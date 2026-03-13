@@ -1,30 +1,71 @@
-import { Disc3, Palette, Type, Image, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, Link } from 'react-router';
+import { Disc3, BookOpen } from 'lucide-react';
+import { Button } from '@netmd-studio/ui';
+import type { LabelTemplateType } from '@netmd-studio/types';
+import { TemplateSelector } from './components/TemplateSelector';
+import { LabelEditor } from './components/LabelEditor';
 
 export function LabelStudioPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedTemplate, setSelectedTemplate] = useState<LabelTemplateType | null>(null);
+  const editDesignId = searchParams.get('edit') ?? undefined;
+
+  // If editing an existing design, go straight to editor
+  useEffect(() => {
+    if (editDesignId && !selectedTemplate) {
+      // Default to jcard_front, the editor will load the correct type from the design
+      setSelectedTemplate('jcard_front');
+    }
+  }, [editDesignId, selectedTemplate]);
+
+  const handleSelectTemplate = (type: LabelTemplateType) => {
+    setSelectedTemplate(type);
+  };
+
+  const handleBack = () => {
+    setSelectedTemplate(null);
+    // Clear edit param
+    if (editDesignId) {
+      setSearchParams({});
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-      <div className="w-16 h-16 rounded-studio-xl bg-studio-cyan-muted border border-studio-cyan-border flex items-center justify-center mb-6">
-        <Disc3 size={32} className="text-studio-cyan" />
-      </div>
-      <h2 className="text-2xl font-semibold text-studio-text mb-2">Label Studio</h2>
-      <p className="text-base text-studio-text-muted max-w-md mb-8">
-        Design J-cards, spine labels, and disc labels for your MiniDisc collection.
-        Search Discogs and MusicBrainz for album metadata and cover art.
-      </p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-lg">
-        {[
-          { icon: Palette, label: 'Templates' },
-          { icon: Type, label: 'Text Tools' },
-          { icon: Image, label: 'Cover Art' },
-          { icon: Download, label: 'PDF Export' },
-        ].map(({ icon: Icon, label }) => (
-          <div key={label} className="flex flex-col items-center gap-2 p-3 bg-studio-surface border border-studio-border rounded-studio-lg">
-            <Icon size={20} className="text-studio-text-dim" />
-            <span className="text-xs text-studio-text-muted">{label}</span>
+    <div>
+      {/* Navigation bar */}
+      {!selectedTemplate && (
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-studio-lg bg-studio-cyan-muted border border-studio-cyan-border flex items-center justify-center">
+              <Disc3 size={20} className="text-studio-cyan" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-studio-text">Label Studio</h1>
+              <p className="text-sm text-studio-text-muted">
+                Design J-cards, spine labels, and disc labels for your MiniDisc collection.
+              </p>
+            </div>
           </div>
-        ))}
-      </div>
-      <p className="text-xs text-studio-text-dim mt-8">Coming in Prompt 3</p>
+          <Link to="/labels/gallery">
+            <Button variant="secondary">
+              <BookOpen size={14} />
+              Gallery
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Main content */}
+      {selectedTemplate ? (
+        <LabelEditor
+          templateType={selectedTemplate}
+          onBack={handleBack}
+          editDesignId={editDesignId}
+        />
+      ) : (
+        <TemplateSelector onSelect={handleSelectTemplate} />
+      )}
     </div>
   );
 }

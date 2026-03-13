@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { Layout } from './Layout';
 import { HomePage } from './HomePage';
 import { LabelStudioPage } from '../features/label-studio/LabelStudioPage';
+import { GalleryPage } from '../features/label-studio/GalleryPage';
 import { TransferStudioPage } from '../features/transfer-studio/TransferStudioPage';
 import { DeviceLibraryPage } from '../features/device-library/DeviceLibraryPage';
 import { DeviceDetailPage } from '../features/device-library/DeviceDetailPage';
@@ -21,6 +22,7 @@ export function App() {
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="labels" element={<LabelStudioPage />} />
+          <Route path="labels/gallery" element={<GalleryPage />} />
           <Route path="transfer" element={<TransferStudioPage />} />
           <Route path="devices" element={<DeviceLibraryPage />} />
           <Route path="devices/submit" element={<DeviceSubmitPage />} />
