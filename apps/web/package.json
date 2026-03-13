@@ -11,6 +11,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "0.6.1",
     "@netmd-studio/atrac-wasm": "workspace:*",
     "@netmd-studio/netmd": "workspace:*",
     "@netmd-studio/types": "workspace:*",

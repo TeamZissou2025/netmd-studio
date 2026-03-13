@@ -1,61 +1,59 @@
-import { useRef, useCallback } from 'react';
+/**
+ * Audio encoding pipeline using FFmpeg WASM + atracdenc WASM.
+ *
+ * Architecture matches Web MiniDisc Pro (asivery/webminidisc):
+ * - FFmpeg WASM (in its own worker via @ffmpeg/ffmpeg) handles all audio decoding
+ * - For SP: FFmpeg transcodes directly to s16be PCM
+ * - For LP2/LP4: FFmpeg transcodes to WAV, then atracdenc worker encodes to ATRAC3
+ *
+ * No OfflineAudioContext or AudioContext used — all decoding is FFmpeg-based.
+ */
+
+import { useCallback } from 'react';
+import { createWorker, type FFmpegWorker } from '@ffmpeg/ffmpeg';
 import { useTransferStore } from './store';
 
-type AudioWorkerResponse =
-  | { type: 'progress'; id: string; percent: number; stage: 'encoding' }
-  | { type: 'complete'; id: string; data: ArrayBuffer; format: 'sp' | 'lp2' | 'lp4'; durationSeconds: number }
-  | { type: 'error'; id: string; message: string };
-
-let workerIdCounter = 0;
-
 /**
- * Decode audio file to 44100Hz stereo PCM on the main thread.
- * OfflineAudioContext is only available on the main thread — NOT in Web Workers.
+ * Wrapper for the atracdenc Web Worker.
+ * Matches AtracdencProcess from Web MiniDisc Pro.
  */
-async function decodeAudioOnMainThread(
-  buffer: ArrayBuffer,
-  onProgress?: (percent: number) => void
-): Promise<{ left: Float32Array; right: Float32Array; durationSeconds: number }> {
-  onProgress?.(0);
+class AtracdencProcess {
+  private worker: Worker;
+  private messageCallback?: (ev: MessageEvent) => void;
 
-  // Step 1: Decode compressed audio to AudioBuffer using the browser's built-in decoder
-  const audioContext = new OfflineAudioContext(2, 44100, 44100);
-  const audioBuffer = await audioContext.decodeAudioData(buffer);
-
-  onProgress?.(40);
-
-  // Step 2: Resample to 44100Hz stereo if needed
-  let resampledBuffer: AudioBuffer;
-  if (audioBuffer.sampleRate !== 44100 || audioBuffer.numberOfChannels !== 2) {
-    const offlineCtx = new OfflineAudioContext(
-      2,
-      Math.ceil(audioBuffer.duration * 44100),
-      44100
+  constructor() {
+    this.worker = new Worker(
+      `${import.meta.env.BASE_URL}wasm/atracdenc-worker.js`
     );
-    const source = offlineCtx.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(offlineCtx.destination);
-    source.start(0);
-    resampledBuffer = await offlineCtx.startRendering();
-  } else {
-    resampledBuffer = audioBuffer;
+    this.worker.onmessage = this.handleMessage.bind(this);
   }
 
-  onProgress?.(80);
+  async init(): Promise<void> {
+    await new Promise<void>((resolve) => {
+      this.messageCallback = () => resolve();
+      this.worker.postMessage({ action: 'init' });
+    });
+  }
 
-  // Step 3: Extract channel data
-  const left = resampledBuffer.getChannelData(0);
-  const right = resampledBuffer.numberOfChannels > 1
-    ? resampledBuffer.getChannelData(1)
-    : left;
+  async encode(data: ArrayBuffer, bitrate: string): Promise<ArrayBuffer> {
+    const ev = await new Promise<MessageEvent>((resolve) => {
+      this.messageCallback = (e) => resolve(e);
+      this.worker.postMessage({ action: 'encode', bitrate, data }, [data]);
+    });
+    return ev.data.result as ArrayBuffer;
+  }
 
-  onProgress?.(100);
+  terminate(): void {
+    this.worker.terminate();
+  }
 
-  return { left, right, durationSeconds: resampledBuffer.duration };
+  private handleMessage(ev: MessageEvent): void {
+    this.messageCallback?.(ev);
+    this.messageCallback = undefined;
+  }
 }
 
 export function useAudioPipeline() {
-  const workerRef = useRef<Worker | null>(null);
   const updateTrackEncodeProgress = useTransferStore((s) => s.updateTrackEncodeProgress);
   const updateTrackTransferProgress = useTransferStore((s) => s.updateTrackTransferProgress);
   const updateTrackStatus = useTransferStore((s) => s.updateTrackStatus);
@@ -64,102 +62,148 @@ export function useAudioPipeline() {
   const setTrackError = useTransferStore((s) => s.setTrackError);
   const updateOverallProgress = useTransferStore((s) => s.updateOverallProgress);
 
-  const getWorker = useCallback(() => {
-    if (!workerRef.current) {
-      workerRef.current = new Worker(
-        new URL('./audio-worker.ts', import.meta.url),
-        { type: 'module' }
-      );
-    }
-    return workerRef.current;
+  /**
+   * Create a new FFmpeg worker instance with local WASM paths.
+   * A new worker is created per file (matching Web MiniDisc Pro).
+   */
+  const createFFmpeg = useCallback((): FFmpegWorker => {
+    return createWorker({
+      corePath: `${import.meta.env.BASE_URL}wasm/ffmpeg-core.js`,
+      workerPath: `${import.meta.env.BASE_URL}wasm/worker.min.js`,
+      logger: ({ message }) => {
+        // Only log non-empty messages
+        if (message.trim()) {
+          console.log('[FFmpeg]', message);
+        }
+      },
+    });
   }, []);
 
   const encodeTrack = useCallback(
-    (trackId: string, file: File, format: 'sp' | 'lp2' | 'lp4'): Promise<{ data: ArrayBuffer; durationSeconds: number }> => {
-      return new Promise((resolve, reject) => {
-        const jobId = `${trackId}-${++workerIdCounter}`;
+    async (
+      trackId: string,
+      file: File,
+      format: 'sp' | 'lp2' | 'lp4'
+    ): Promise<{ data: ArrayBuffer; durationSeconds: number }> => {
+      updateTrackStatus(trackId, 'encoding');
+      updateTrackEncodeProgress(trackId, 0, 'decoding');
 
-        updateTrackStatus(trackId, 'encoding');
-        updateTrackEncodeProgress(trackId, 0, 'decoding');
+      let ffmpeg: FFmpegWorker | null = null;
+      let atracdenc: AtracdencProcess | null = null;
 
-        // Step 1: Read file and decode audio on the main thread
-        file.arrayBuffer().then(async (buffer) => {
-          let left: Float32Array;
-          let right: Float32Array;
-          let durationSeconds: number;
+      try {
+        // Step 1: Create FFmpeg worker and load
+        ffmpeg = createFFmpeg();
+        await ffmpeg.load();
 
-          try {
-            const decoded = await decodeAudioOnMainThread(buffer, (percent) => {
-              updateTrackEncodeProgress(trackId, percent, 'decoding');
-              updateOverallProgress();
-            });
-            left = decoded.left;
-            right = decoded.right;
-            durationSeconds = decoded.durationSeconds;
-          } catch (err) {
-            const message = err instanceof Error ? err.message : 'Failed to decode audio';
-            setTrackError(trackId, message);
-            reject(new Error(message));
-            return;
-          }
+        updateTrackEncodeProgress(trackId, 10, 'decoding');
+        updateOverallProgress();
 
-          // Step 2: Send decoded PCM to worker for format conversion (s16be/s16le)
-          const worker = getWorker();
+        // Step 2: Write input file to FFmpeg's virtual filesystem
+        const ext = file.name.split('.').pop()?.toLowerCase() || 'mp3';
+        const inFile = `input.${ext}`;
+        await ffmpeg.write(inFile, file);
 
-          const handler = (event: MessageEvent<AudioWorkerResponse>) => {
-            const msg = event.data;
-            if (msg.id !== jobId) return;
+        updateTrackEncodeProgress(trackId, 20, 'decoding');
+        updateOverallProgress();
 
-            switch (msg.type) {
-              case 'progress':
-                updateTrackEncodeProgress(trackId, msg.percent, 'encoding');
-                updateOverallProgress();
-                break;
-              case 'complete':
-                worker.removeEventListener('message', handler);
-                updateTrackDuration(trackId, msg.durationSeconds);
-                setTrackEncodedData(trackId, msg.data, msg.data.byteLength);
-                updateOverallProgress();
-                resolve({ data: msg.data, durationSeconds: msg.durationSeconds });
-                break;
-              case 'error':
-                worker.removeEventListener('message', handler);
-                setTrackError(trackId, msg.message);
-                updateOverallProgress();
-                reject(new Error(msg.message));
-                break;
-            }
-          };
+        let outputData: ArrayBuffer;
+        let durationSeconds: number;
 
-          worker.addEventListener('message', handler);
+        if (format === 'sp') {
+          // SP mode: FFmpeg decodes and converts directly to s16be PCM
+          // This is exactly what netmd-js expects for Wireformat.pcm
+          const outFile = 'output.raw';
+          await ffmpeg.transcode(inFile, outFile, '-ac 2 -ar 44100 -f s16be');
 
-          // Transfer Float32Arrays to worker (zero-copy)
-          worker.postMessage(
-            { type: 'encode', id: jobId, left, right, format, durationSeconds },
-            [left.buffer, right.buffer]
-          );
-        }).catch((err) => {
-          setTrackError(trackId, err instanceof Error ? err.message : 'Failed to read file');
-          reject(err);
-        });
-      });
-    },
-    [getWorker, updateTrackStatus, updateTrackEncodeProgress, updateTrackDuration, setTrackEncodedData, setTrackError, updateOverallProgress]
-  );
+          updateTrackEncodeProgress(trackId, 80, 'encoding');
+          updateOverallProgress();
 
-  const cancelEncoding = useCallback(
-    (trackId: string) => {
-      const worker = workerRef.current;
-      if (worker) {
-        worker.postMessage({ type: 'cancel', id: trackId });
+          const result = await ffmpeg.read(outFile);
+          outputData = new Uint8Array(result.data).buffer as ArrayBuffer;
+
+          // Duration from PCM size: bytes / (sampleRate * channels * bytesPerSample)
+          durationSeconds = result.data.byteLength / (44100 * 2 * 2);
+        } else {
+          // LP2/LP4: FFmpeg decodes to WAV, then atracdenc encodes to ATRAC3
+          const wavFile = 'output.wav';
+          await ffmpeg.transcode(inFile, wavFile, '-ac 2 -ar 44100 -f wav');
+
+          updateTrackEncodeProgress(trackId, 40, 'decoding');
+          updateOverallProgress();
+
+          const wavResult = await ffmpeg.read(wavFile);
+
+          // Duration from WAV data (header is 44 bytes for standard PCM WAV)
+          const wavDataSize = wavResult.data.byteLength - 44;
+          durationSeconds = wavDataSize / (44100 * 2 * 2);
+
+          updateTrackEncodeProgress(trackId, 50, 'encoding');
+          updateOverallProgress();
+
+          // Create atracdenc worker and encode
+          atracdenc = new AtracdencProcess();
+          await atracdenc.init();
+
+          updateTrackEncodeProgress(trackId, 60, 'encoding');
+          updateOverallProgress();
+
+          // Map our bitrate to atracdenc's expected values
+          // LP2 = 132kbps → atracdenc expects '128'
+          // LP4 = 66kbps → atracdenc expects '64'
+          const bitrate = format === 'lp2' ? '128' : '64';
+
+          // Transfer WAV data to atracdenc worker — copy to ensure clean ArrayBuffer
+          const wavBuffer = new Uint8Array(wavResult.data).buffer as ArrayBuffer;
+          outputData = await atracdenc.encode(wavBuffer, bitrate);
+
+          atracdenc.terminate();
+          atracdenc = null;
+        }
+
+        // Cleanup FFmpeg worker (one per file, matching Web MiniDisc Pro)
+        await ffmpeg.terminate();
+        ffmpeg = null;
+
+        updateTrackEncodeProgress(trackId, 95, 'encoding');
+        updateOverallProgress();
+
+        // Update store
+        updateTrackDuration(trackId, durationSeconds);
+        setTrackEncodedData(trackId, outputData, outputData.byteLength);
+        updateTrackEncodeProgress(trackId, 100, 'encoding');
+        updateOverallProgress();
+
+        return { data: outputData, durationSeconds };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Audio encoding failed';
+        setTrackError(trackId, message);
+
+        // Cleanup on error
+        try { ffmpeg?.terminate(); } catch { /* ignore */ }
+        try { atracdenc?.terminate(); } catch { /* ignore */ }
+
+        throw new Error(message);
       }
     },
-    []
+    [
+      createFFmpeg,
+      updateTrackStatus,
+      updateTrackEncodeProgress,
+      updateTrackDuration,
+      setTrackEncodedData,
+      setTrackError,
+      updateOverallProgress,
+    ]
   );
 
+  const cancelEncoding = useCallback((_trackId: string) => {
+    // FFmpeg worker is per-file and cleaned up after each encode.
+    // Mid-transcode cancellation not supported by ffmpeg@0.6.1.
+  }, []);
+
   const terminateWorker = useCallback(() => {
-    workerRef.current?.terminate();
-    workerRef.current = null;
+    // No persistent worker to terminate — each encode creates and destroys its own.
   }, []);
 
   return {
