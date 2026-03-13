@@ -1,2 +1,3 @@
-export { AtracEncoder } from './encoder';
-export { AudioDecoder } from './decoder';
+export { AtracEncoder, type AtracBitrate, type EncodeOptions } from './encoder';
+export { AudioDecoder, type DecodedAudio } from './decoder';
+export type { AudioWorkerMessage, AudioWorkerResponse } from './worker';

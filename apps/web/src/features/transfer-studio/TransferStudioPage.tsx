@@ -1,30 +1,87 @@
-import { Usb, Disc3, Music, Zap } from 'lucide-react';
+import { Usb } from 'lucide-react';
+import { NetMDConnection } from '@netmd-studio/netmd';
+import { BrowserCheck } from './BrowserCheck';
+import { DeviceConnectionPanel } from './DeviceConnectionPanel';
+import { DiscTOCPanel } from './DiscTOCPanel';
+import { FormatSelector } from './FormatSelector';
+import { TransferQueue } from './TransferQueue';
+import { useTransferStore } from './store';
 
 export function TransferStudioPage() {
+  const connectionStatus = useTransferStore((s) => s.connectionStatus);
+
+  // Check WebUSB support
+  if (!NetMDConnection.isSupported()) {
+    return <BrowserCheck />;
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-      <div className="w-16 h-16 rounded-studio-xl bg-studio-magenta-muted border border-studio-magenta/20 flex items-center justify-center mb-6">
-        <Usb size={32} className="text-studio-magenta" />
+    <div className="max-w-7xl mx-auto">
+      {/* Page header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-studio-lg bg-studio-magenta-muted border border-studio-magenta/20 flex items-center justify-center">
+          <Usb size={20} className="text-studio-magenta" />
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold text-studio-text">Transfer Studio</h1>
+          <p className="text-xs text-studio-text-muted">
+            Transfer audio to your MiniDisc player via WebUSB
+          </p>
+        </div>
       </div>
-      <h2 className="text-2xl font-semibold text-studio-text mb-2">Transfer Studio</h2>
-      <p className="text-base text-studio-text-muted max-w-md mb-8">
-        Transfer audio to your MiniDisc player via WebUSB. Supports SP, LP2, and LP4
-        encoding with client-side ATRAC compression.
+
+      {/* Main layout: sidebar + content */}
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+        {/* Left sidebar — device + format */}
+        <div className="space-y-4">
+          <DeviceConnectionPanel />
+          {connectionStatus === 'connected' && (
+            <>
+              <FormatSelector />
+              <DiscTOCPanel />
+            </>
+          )}
+        </div>
+
+        {/* Main content — transfer queue */}
+        <div>
+          {connectionStatus === 'connected' ? (
+            <TransferQueue />
+          ) : (
+            <EmptyState />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="w-16 h-16 rounded-studio-xl bg-studio-surface border border-studio-border flex items-center justify-center mb-4">
+        <Usb size={28} className="text-studio-text-dim" />
+      </div>
+      <h2 className="text-lg font-semibold text-studio-text mb-2">Connect a Device</h2>
+      <p className="text-sm text-studio-text-muted max-w-sm">
+        Connect your Net MD or Hi-MD player via USB to start transferring audio.
+        Use the panel on the left to pair your device.
       </p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-lg">
+      <div className="grid grid-cols-3 gap-3 mt-6 max-w-sm">
         {[
-          { icon: Usb, label: 'WebUSB' },
-          { icon: Music, label: 'Audio Queue' },
-          { icon: Disc3, label: 'Disc TOC' },
-          { icon: Zap, label: 'ATRAC Encode' },
-        ].map(({ icon: Icon, label }) => (
-          <div key={label} className="flex flex-col items-center gap-2 p-3 bg-studio-surface border border-studio-border rounded-studio-lg">
-            <Icon size={20} className="text-studio-text-dim" />
-            <span className="text-xs text-studio-text-muted">{label}</span>
+          { label: 'SP', desc: '80 min · Best quality' },
+          { label: 'LP2', desc: '160 min · Good quality' },
+          { label: 'LP4', desc: '320 min · Acceptable' },
+        ].map((fmt) => (
+          <div
+            key={fmt.label}
+            className="p-3 bg-studio-surface border border-studio-border rounded-studio text-center"
+          >
+            <span className="text-xs font-mono font-semibold text-studio-magenta">{fmt.label}</span>
+            <p className="text-2xs text-studio-text-dim mt-1">{fmt.desc}</p>
           </div>
         ))}
       </div>
-      <p className="text-xs text-studio-text-dim mt-8">Coming in Prompt 4</p>
     </div>
   );
 }
