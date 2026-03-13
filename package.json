@@ -1,0 +1,19 @@
+{
+  "name": "netmd-studio",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "check-types": "turbo check-types",
+    "test": "turbo test",
+    "db:generate": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > packages/types/src/database.ts",
+    "db:migrate": "supabase db push",
+    "db:reset": "supabase db reset",
+    "clean": "turbo clean && rm -rf node_modules"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "devDependencies": {
+    "turbo": "^2.8.16"
+  }
+}

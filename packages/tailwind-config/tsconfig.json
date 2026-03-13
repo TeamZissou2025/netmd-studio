@@ -1,0 +1,4 @@
+{
+  "extends": "@netmd-studio/typescript-config/base.json",
+  "include": ["tailwind.config.ts"]
+}

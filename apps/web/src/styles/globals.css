@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+@theme {
+  /* Surfaces */
+  --color-studio-black: #0a0a0b;
+  --color-studio-surface: #141417;
+  --color-studio-surface-hover: #1a1a1f;
+  --color-studio-surface-active: #222228;
+  --color-studio-border: #2a2a32;
+  --color-studio-border-bright: #3a3a44;
+
+  /* Text */
+  --color-studio-text: #e8e8ec;
+  --color-studio-text-muted: #8888a0;
+  --color-studio-text-dim: #555568;
+
+  /* Accent — Electric Cyan */
+  --color-studio-cyan: #00d4ff;
+  --color-studio-cyan-hover: #00bfe6;
+  --color-studio-cyan-muted: #00d4ff1a;
+  --color-studio-cyan-border: #00d4ff33;
+
+  /* Secondary — Magenta */
+  --color-studio-magenta: #ff0066;
+  --color-studio-magenta-hover: #e6005c;
+  --color-studio-magenta-muted: #ff00661a;
+
+  /* Status */
+  --color-studio-success: #00cc88;
+  --color-studio-warning: #ffaa00;
+  --color-studio-error: #ff3344;
+
+  /* Pillar identity colors */
+  --color-pillar-label: #00d4ff;
+  --color-pillar-transfer: #ff0066;
+  --color-pillar-device: #ffaa00;
+  --color-pillar-market: #00cc88;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Font sizes */
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 0.875rem;
+  --text-xs: 0.6875rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.75rem;
+  --text-sm--line-height: 1.125rem;
+  --text-base: 0.8125rem;
+  --text-base--line-height: 1.25rem;
+  --text-md: 0.875rem;
+  --text-md--line-height: 1.375rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 2.5rem;
+
+  /* Border radius */
+  --radius-studio: 6px;
+  --radius-studio-lg: 8px;
+  --radius-studio-xl: 12px;
+
+  /* Box shadows */
+  --shadow-studio: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-studio-lg: 0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-studio-glow-cyan: 0 0 20px rgba(0,212,255,0.15);
+  --shadow-studio-glow-magenta: 0 0 20px rgba(255,0,102,0.15);
+
+  /* Animations */
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-spin-slow: spin 3s linear infinite;
+}
+
+@source "../../../packages/ui/src/**/*.tsx";
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a32 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #2a2a32;
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #3a3a44;
+}
+
+::selection {
+  background: rgba(0, 212, 255, 0.3);
+  color: #e8e8ec;
+}
