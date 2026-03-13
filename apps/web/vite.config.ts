@@ -11,9 +11,10 @@ export default defineConfig({
     tailwindcss(),
     nodePolyfills({
       globals: {
-        Buffer: false, // We handle Buffer via @rollup/plugin-inject
+        Buffer: true,
+        process: true,
       },
-      exclude: ['buffer'],
+      include: ['buffer', 'process', 'stream', 'util', 'events'],
     }),
   ],
   resolve: {
