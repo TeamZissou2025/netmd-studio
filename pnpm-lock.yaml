@@ -29,6 +29,12 @@ importers:
       '@netmd-studio/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@stripe/react-stripe-js':
+        specifier: ^5.6.1
+        version: 5.6.1(@stripe/stripe-js@8.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@stripe/stripe-js':
+        specifier: ^8.9.0
+        version: 8.9.0
       '@supabase/supabase-js':
         specifier: ^2.49.0
         version: 2.99.1
@@ -84,6 +90,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.0
         version: 10.4.27(postcss@8.5.8)
+      stripe:
+        specifier: ^20.4.1
+        version: 20.4.1(@types/node@25.5.0)
       tailwindcss:
         specifier: ^4.0.0
         version: 4.2.1
@@ -907,6 +916,17 @@ packages:
     resolution: {integrity: sha512-2HRCml6OztYXyJXAvdDXPKcawukWY2GpR5/nxKp4iBgiO3wcoEGkAaqctIbZcNB6KlUQBIqt8VYkNSj2397EfA==}
     cpu: [x64]
     os: [win32]
+
+  '@stripe/react-stripe-js@5.6.1':
+    resolution: {integrity: sha512-5xBrjkGmFvKvpMod6VvpOaFaa67eRbmieKeFTePZyOr/sUXzm7A3YY91l330pS0usUst5PxTZDUZHWfOc0v1GA==}
+    peerDependencies:
+      '@stripe/stripe-js': '>=8.0.0 <9.0.0'
+      react: '>=16.8.0 <20.0.0'
+      react-dom: '>=16.8.0 <20.0.0'
+
+  '@stripe/stripe-js@8.9.0':
+    resolution: {integrity: sha512-OJkXvUI5GAc56QdiSRimQDvWYEqn475J+oj8RzRtFTCPtkJNO2TWW619oDY+nn1ExR+2tCVTQuRQBbR4dRugww==}
+    engines: {node: '>=12.16'}
 
   '@supabase/auth-js@2.99.1':
     resolution: {integrity: sha512-x7lKKTvKjABJt/FYcRSPiTT01Xhm2FF8RhfL8+RHMkmlwmRQ88/lREupIHKwFPW0W6pTCJqkZb7Yhpw/EZ+fNw==}
@@ -2561,6 +2581,15 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
+  stripe@20.4.1:
+    resolution: {integrity: sha512-axCguHItc8Sxt0HC6aSkdVRPffjYPV7EQqZRb2GkIa8FzWDycE7nHJM19C6xAIynH1Qp1/BHiopSi96jGBxT0w==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      '@types/node': '>=16'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
   supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
     engines: {node: '>=8'}
@@ -3410,6 +3439,15 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.59.0':
     optional: true
+
+  '@stripe/react-stripe-js@5.6.1(@stripe/stripe-js@8.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@stripe/stripe-js': 8.9.0
+      prop-types: 15.8.1
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+
+  '@stripe/stripe-js@8.9.0': {}
 
   '@supabase/auth-js@2.99.1':
     dependencies:
@@ -5445,6 +5483,10 @@ snapshots:
     optional: true
 
   strip-json-comments@3.1.1: {}
+
+  stripe@20.4.1(@types/node@25.5.0):
+    optionalDependencies:
+      '@types/node': 25.5.0
 
   supports-color@7.2.0:
     dependencies:

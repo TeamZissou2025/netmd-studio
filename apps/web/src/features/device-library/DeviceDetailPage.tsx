@@ -8,6 +8,7 @@ import { Button, Badge, Card, Skeleton } from '@netmd-studio/ui';
 import { useDevice, DEVICE_TYPE_LABELS } from './hooks/useDevices';
 import { useDeviceReports } from './hooks/useDeviceReports';
 import { CompatibilityStats, CompatibilityReportForm } from './components/CompatibilityReport';
+import { DeviceListings } from '../marketplace/components/DeviceListings';
 import { useAuth } from '../../hooks/useAuth';
 
 const ATRAC_LABELS: Record<string, string> = {
@@ -284,16 +285,10 @@ export function DeviceDetailPage() {
             )}
           </Card>
 
-          {/* Related Marketplace Listings placeholder */}
+          {/* Related Marketplace Listings */}
           <Card>
             <h2 className="text-lg font-semibold text-studio-text mb-3">Marketplace Listings</h2>
-            <p className="text-sm text-studio-text-dim">No active listings for this device</p>
-            <Link
-              to={`/marketplace?device=${device.id}`}
-              className="text-2xs text-studio-cyan hover:text-studio-cyan-hover transition-colors mt-2 inline-block"
-            >
-              Search marketplace →
-            </Link>
+            <DeviceListings deviceId={device.id} />
           </Card>
         </div>
       </div>

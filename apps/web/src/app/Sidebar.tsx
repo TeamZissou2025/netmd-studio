@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router';
-import { Disc3, Usb, Database, ShoppingBag, LayoutDashboard, LogOut, User } from 'lucide-react';
+import { Disc3, Usb, Database, ShoppingBag, LayoutDashboard, LogOut, User, Package, DollarSign } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const pillars = [
@@ -59,6 +59,32 @@ export function Sidebar() {
             >
               <LayoutDashboard size={16} />
               Dashboard
+            </NavLink>
+            <NavLink
+              to="/dashboard/orders"
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 mx-2 px-3 py-1.5 rounded-studio text-sm font-medium transition-colors border-l-2 ${
+                  isActive
+                    ? 'border-studio-cyan text-studio-cyan bg-studio-surface-hover'
+                    : 'border-transparent text-studio-text-muted hover:text-studio-text hover:bg-studio-surface-hover'
+                }`
+              }
+            >
+              <Package size={16} />
+              Orders
+            </NavLink>
+            <NavLink
+              to="/dashboard/selling"
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 mx-2 px-3 py-1.5 rounded-studio text-sm font-medium transition-colors border-l-2 ${
+                  isActive
+                    ? 'border-studio-cyan text-studio-cyan bg-studio-surface-hover'
+                    : 'border-transparent text-studio-text-muted hover:text-studio-text hover:bg-studio-surface-hover'
+                }`
+              }
+            >
+              <DollarSign size={16} />
+              Selling
             </NavLink>
           </>
         )}

@@ -10,6 +10,12 @@ import { DeviceDetailPage } from '../features/device-library/DeviceDetailPage';
 import { DeviceSubmitPage } from '../features/device-library/DeviceSubmitPage';
 import { AdminDevicesPage } from '../features/device-library/AdminDevicesPage';
 import { MarketplacePage } from '../features/marketplace/MarketplacePage';
+import { ListingDetailPage } from '../features/marketplace/ListingDetailPage';
+import { SellPage } from '../features/marketplace/SellPage';
+import { CheckoutPage } from '../features/marketplace/CheckoutPage';
+import { OrdersPage } from '../features/marketplace/OrdersPage';
+import { OrderDetailPage } from '../features/marketplace/OrderDetailPage';
+import { SellerDashboardPage } from '../features/marketplace/SellerDashboardPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { LoginPage } from '../features/auth/LoginPage';
 import { SignupPage } from '../features/auth/SignupPage';
@@ -21,15 +27,28 @@ export function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
+          {/* Label Studio */}
           <Route path="labels" element={<LabelStudioPage />} />
           <Route path="labels/gallery" element={<GalleryPage />} />
+          {/* Transfer Studio */}
           <Route path="transfer" element={<TransferStudioPage />} />
+          {/* Device Library */}
           <Route path="devices" element={<DeviceLibraryPage />} />
           <Route path="devices/submit" element={<DeviceSubmitPage />} />
           <Route path="devices/:id" element={<DeviceDetailPage />} />
           <Route path="admin/devices" element={<AdminDevicesPage />} />
+          {/* Marketplace */}
           <Route path="marketplace" element={<MarketplacePage />} />
+          <Route path="marketplace/sell" element={<SellPage />} />
+          <Route path="marketplace/sell/:id" element={<SellPage />} />
+          <Route path="marketplace/checkout/:id" element={<CheckoutPage />} />
+          <Route path="marketplace/:id" element={<ListingDetailPage />} />
+          {/* Dashboard */}
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="dashboard/orders" element={<OrdersPage />} />
+          <Route path="dashboard/orders/:id" element={<OrderDetailPage />} />
+          <Route path="dashboard/selling" element={<SellerDashboardPage />} />
+          {/* Auth */}
           <Route path="auth/login" element={<LoginPage />} />
           <Route path="auth/signup" element={<SignupPage />} />
           <Route path="auth/callback" element={<AuthCallbackPage />} />
