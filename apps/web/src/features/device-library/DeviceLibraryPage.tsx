@@ -5,6 +5,7 @@ import { Input, Button, Skeleton } from '@netmd-studio/ui';
 import { useDevices, DEFAULT_FILTERS, type DeviceFilters } from './hooks/useDevices';
 import { DeviceCard } from './components/DeviceCard';
 import { DeviceFiltersPanel } from './components/DeviceFilters';
+import { SEOHead } from '../../app/SEOHead';
 import { useAuth } from '../../hooks/useAuth';
 
 const SORT_OPTIONS = [
@@ -42,6 +43,7 @@ export function DeviceLibraryPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <SEOHead title="Device Library" description="Community-maintained database of MiniDisc hardware — Net MD, Hi-MD, and standard MD devices." />
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>

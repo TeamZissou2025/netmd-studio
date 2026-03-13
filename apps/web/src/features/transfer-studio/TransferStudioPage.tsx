@@ -5,6 +5,7 @@ import { DeviceConnectionPanel } from './DeviceConnectionPanel';
 import { DiscTOCPanel } from './DiscTOCPanel';
 import { FormatSelector } from './FormatSelector';
 import { TransferQueue } from './TransferQueue';
+import { SEOHead } from '../../app/SEOHead';
 import { useTransferStore } from './store';
 
 export function TransferStudioPage() {
@@ -17,6 +18,7 @@ export function TransferStudioPage() {
 
   return (
     <div className="max-w-7xl mx-auto">
+      <SEOHead title="Transfer Studio" description="Transfer audio to your MiniDisc player via WebUSB — SP, LP2, and LP4 encoding." />
       {/* Page header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-studio-lg bg-studio-magenta-muted border border-studio-magenta/20 flex items-center justify-center">

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router';
-import { Disc3, BookOpen } from 'lucide-react';
+import { Disc3, BookOpen, ShoppingBag } from 'lucide-react';
 import { Button } from '@netmd-studio/ui';
 import type { LabelTemplateType } from '@netmd-studio/types';
 import { TemplateSelector } from './components/TemplateSelector';
 import { LabelEditor } from './components/LabelEditor';
+import { SEOHead } from '../../app/SEOHead';
 
 export function LabelStudioPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -33,6 +34,7 @@ export function LabelStudioPage() {
 
   return (
     <div>
+      <SEOHead title="Label Studio" description="Design J-cards, spine labels, and disc labels for your MiniDisc collection." />
       {/* Navigation bar */}
       {!selectedTemplate && (
         <div className="flex items-center justify-between mb-6">
@@ -47,12 +49,20 @@ export function LabelStudioPage() {
               </p>
             </div>
           </div>
-          <Link to="/labels/gallery">
-            <Button variant="secondary">
-              <BookOpen size={14} />
-              Gallery
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to="/marketplace?search=disc+custom">
+              <Button variant="ghost">
+                <ShoppingBag size={14} />
+                Marketplace
+              </Button>
+            </Link>
+            <Link to="/labels/gallery">
+              <Button variant="secondary">
+                <BookOpen size={14} />
+                Gallery
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
 

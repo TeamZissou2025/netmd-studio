@@ -7,6 +7,7 @@ import { useListings, DEFAULT_LISTING_FILTERS } from './hooks/useListings';
 import { useFavorites } from './hooks/useFavorites';
 import { ListingCard } from './components/ListingCard';
 import { ListingFiltersPanel } from './components/ListingFilters';
+import { SEOHead } from '../../app/SEOHead';
 import type { ListingFilters } from './hooks/useListings';
 
 export function MarketplacePage() {
@@ -34,6 +35,7 @@ export function MarketplacePage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SEOHead title="Marketplace" description="Buy and sell MiniDisc hardware, discs, and accessories on NetMD Studio." />
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>

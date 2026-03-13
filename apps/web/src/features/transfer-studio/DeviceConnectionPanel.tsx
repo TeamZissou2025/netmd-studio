@@ -1,4 +1,5 @@
-import { Usb, Unplug, RefreshCw, Disc3, Loader2 } from 'lucide-react';
+import { Link } from 'react-router';
+import { Usb, Unplug, RefreshCw, Disc3, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@netmd-studio/ui';
 import { formatDuration } from '@netmd-studio/utils';
 import { useDeviceConnection } from './useDeviceConnection';
@@ -72,6 +73,14 @@ export function DeviceConnectionPanel() {
                 {deviceInfo?.manufacturer}
                 {deviceInfo ? ` · ${deviceInfo.isHiMD ? 'Hi-MD' : 'Net MD'}` : ''}
               </p>
+              {deviceInfo?.modelNumber && (
+                <Link
+                  to={`/devices?search=${encodeURIComponent(deviceInfo.modelNumber)}`}
+                  className="text-2xs text-studio-cyan hover:text-studio-cyan-hover transition-colors flex items-center gap-0.5 mt-0.5"
+                >
+                  <ExternalLink size={9} /> View specs
+                </Link>
+              )}
             </div>
           </div>
 

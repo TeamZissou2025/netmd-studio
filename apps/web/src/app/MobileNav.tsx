@@ -10,19 +10,20 @@ const items = [
 
 export function MobileNav() {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-studio-surface border-t border-studio-border z-50">
-      <div className="flex">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-studio-surface border-t border-studio-border z-50" aria-label="Mobile navigation">
+      <div className="flex" role="tablist">
         {items.map(({ to, label, icon: Icon, color }) => (
           <NavLink
             key={to}
             to={to}
+            aria-label={label}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center gap-0.5 py-2 text-2xs font-medium transition-colors ${
                 isActive ? color : 'text-studio-text-dim'
               }`
             }
           >
-            <Icon size={20} />
+            <Icon size={20} aria-hidden="true" />
             {label}
           </NavLink>
         ))}

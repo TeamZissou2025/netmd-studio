@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useListing, CATEGORY_LABELS, CONDITION_LABELS, CONDITION_VARIANTS } from './hooks/useListings';
 import { useFavorites } from './hooks/useFavorites';
 import { ImageGallery } from './components/ImageGallery';
+import { SEOHead, ListingStructuredData } from '../../app/SEOHead';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -97,6 +98,21 @@ export function ListingDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SEOHead
+        title={listing.title}
+        description={`${CONDITION_LABELS[listing.condition]} · ${formatPrice(listing.price_cents, listing.currency)} — ${listing.description.slice(0, 120)}`}
+      />
+      <ListingStructuredData
+        name={listing.title}
+        description={listing.description}
+        priceCents={listing.price_cents}
+        currency={listing.currency}
+        condition={listing.condition}
+        imageUrl={listing.images?.[0]}
+        sellerName={listing.seller?.display_name || undefined}
+        url={`${window.location.origin}/marketplace/${listing.id}`}
+        inStock={listing.quantity > 0}
+      />
       {/* Breadcrumb */}
       <Link
         to="/marketplace"

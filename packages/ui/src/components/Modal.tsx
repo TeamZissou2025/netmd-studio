@@ -22,7 +22,7 @@ export function Modal({ open, onClose, title, children, className = '' }: ModalP
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose} role="dialog" aria-modal="true" aria-label={title || 'Dialog'}>
       <div
         className={`bg-studio-surface border border-studio-border rounded-studio-xl shadow-studio-lg max-w-lg w-full mx-4 ${className}`}
         onClick={(e) => e.stopPropagation()}
@@ -30,8 +30,8 @@ export function Modal({ open, onClose, title, children, className = '' }: ModalP
         {title && (
           <div className="flex items-center justify-between px-5 py-3 border-b border-studio-border">
             <h2 className="text-lg font-semibold text-studio-text">{title}</h2>
-            <button onClick={onClose} className="text-studio-text-muted hover:text-studio-text transition-colors">
-              <X size={16} />
+            <button onClick={onClose} className="text-studio-text-muted hover:text-studio-text transition-colors" aria-label="Close dialog">
+              <X size={16} aria-hidden="true" />
             </button>
           </div>
         )}

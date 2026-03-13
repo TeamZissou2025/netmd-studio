@@ -9,6 +9,7 @@ import { useDevice, DEVICE_TYPE_LABELS } from './hooks/useDevices';
 import { useDeviceReports } from './hooks/useDeviceReports';
 import { CompatibilityStats, CompatibilityReportForm } from './components/CompatibilityReport';
 import { DeviceListings } from '../marketplace/components/DeviceListings';
+import { SEOHead } from '../../app/SEOHead';
 import { useAuth } from '../../hooks/useAuth';
 
 const ATRAC_LABELS: Record<string, string> = {
@@ -90,6 +91,10 @@ export function DeviceDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SEOHead
+        title={`${device.name} — Device Library`}
+        description={`${device.manufacturer} ${device.model_number} — ${DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}${device.year_released ? ` (${device.year_released})` : ''}`}
+      />
       {/* Breadcrumb */}
       <Link to="/devices" className="inline-flex items-center gap-1.5 text-sm text-studio-text-muted hover:text-studio-cyan transition-colors w-fit">
         <ArrowLeft size={14} />

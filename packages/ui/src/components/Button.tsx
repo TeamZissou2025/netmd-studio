@@ -18,7 +18,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={`h-8 px-3 text-sm rounded-studio font-medium transition-colors duration-150 inline-flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none ${variantClasses[variant]} ${className}`}
+        className={`h-8 px-3 text-sm rounded-studio font-medium transition-colors duration-150 inline-flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-cyan focus-visible:ring-offset-1 focus-visible:ring-offset-studio-black ${variantClasses[variant]} ${className}`}
         disabled={disabled}
         {...props}
       />

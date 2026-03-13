@@ -18,7 +18,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           id={inputId}
-          className={`h-8 bg-studio-black border border-studio-border rounded-studio px-3 text-sm text-studio-text placeholder:text-studio-text-dim focus:border-studio-cyan focus:ring-1 focus:ring-studio-cyan-border outline-none transition-colors ${error ? 'border-studio-error' : ''} ${className}`}
+          className={`h-8 bg-studio-black border border-studio-border rounded-studio px-3 text-sm text-studio-text placeholder:text-studio-text-dim focus:border-studio-cyan focus:ring-1 focus:ring-studio-cyan-border outline-none transition-colors focus-visible:ring-2 focus-visible:ring-studio-cyan ${error ? 'border-studio-error' : ''} ${className}`}
           {...props}
         />
         {error && <span className="text-2xs text-studio-error">{error}</span>}
