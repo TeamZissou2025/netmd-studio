@@ -10,15 +10,15 @@ let workerIdCounter = 0;
 
 export function useAudioPipeline() {
   const workerRef = useRef<Worker | null>(null);
-  const {
-    updateTrackEncodeProgress,
-    updateTrackTransferProgress,
-    updateTrackStatus,
-    updateTrackDuration,
-    setTrackEncodedData,
-    setTrackError,
-    updateOverallProgress,
-  } = useTransferStore();
+  // Use getState() for actions to avoid subscribing to the entire store.
+  // Actions are stable references so this is safe.
+  const updateTrackEncodeProgress = useTransferStore((s) => s.updateTrackEncodeProgress);
+  const updateTrackTransferProgress = useTransferStore((s) => s.updateTrackTransferProgress);
+  const updateTrackStatus = useTransferStore((s) => s.updateTrackStatus);
+  const updateTrackDuration = useTransferStore((s) => s.updateTrackDuration);
+  const setTrackEncodedData = useTransferStore((s) => s.setTrackEncodedData);
+  const setTrackError = useTransferStore((s) => s.setTrackError);
+  const updateOverallProgress = useTransferStore((s) => s.updateOverallProgress);
 
   const getWorker = useCallback(() => {
     if (!workerRef.current) {

@@ -68,7 +68,7 @@ export function TransferQueue() {
               </div>
               <div className="h-1.5 bg-studio-surface-hover rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-studio-cyan to-studio-magenta rounded-full transition-all duration-300"
+                  className="h-full bg-gradient-to-r from-studio-cyan to-studio-magenta rounded-full transition-[width] duration-300"
                   style={{ width: `${overallProgress}%` }}
                 />
               </div>

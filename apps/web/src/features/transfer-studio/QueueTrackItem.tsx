@@ -103,7 +103,7 @@ export function QueueTrackItem({
               </span>
               <div className="flex-1 h-1 bg-studio-surface-hover rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-studio-cyan rounded-full transition-all duration-150"
+                  className="h-full bg-studio-cyan rounded-full transition-[width] duration-150"
                   style={{ width: `${track.encodeProgress}%` }}
                 />
               </div>
@@ -118,7 +118,7 @@ export function QueueTrackItem({
                 <span className="text-2xs text-studio-text-dim w-16 shrink-0">Transfer</span>
                 <div className="flex-1 h-1 bg-studio-surface-hover rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-studio-magenta rounded-full transition-all duration-150"
+                    className="h-full bg-studio-magenta rounded-full transition-[width] duration-150"
                     style={{ width: `${track.transferProgress}%` }}
                   />
                 </div>

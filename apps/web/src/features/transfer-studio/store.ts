@@ -16,6 +16,8 @@ interface TransferStore extends TransferQueueState, DeviceState {
   setConnectionStatus: (status: ConnectionStatus) => void;
   setDeviceInfo: (info: NetMDDeviceEntry | null) => void;
   setTOC: (toc: DiscTOC | null) => void;
+  setDeviceConnected: (info: NetMDDeviceEntry, toc: DiscTOC | null) => void;
+  setDeviceDisconnected: () => void;
 
   // Queue actions
   setSelectedFormat: (format: TransferFormat) => void;
@@ -53,6 +55,10 @@ export const useTransferStore = create<TransferStore>((set, get) => ({
   setConnectionStatus: (connectionStatus) => set({ connectionStatus }),
   setDeviceInfo: (deviceInfo) => set({ deviceInfo }),
   setTOC: (toc) => set({ toc }),
+  setDeviceConnected: (deviceInfo, toc) =>
+    set({ connectionStatus: 'connected', deviceInfo, toc }),
+  setDeviceDisconnected: () =>
+    set({ connectionStatus: 'disconnected', deviceInfo: null, toc: null }),
 
   // Queue actions
   setSelectedFormat: (selectedFormat) =>

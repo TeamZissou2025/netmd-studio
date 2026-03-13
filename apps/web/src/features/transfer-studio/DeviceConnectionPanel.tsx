@@ -19,7 +19,7 @@ export function DeviceConnectionPanel() {
   const usedPercent = totalCapacity > 0 ? (usedSeconds / totalCapacity) * 100 : 0;
 
   return (
-    <div className="bg-studio-surface border border-studio-border rounded-studio-lg p-4">
+    <div className="bg-studio-surface border border-studio-border rounded-studio-lg p-4 min-h-[160px]">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-studio-text flex items-center gap-2">
           <Disc3 size={16} className="text-studio-magenta" />
@@ -97,7 +97,7 @@ export function DeviceConnectionPanel() {
             <div className="space-y-1">
               <div className="h-1.5 bg-studio-surface-hover rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-studio-magenta rounded-full transition-all duration-300"
+                  className="h-full bg-studio-magenta rounded-full transition-[width] duration-300"
                   style={{ width: `${Math.min(usedPercent, 100)}%` }}
                 />
               </div>

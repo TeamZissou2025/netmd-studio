@@ -26,24 +26,23 @@ function stripExtension(filename: string): string {
 }
 
 export function useTransferQueue() {
-  const {
-    tracks,
-    isTransferring,
-    isPaused,
-    currentTrackIndex,
-    overallProgress,
-    selectedFormat,
-    connectionStatus,
-    toc,
-    addTracks,
-    removeTrack,
-    clearQueue,
-    reorderTrack,
-    setIsTransferring,
-    setIsPaused,
-    setCurrentTrackIndex,
-    setSelectedFormat,
-  } = useTransferStore();
+  // Use individual selectors to prevent re-renders from unrelated state changes
+  const tracks = useTransferStore((s) => s.tracks);
+  const isTransferring = useTransferStore((s) => s.isTransferring);
+  const isPaused = useTransferStore((s) => s.isPaused);
+  const currentTrackIndex = useTransferStore((s) => s.currentTrackIndex);
+  const overallProgress = useTransferStore((s) => s.overallProgress);
+  const selectedFormat = useTransferStore((s) => s.selectedFormat);
+  const connectionStatus = useTransferStore((s) => s.connectionStatus);
+  const toc = useTransferStore((s) => s.toc);
+  const addTracks = useTransferStore((s) => s.addTracks);
+  const removeTrack = useTransferStore((s) => s.removeTrack);
+  const clearQueue = useTransferStore((s) => s.clearQueue);
+  const reorderTrack = useTransferStore((s) => s.reorderTrack);
+  const setIsTransferring = useTransferStore((s) => s.setIsTransferring);
+  const setIsPaused = useTransferStore((s) => s.setIsPaused);
+  const setCurrentTrackIndex = useTransferStore((s) => s.setCurrentTrackIndex);
+  const setSelectedFormat = useTransferStore((s) => s.setSelectedFormat);
 
   const cancelledRef = useRef(false);
   const pausedRef = useRef(false);

@@ -16,6 +16,8 @@ export function TransferStudioPage() {
     return <BrowserCheck />;
   }
 
+  const isConnected = connectionStatus === 'connected';
+
   return (
     <div className="max-w-7xl mx-auto">
       <SEOHead title="Transfer Studio" description="Transfer audio to your MiniDisc player via WebUSB — SP, LP2, and LP4 encoding." />
@@ -32,22 +34,26 @@ export function TransferStudioPage() {
         </div>
       </div>
 
-      {/* Main layout: sidebar + content */}
+      {/* Main layout: sidebar + content
+          Use a stable grid that doesn't shift when panels appear/disappear */}
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
-        {/* Left sidebar — device + format */}
+        {/* Left sidebar — always rendered, stable height */}
         <div className="space-y-4">
           <DeviceConnectionPanel />
-          {connectionStatus === 'connected' && (
-            <>
-              <FormatSelector />
-              <DiscTOCPanel />
-            </>
-          )}
+          {/* Stable container for connected-only panels to prevent layout shift */}
+          <div
+            className={`space-y-4 transition-opacity duration-200 ${
+              isConnected ? 'opacity-100' : 'opacity-0 pointer-events-none h-0 overflow-hidden'
+            }`}
+          >
+            <FormatSelector />
+            <DiscTOCPanel />
+          </div>
         </div>
 
-        {/* Main content — transfer queue */}
-        <div>
-          {connectionStatus === 'connected' ? (
+        {/* Main content — transfer queue or empty state */}
+        <div className="min-h-[400px]">
+          {isConnected ? (
             <TransferQueue />
           ) : (
             <EmptyState />

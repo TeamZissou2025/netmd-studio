@@ -22,6 +22,7 @@ export interface NetMDConnectionEvents {
   onStatusChange: (status: ConnectionStatus) => void;
   onDeviceIdentified: (device: NetMDDeviceEntry) => void;
   onTOCRead: (toc: DiscTOC) => void;
+  onConnected: (device: NetMDDeviceEntry, toc: DiscTOC | null) => void;
   onDisconnect: () => void;
   onError: (error: string) => void;
 }
@@ -137,15 +138,17 @@ export class NetMDConnection {
         isHiMD: false,
       };
 
-      this.events.onDeviceIdentified?.(this._deviceInfo);
-
       // Listen for disconnect
       navigator.usb.addEventListener('disconnect', this.handleDisconnect);
 
-      // Read disc TOC
+      // Read disc TOC (sets this._toc internally)
       await this.readTOC();
 
-      this.setStatus('connected');
+      // Fire a single batched event with all connection data at once.
+      // This avoids multiple rapid state updates that cause UI jitter.
+      this._status = 'connected';
+      this.events.onConnected?.(this._deviceInfo, this._toc);
+
       return true;
     } catch (err) {
       this.setStatus('error');
@@ -159,7 +162,8 @@ export class NetMDConnection {
       this.usbDevice = null;
       this._deviceInfo = null;
       this._toc = null;
-      this.setStatus('disconnected');
+      this._status = 'disconnected';
+      // Fire a single disconnect event — the listener handles clearing all state at once
       this.events.onDisconnect?.();
     }
   };
@@ -167,25 +171,18 @@ export class NetMDConnection {
   async readTOC(): Promise<DiscTOC | null> {
     if (!this.usbDevice) return null;
 
+    // Track whether this is a post-connection refresh or initial read
+    const isRefresh = this._status === 'connected';
+
     try {
       // In a real implementation, this would use netmd-js to read the disc TOC.
-      // The NetMD protocol sends SCSI-like commands over USB bulk transfers.
-      // For now, we simulate the TOC structure — netmd-js integration would
-      // call: const netmd = new NetMD(this.usbDevice);
-      //       const factory = await NetMDFactory.make(netmd);
-      //       const session = new MDSession(factory);
-      //       const discInfo = await session.getDiscTitle();
-      //       const trackCount = await session.getTrackCount();
-      //       etc.
-
-      // Send a NetMD status request to check if device is responsive
+      // For now, we simulate the TOC structure.
       const result = await this.usbDevice.controlTransferIn(
         { requestType: 'vendor', recipient: 'interface', request: 0x01, value: 0, index: 0 },
         64
       );
 
       if (result.status === 'ok') {
-        // Device is responsive — build TOC from device data
         this._toc = {
           title: '',
           trackCount: 0,
@@ -193,13 +190,16 @@ export class NetMDConnection {
           totalSeconds: SP_CAPACITY_SECONDS,
           tracks: [],
         };
-        this.events.onTOCRead?.(this._toc);
+        // Only fire onTOCRead for post-connection refreshes.
+        // During initial connection, TOC is included in the batched onConnected event.
+        if (isRefresh) {
+          this.events.onTOCRead?.(this._toc);
+        }
         return this._toc;
       }
 
       return null;
     } catch {
-      // If the control transfer fails, assume blank disc
       this._toc = {
         title: '',
         trackCount: 0,
@@ -207,7 +207,9 @@ export class NetMDConnection {
         totalSeconds: SP_CAPACITY_SECONDS,
         tracks: [],
       };
-      this.events.onTOCRead?.(this._toc);
+      if (isRefresh) {
+        this.events.onTOCRead?.(this._toc);
+      }
       return this._toc;
     }
   }
@@ -318,7 +320,9 @@ export class NetMDConnection {
       this.usbDevice = null;
       this._deviceInfo = null;
       this._toc = null;
-      this.setStatus('disconnected');
+      this._status = 'disconnected';
+      // Fire single disconnect event to clear all state at once in the store
+      this.events.onDisconnect?.();
     }
   }
 }
