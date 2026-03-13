@@ -1,13 +1,24 @@
-// Audio processing Web Worker
-// Handles decoding (via FFmpeg WASM) and encoding (via atracdenc WASM)
-// off the main thread to prevent UI blocking.
+// Audio encoding Web Worker
+// Handles PCM format conversion (float→int16) off the main thread.
+//
+// NOTE: OfflineAudioContext is NOT available in Web Workers.
+// Audio decoding must happen on the main thread before posting data here.
+// This worker receives decoded Float32 PCM and converts to the wire format
+// needed by netmd-js (s16be for SP, s16le for LP2/LP4).
 
 export type AudioWorkerMessage =
-  | { type: 'encode'; id: string; buffer: ArrayBuffer; format: 'sp' | 'lp2' | 'lp4'; filename: string }
+  | {
+      type: 'encode';
+      id: string;
+      left: Float32Array;
+      right: Float32Array;
+      format: 'sp' | 'lp2' | 'lp4';
+      durationSeconds: number;
+    }
   | { type: 'cancel'; id: string };
 
 export type AudioWorkerResponse =
-  | { type: 'progress'; id: string; percent: number; stage: 'decoding' | 'encoding' }
+  | { type: 'progress'; id: string; percent: number; stage: 'encoding' }
   | { type: 'complete'; id: string; data: ArrayBuffer; format: 'sp' | 'lp2' | 'lp4'; durationSeconds: number }
   | { type: 'error'; id: string; message: string };
 
@@ -26,57 +37,9 @@ ctx.addEventListener('message', async (event: MessageEvent<AudioWorkerMessage>) 
           return;
         }
 
-        // Phase 1: Decode audio to PCM using Web Audio API
-        // (In production with COOP/COEP headers, FFmpeg WASM would be used instead)
-        ctx.postMessage({
-          type: 'progress',
-          id: msg.id,
-          percent: 0,
-          stage: 'decoding',
-        } satisfies AudioWorkerResponse);
-
-        // Decode using OfflineAudioContext
-        const audioContext = new OfflineAudioContext(2, 44100, 44100);
-        const audioBuffer = await audioContext.decodeAudioData(msg.buffer);
-
-        if (cancelledJobs.has(msg.id)) {
-          cancelledJobs.delete(msg.id);
-          return;
-        }
-
-        // Resample to 44100Hz stereo
-        const targetSampleRate = 44100;
-        const offlineCtx = new OfflineAudioContext(
-          2,
-          Math.ceil(audioBuffer.duration * targetSampleRate),
-          targetSampleRate
-        );
-        const source = offlineCtx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(offlineCtx.destination);
-        source.start(0);
-        const resampledBuffer = await offlineCtx.startRendering();
-
-        ctx.postMessage({
-          type: 'progress',
-          id: msg.id,
-          percent: 100,
-          stage: 'decoding',
-        } satisfies AudioWorkerResponse);
-
-        if (cancelledJobs.has(msg.id)) {
-          cancelledJobs.delete(msg.id);
-          return;
-        }
-
-        // Interleave to stereo PCM
-        const left = resampledBuffer.getChannelData(0);
-        const right = resampledBuffer.numberOfChannels > 1
-          ? resampledBuffer.getChannelData(1)
-          : left;
+        const { left, right, format, durationSeconds } = msg;
         const samples = left.length;
 
-        // Phase 2: Encode
         ctx.postMessage({
           type: 'progress',
           id: msg.id,
@@ -86,8 +49,8 @@ ctx.addEventListener('message', async (event: MessageEvent<AudioWorkerMessage>) 
 
         let outputBuffer: ArrayBuffer;
 
-        if (msg.format === 'sp') {
-          // SP mode: convert to signed 16-bit big-endian PCM
+        if (format === 'sp') {
+          // SP mode: convert Float32 PCM to signed 16-bit big-endian PCM (s16be)
           const dataView = new DataView(new ArrayBuffer(samples * 4)); // stereo 16-bit = 4 bytes per frame
           for (let i = 0; i < samples; i++) {
             const l = Math.max(-1, Math.min(1, left[i]));
@@ -128,6 +91,11 @@ ctx.addEventListener('message', async (event: MessageEvent<AudioWorkerMessage>) 
           outputBuffer = int16.buffer;
         }
 
+        if (cancelledJobs.has(msg.id)) {
+          cancelledJobs.delete(msg.id);
+          return;
+        }
+
         ctx.postMessage({
           type: 'progress',
           id: msg.id,
@@ -140,8 +108,8 @@ ctx.addEventListener('message', async (event: MessageEvent<AudioWorkerMessage>) 
             type: 'complete',
             id: msg.id,
             data: outputBuffer,
-            format: msg.format,
-            durationSeconds: resampledBuffer.duration,
+            format,
+            durationSeconds,
           } satisfies AudioWorkerResponse,
           [outputBuffer]
         );
@@ -149,7 +117,7 @@ ctx.addEventListener('message', async (event: MessageEvent<AudioWorkerMessage>) 
         ctx.postMessage({
           type: 'error',
           id: msg.id,
-          message: err instanceof Error ? err.message : 'Audio processing failed',
+          message: err instanceof Error ? err.message : 'Audio encoding failed',
         } satisfies AudioWorkerResponse);
       }
       break;

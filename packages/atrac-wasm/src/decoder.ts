@@ -1,6 +1,9 @@
-// FFmpeg WASM audio decoder wrapper.
-// Decodes any supported audio format (MP3, FLAC, WAV, OGG, AAC, M4A)
+// Audio decoder wrapper.
+// Decodes any browser-supported audio format (MP3, FLAC, WAV, OGG, AAC, M4A)
 // to raw PCM (44100Hz, 16-bit, stereo).
+//
+// IMPORTANT: This class uses OfflineAudioContext which is ONLY available on the
+// main thread. Do NOT use this class inside a Web Worker.
 
 export interface DecodedAudio {
   pcmData: Float32Array;
@@ -15,8 +18,16 @@ export class AudioDecoder {
   async init(): Promise<void> {
     if (this.initialized) return;
 
+    // Verify we're on the main thread where OfflineAudioContext is available
+    if (typeof OfflineAudioContext === 'undefined') {
+      throw new Error(
+        'AudioDecoder requires OfflineAudioContext which is only available on the main thread. ' +
+        'Do not use this class inside a Web Worker.'
+      );
+    }
+
     try {
-      // In production, load FFmpeg WASM:
+      // In production, load FFmpeg WASM for broader format support:
       // const { FFmpeg } = await import('@ffmpeg/ffmpeg');
       // this.ffmpeg = new FFmpeg();
       // await this.ffmpeg.load({
@@ -36,21 +47,14 @@ export class AudioDecoder {
   ): Promise<DecodedAudio> {
     if (!this.initialized) await this.init();
 
-    // In production, this would:
-    // 1. Write the input file to FFmpeg's virtual filesystem
-    // 2. Run: ffmpeg -i input.ext -f f32le -acodec pcm_f32le -ac 2 -ar 44100 output.raw
-    // 3. Read the output PCM data
-    // 4. Return as Float32Array
-
-    // For now, simulate decoding with a Web Audio API fallback
-    // which works for most formats in modern browsers
     try {
+      // Step 1: Decode compressed audio using the browser's built-in decoder
       const audioContext = new OfflineAudioContext(2, 44100, 44100);
       const audioBuffer = await audioContext.decodeAudioData(fileData.slice(0));
 
       onProgress?.(50);
 
-      // Resample to 44100 Hz stereo if needed
+      // Step 2: Resample to 44100 Hz stereo if needed
       const targetSampleRate = 44100;
       const targetChannels = 2;
 
@@ -70,7 +74,7 @@ export class AudioDecoder {
         resampledBuffer = audioBuffer;
       }
 
-      // Interleave stereo channels into a single Float32Array
+      // Step 3: Interleave stereo channels into a single Float32Array
       const left = resampledBuffer.getChannelData(0);
       const right = resampledBuffer.numberOfChannels > 1
         ? resampledBuffer.getChannelData(1)
