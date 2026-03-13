@@ -4,11 +4,8 @@
  * This module creates exactly ONE NetMDConnection for the entire app lifetime,
  * wires its events directly to the Zustand store, and exposes imperative
  * methods that any component can call without risk of duplicate connections.
- *
- * Previously, every call to useDeviceConnection() created its own
- * NetMDConnection + autoReconnect(), causing 2-3 instances to race for
- * the same USB device and thrash the store between 'connected' and 'error'.
  */
+import toast from 'react-hot-toast';
 import { NetMDConnection } from '@netmd-studio/netmd';
 import { useTransferStore } from './store';
 
@@ -34,9 +31,12 @@ export function initConnection(): void {
   const c = getConnection();
 
   c.on('onStatusChange', (status) => {
-    // Only relay intermediate states; 'connected' and 'disconnected' are
-    // handled by the batched onConnected / onDisconnect events.
-    if (status === 'connecting' || status === 'error') {
+    // Only relay 'connecting' to the store.
+    // 'connected' is handled by the batched onConnected event.
+    // 'disconnected' is handled by the batched onDisconnect event.
+    // 'error' is NEVER relayed — the connection class now goes straight
+    // to 'disconnected' on failure, so this shouldn't fire, but guard anyway.
+    if (status === 'connecting') {
       useTransferStore.getState().setConnectionStatus(status);
     }
   });
@@ -63,6 +63,7 @@ export function initConnection(): void {
 
   c.on('onError', (error) => {
     console.error('[NetMD]', error);
+    toast.error(error);
   });
 }
 

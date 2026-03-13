@@ -47,6 +47,7 @@ export class NetMDConnection {
   private _status: ConnectionStatus = 'disconnected';
   private _deviceInfo: NetMDDeviceEntry | null = null;
   private _toc: DiscTOC | null = null;
+  private _connecting = false; // Lock to prevent concurrent connection attempts
 
   get status(): ConnectionStatus {
     return this._status;
@@ -83,60 +84,115 @@ export class NetMDConnection {
       return false;
     }
 
-    // Guard: already connected or in the middle of connecting
-    if (this._status === 'connected' || this._status === 'connecting') {
-      return this._status === 'connected';
+    // Lock: prevent concurrent connection attempts
+    if (this._connecting) {
+      console.warn('[NetMD] requestDevice blocked — connection already in progress');
+      return false;
     }
 
+    // Guard: already connected
+    if (this._status === 'connected') {
+      return true;
+    }
+
+    this._connecting = true;
     try {
+      console.log('[NetMD] %s requestDevice — opening device picker', new Date().toISOString());
       this.setStatus('connecting');
       const device = await navigator.usb.requestDevice({ filters: NETMD_DEVICE_FILTERS });
+      console.log('[NetMD] %s Device selected: VID=%s PID=%s', new Date().toISOString(),
+        device.vendorId.toString(16).padStart(4, '0'),
+        device.productId.toString(16).padStart(4, '0'));
       return await this.connectDevice(device);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'NotFoundError') {
         // User cancelled device picker — not an error
+        console.log('[NetMD] %s Device picker cancelled by user', new Date().toISOString());
         this.setStatus('disconnected');
         return false;
       }
-      this.setStatus('error');
+      console.error('[NetMD] %s requestDevice failed:', new Date().toISOString(), err);
+      // Go to disconnected, NOT error — avoids UI thrashing
+      this.setStatus('disconnected');
       this.events.onError?.(err instanceof Error ? err.message : 'Failed to request device');
       return false;
+    } finally {
+      this._connecting = false;
     }
   }
 
   async autoReconnect(): Promise<boolean> {
     if (!NetMDConnection.isSupported()) return false;
 
-    // Guard: already connected or in the middle of connecting
-    if (this._status === 'connected' || this._status === 'connecting') {
-      return this._status === 'connected';
+    // Lock: prevent concurrent connection attempts
+    if (this._connecting) {
+      console.warn('[NetMD] autoReconnect blocked — connection already in progress');
+      return false;
     }
 
+    // Guard: already connected
+    if (this._status === 'connected') {
+      return true;
+    }
+
+    this._connecting = true;
     try {
+      console.log('[NetMD] %s autoReconnect — checking for previously paired devices', new Date().toISOString());
       const devices = await navigator.usb.getDevices();
-      if (devices.length === 0) return false;
+      if (devices.length === 0) {
+        console.log('[NetMD] %s autoReconnect — no paired devices found', new Date().toISOString());
+        return false;
+      }
 
       // Try to connect to the first previously-authorized device
       for (const device of devices) {
         const entry = identifyDevice(device.vendorId, device.productId);
         if (entry) {
+          console.log('[NetMD] %s autoReconnect — found %s, attempting connection', new Date().toISOString(), entry.name);
           return await this.connectDevice(device);
         }
       }
       return false;
-    } catch {
+    } catch (err) {
+      console.error('[NetMD] %s autoReconnect failed:', new Date().toISOString(), err);
       return false;
+    } finally {
+      this._connecting = false;
     }
   }
 
   private async connectDevice(device: USBDevice): Promise<boolean> {
     try {
       this.setStatus('connecting');
+
+      // Step 1: Open device
+      console.log('[NetMD] %s Step 1/4: device.open()', new Date().toISOString());
       await device.open();
+      console.log('[NetMD] %s Step 1/4: device.open() — OK', new Date().toISOString());
+
+      // Step 2: Select configuration
       if (device.configuration === null) {
+        console.log('[NetMD] %s Step 2/4: selectConfiguration(1)', new Date().toISOString());
         await device.selectConfiguration(1);
+        console.log('[NetMD] %s Step 2/4: selectConfiguration(1) — OK', new Date().toISOString());
+      } else {
+        console.log('[NetMD] %s Step 2/4: configuration already set (%d)', new Date().toISOString(), device.configuration.configurationValue);
       }
-      await device.claimInterface(0);
+
+      // Step 3: Claim interface
+      console.log('[NetMD] %s Step 3/4: claimInterface(0)', new Date().toISOString());
+      try {
+        await device.claimInterface(0);
+      } catch (claimErr) {
+        // claimInterface failure is common — another tab/process has the device
+        console.error('[NetMD] %s Step 3/4: claimInterface(0) — FAILED:', new Date().toISOString(), claimErr);
+        // Clean up: close the device we just opened
+        try { await device.close(); } catch { /* ignore */ }
+        this.setStatus('disconnected');
+        this.events.onError?.('Could not claim device. Close Web MiniDisc or any other tab using this device and try again.');
+        return false;
+      }
+      console.log('[NetMD] %s Step 3/4: claimInterface(0) — OK', new Date().toISOString());
 
       this.usbDevice = device;
       this._deviceInfo = identifyDevice(device.vendorId, device.productId) ?? {
@@ -148,20 +204,30 @@ export class NetMDConnection {
         isHiMD: false,
       };
 
-      // Listen for disconnect
+      // Listen for disconnect — added AFTER successful claim only
       navigator.usb.addEventListener('disconnect', this.handleDisconnect);
 
-      // Read disc TOC (sets this._toc internally)
+      // Step 4: Read disc TOC
+      console.log('[NetMD] %s Step 4/4: readTOC()', new Date().toISOString());
       await this.readTOC();
+      console.log('[NetMD] %s Step 4/4: readTOC() — OK', new Date().toISOString());
 
       // Fire a single batched event with all connection data at once.
       // This avoids multiple rapid state updates that cause UI jitter.
       this._status = 'connected';
       this.events.onConnected?.(this._deviceInfo, this._toc);
+      console.log('[NetMD] %s Connection complete: %s', new Date().toISOString(), this._deviceInfo.name);
 
       return true;
     } catch (err) {
-      this.setStatus('error');
+      console.error('[NetMD] %s connectDevice failed:', new Date().toISOString(), err);
+      // Clean up: try to close the device if we opened it
+      try { await device.close(); } catch { /* ignore */ }
+      // Go to disconnected, NOT error — prevents UI thrashing from error state
+      this.usbDevice = null;
+      this._deviceInfo = null;
+      this._toc = null;
+      this.setStatus('disconnected');
       this.events.onError?.(err instanceof Error ? err.message : 'Failed to connect to device');
       return false;
     }
@@ -169,11 +235,15 @@ export class NetMDConnection {
 
   private handleDisconnect = (event: USBConnectionEvent): void => {
     if (event.device === this.usbDevice) {
+      console.log('[NetMD] %s USB disconnect event for %s — cleaning up, NO reconnect', new Date().toISOString(), this._deviceInfo?.name ?? 'unknown');
+      navigator.usb.removeEventListener('disconnect', this.handleDisconnect);
       this.usbDevice = null;
       this._deviceInfo = null;
       this._toc = null;
+      this._connecting = false; // Release lock so manual reconnect is possible later
       this._status = 'disconnected';
-      // Fire a single disconnect event — the listener handles clearing all state at once
+      // Fire a single disconnect event — the listener clears all store state at once.
+      // This does NOT trigger any reconnect attempt.
       this.events.onDisconnect?.();
     }
   };
@@ -308,6 +378,7 @@ export class NetMDConnection {
   }
 
   async disconnect(): Promise<void> {
+    console.log('[NetMD] %s disconnect() called', new Date().toISOString());
     if (this.usbDevice) {
       try {
         navigator.usb.removeEventListener('disconnect', this.handleDisconnect);
@@ -319,8 +390,10 @@ export class NetMDConnection {
       this.usbDevice = null;
       this._deviceInfo = null;
       this._toc = null;
+      this._connecting = false;
       this._status = 'disconnected';
-      // Fire single disconnect event to clear all state at once in the store
+      // Fire single disconnect event to clear all state at once in the store.
+      // This does NOT trigger any reconnect attempt.
       this.events.onDisconnect?.();
     }
   }

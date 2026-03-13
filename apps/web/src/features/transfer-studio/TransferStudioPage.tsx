@@ -8,16 +8,17 @@ import { FormatSelector } from './FormatSelector';
 import { TransferQueue } from './TransferQueue';
 import { SEOHead } from '../../app/SEOHead';
 import { useTransferStore } from './store';
-import { initConnection, autoReconnect, destroyConnection } from './connection';
+import { initConnection, destroyConnection } from './connection';
 
 export function TransferStudioPage() {
   const connectionStatus = useTransferStore((s) => s.connectionStatus);
 
   // Initialise the singleton connection ONCE when this page mounts.
-  // This is the only place in the app that calls initConnection / autoReconnect.
+  // Auto-reconnect is DISABLED — it conflicts with manual connect on some
+  // devices (e.g., Sony MZ-NF810) that need a clean user-gesture-initiated
+  // connection. Users must click "Connect Device" explicitly.
   useEffect(() => {
     initConnection();
-    autoReconnect();
     return () => {
       // Tear down on unmount (only matters for HMR / route away)
       destroyConnection();
