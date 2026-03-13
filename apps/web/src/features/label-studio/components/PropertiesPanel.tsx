@@ -35,8 +35,9 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
 
   if (!selectedObject) {
     return (
-      <div className="p-3">
-        <p className="text-xs text-studio-text-dim text-center">Select an object to edit its properties</p>
+      <div className="p-4">
+        <h3 className="text-sm font-medium text-studio-text-muted mb-2">Properties</h3>
+        <p className="text-xs text-studio-text-dim text-center py-4">Select an object to edit its properties</p>
       </div>
     );
   }
@@ -52,7 +53,7 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
   };
 
   return (
-    <div className="p-3 space-y-3 text-xs">
+    <div className="p-4 space-y-3 text-xs">
       <h3 className="text-sm font-medium text-studio-text-muted">Properties</h3>
 
       {/* Position */}

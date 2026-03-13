@@ -64,30 +64,43 @@ export function CanvasToolbar({
     e.target.value = '';
   };
 
+  const toolBtnClass = (active?: boolean) =>
+    `h-9 min-w-[3rem] px-2 flex flex-col items-center justify-center gap-0.5 rounded-studio transition-colors ${
+      active
+        ? 'bg-studio-cyan-muted text-studio-cyan border border-studio-cyan-border'
+        : 'text-studio-text-muted hover:text-studio-text hover:bg-studio-surface-hover border border-transparent'
+    }`;
+
+  const disabledClass = 'opacity-30 pointer-events-none';
+
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 bg-studio-surface border border-studio-border rounded-studio-lg">
+    <div className="flex flex-wrap items-center gap-1 px-3 py-2 bg-studio-surface border border-studio-border rounded-studio-lg">
       {/* Add objects */}
-      <div className="flex items-center gap-1 border-r border-studio-border pr-2 mr-1">
-        <Button variant="ghost" className="h-7 w-7 p-0" title="Add text" onClick={onAddText}>
-          <Type size={14} />
-        </Button>
-        <Button variant="ghost" className="h-7 w-7 p-0" title="Add rectangle" onClick={() => onAddShape('rect')}>
-          <Square size={14} />
-        </Button>
-        <Button variant="ghost" className="h-7 w-7 p-0" title="Add circle" onClick={() => onAddShape('circle')}>
-          <Circle size={14} />
-        </Button>
-        <Button variant="ghost" className="h-7 w-7 p-0" title="Add line" onClick={() => onAddShape('line')}>
-          <Minus size={14} />
-        </Button>
-        <Button
-          variant="ghost"
-          className="h-7 w-7 p-0"
+      <div className="flex items-center gap-1 border-r border-studio-border pr-3 mr-2">
+        <button className={toolBtnClass()} title="Add text" onClick={onAddText}>
+          <Type size={20} />
+          <span className="text-2xs leading-none">Text</span>
+        </button>
+        <button className={toolBtnClass()} title="Add rectangle" onClick={() => onAddShape('rect')}>
+          <Square size={20} />
+          <span className="text-2xs leading-none">Rect</span>
+        </button>
+        <button className={toolBtnClass()} title="Add circle" onClick={() => onAddShape('circle')}>
+          <Circle size={20} />
+          <span className="text-2xs leading-none">Circle</span>
+        </button>
+        <button className={toolBtnClass()} title="Add line" onClick={() => onAddShape('line')}>
+          <Minus size={20} />
+          <span className="text-2xs leading-none">Line</span>
+        </button>
+        <button
+          className={toolBtnClass()}
           title="Upload image"
           onClick={() => fileInputRef.current?.click()}
         >
-          <Image size={14} />
-        </Button>
+          <Image size={20} />
+          <span className="text-2xs leading-none">Image</span>
+        </button>
         <input
           ref={fileInputRef}
           type="file"
@@ -98,15 +111,15 @@ export function CanvasToolbar({
       </div>
 
       {/* Background */}
-      <div className="flex items-center gap-1 border-r border-studio-border pr-2 mr-1">
-        <Button
-          variant="ghost"
-          className="h-7 w-7 p-0"
+      <div className="flex items-center gap-1 border-r border-studio-border pr-3 mr-2">
+        <button
+          className={toolBtnClass()}
           title="Background color"
           onClick={() => bgColorRef.current?.click()}
         >
-          <Paintbrush size={14} />
-        </Button>
+          <Paintbrush size={20} />
+          <span className="text-2xs leading-none">Fill</span>
+        </button>
         <input
           ref={bgColorRef}
           type="color"
@@ -117,97 +130,90 @@ export function CanvasToolbar({
       </div>
 
       {/* Undo/redo */}
-      <div className="flex items-center gap-1 border-r border-studio-border pr-2 mr-1">
-        <Button
-          variant="ghost"
-          className="h-7 w-7 p-0"
+      <div className="flex items-center gap-1 border-r border-studio-border pr-3 mr-2">
+        <button
+          className={`${toolBtnClass()} ${!canUndo ? disabledClass : ''}`}
           title="Undo (Ctrl+Z)"
           onClick={onUndo}
-          disabled={!canUndo}
         >
-          <Undo2 size={14} />
-        </Button>
-        <Button
-          variant="ghost"
-          className="h-7 w-7 p-0"
+          <Undo2 size={20} />
+          <span className="text-2xs leading-none">Undo</span>
+        </button>
+        <button
+          className={`${toolBtnClass()} ${!canRedo ? disabledClass : ''}`}
           title="Redo (Ctrl+Shift+Z)"
           onClick={onRedo}
-          disabled={!canRedo}
         >
-          <Redo2 size={14} />
-        </Button>
+          <Redo2 size={20} />
+          <span className="text-2xs leading-none">Redo</span>
+        </button>
       </div>
 
       {/* Layer controls */}
-      <div className="flex items-center gap-1 border-r border-studio-border pr-2 mr-1">
-        <Button
-          variant="ghost"
-          className="h-7 w-7 p-0"
+      <div className="flex items-center gap-1 border-r border-studio-border pr-3 mr-2">
+        <button
+          className={`${toolBtnClass()} ${!hasSelection ? disabledClass : ''}`}
           title="Bring forward"
           onClick={() => onMoveLayer('up')}
-          disabled={!hasSelection}
         >
-          <ArrowUp size={14} />
-        </Button>
-        <Button
-          variant="ghost"
-          className="h-7 w-7 p-0"
+          <ArrowUp size={20} />
+          <span className="text-2xs leading-none">Fwd</span>
+        </button>
+        <button
+          className={`${toolBtnClass()} ${!hasSelection ? disabledClass : ''}`}
           title="Send backward"
           onClick={() => onMoveLayer('down')}
-          disabled={!hasSelection}
         >
-          <ArrowDown size={14} />
-        </Button>
-        <Button
-          variant="ghost"
-          className="h-7 w-7 p-0"
+          <ArrowDown size={20} />
+          <span className="text-2xs leading-none">Back</span>
+        </button>
+        <button
+          className={`${toolBtnClass()} ${!hasSelection ? disabledClass : ''}`}
           title="Bring to front"
           onClick={() => onMoveLayer('top')}
-          disabled={!hasSelection}
         >
-          <ChevronsUp size={14} />
-        </Button>
-        <Button
-          variant="ghost"
-          className="h-7 w-7 p-0"
+          <ChevronsUp size={20} />
+          <span className="text-2xs leading-none">Top</span>
+        </button>
+        <button
+          className={`${toolBtnClass()} ${!hasSelection ? disabledClass : ''}`}
           title="Send to back"
           onClick={() => onMoveLayer('bottom')}
-          disabled={!hasSelection}
         >
-          <ChevronsDown size={14} />
-        </Button>
+          <ChevronsDown size={20} />
+          <span className="text-2xs leading-none">Bottom</span>
+        </button>
       </div>
 
       {/* View toggles */}
-      <div className="flex items-center gap-1 border-r border-studio-border pr-2 mr-1">
-        <Button
-          variant={showGrid ? 'secondary' : 'ghost'}
-          className="h-7 px-2 text-2xs"
+      <div className="flex items-center gap-1 border-r border-studio-border pr-3 mr-2">
+        <button
+          className={toolBtnClass(showGrid)}
           onClick={onToggleGrid}
           title="Toggle grid"
         >
-          <Grid3X3 size={14} />
-        </Button>
-        <Button
-          variant={showBleed ? 'secondary' : 'ghost'}
-          className="h-7 px-2 text-2xs"
+          <Grid3X3 size={20} />
+          <span className="text-2xs leading-none">Grid</span>
+        </button>
+        <button
+          className={toolBtnClass(showBleed)}
           onClick={onToggleBleed}
           title="Toggle bleed"
         >
-          <Expand size={14} />
-        </Button>
+          <Expand size={20} />
+          <span className="text-2xs leading-none">Bleed</span>
+        </button>
       </div>
 
       {/* Delete */}
-      <Button
-        variant="ghost"
-        className="h-7 w-7 p-0 text-studio-error"
+      <button
+        className={`${toolBtnClass()} ${!hasSelection ? disabledClass : ''} ${hasSelection ? '!text-studio-error hover:!text-studio-error' : ''}`}
         title="Delete selected"
         onClick={onDelete}
-        disabled={!hasSelection}
       >
-        <Trash2 size={14} />
-      </Button>
+        <Trash2 size={20} />
+        <span className="text-2xs leading-none">Delete</span>
+      </button>
     </div>
   );
 }

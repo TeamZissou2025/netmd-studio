@@ -181,14 +181,14 @@ export function LabelEditor({ templateType, onBack, editDesignId }: LabelEditorP
   return (
     <div className="flex flex-col gap-3 h-full">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" onClick={onBack} className="h-7 px-2">
-          <ArrowLeft size={14} />
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={onBack} className="h-8 px-2">
+          <ArrowLeft size={16} />
         </Button>
         <div className="flex-1 min-w-0">
-          <h2 className="text-md font-semibold text-studio-text truncate">{config.name}</h2>
-          <p className="text-2xs text-studio-text-dim">
-            {config.widthMm}mm x {config.heightMm}mm — {DISPLAY_PPI} DPI (exports at {EXPORT_PPI} DPI)
+          <h2 className="text-lg font-semibold text-studio-text truncate">{config.name}</h2>
+          <p className="text-sm text-studio-text-muted font-mono">
+            {config.widthMm}mm &times; {config.heightMm}mm &mdash; {DISPLAY_PPI} DPI preview &middot; exports at {EXPORT_PPI} DPI
           </p>
         </div>
         <div className="w-80">
@@ -218,7 +218,7 @@ export function LabelEditor({ templateType, onBack, editDesignId }: LabelEditorP
       {/* Main area: Canvas + Panels */}
       <div className="flex gap-3 flex-1 min-h-0">
         {/* Canvas area */}
-        <div className="flex-1 flex items-center justify-center bg-studio-surface border border-studio-border rounded-studio-lg p-6 overflow-auto">
+        <div className="flex-1 flex items-center justify-center bg-studio-surface border border-studio-border rounded-studio-lg p-6 overflow-auto min-h-[600px]">
           <div className="relative" style={{ width: canvasWidth, height: canvasHeight }}>
             <canvas ref={canvasElRef} />
             <CanvasOverlay
@@ -230,7 +230,7 @@ export function LabelEditor({ templateType, onBack, editDesignId }: LabelEditorP
         </div>
 
         {/* Right panel */}
-        <div className="w-64 flex-shrink-0 bg-studio-surface border border-studio-border rounded-studio-lg overflow-y-auto max-h-[calc(100vh-14rem)]">
+        <div className="w-[280px] min-w-[280px] flex-shrink-0 bg-studio-surface border border-studio-border rounded-studio-lg overflow-y-auto max-h-[calc(100vh-14rem)]">
           <PropertiesPanel
             selectedObject={editor.selectedObject}
             onUpdate={editor.saveState}
