@@ -5,6 +5,9 @@ import { HomePage } from './HomePage';
 import { LabelStudioPage } from '../features/label-studio/LabelStudioPage';
 import { TransferStudioPage } from '../features/transfer-studio/TransferStudioPage';
 import { DeviceLibraryPage } from '../features/device-library/DeviceLibraryPage';
+import { DeviceDetailPage } from '../features/device-library/DeviceDetailPage';
+import { DeviceSubmitPage } from '../features/device-library/DeviceSubmitPage';
+import { AdminDevicesPage } from '../features/device-library/AdminDevicesPage';
 import { MarketplacePage } from '../features/marketplace/MarketplacePage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { LoginPage } from '../features/auth/LoginPage';
@@ -20,6 +23,9 @@ export function App() {
           <Route path="labels" element={<LabelStudioPage />} />
           <Route path="transfer" element={<TransferStudioPage />} />
           <Route path="devices" element={<DeviceLibraryPage />} />
+          <Route path="devices/submit" element={<DeviceSubmitPage />} />
+          <Route path="devices/:id" element={<DeviceDetailPage />} />
+          <Route path="admin/devices" element={<AdminDevicesPage />} />
           <Route path="marketplace" element={<MarketplacePage />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="auth/login" element={<LoginPage />} />

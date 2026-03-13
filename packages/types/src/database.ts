@@ -9,6 +9,28 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type DeviceType =
+  | 'portable_netmd'
+  | 'portable_himd'
+  | 'portable_standard'
+  | 'deck_netmd'
+  | 'deck_standard'
+  | 'deck_es'
+  | 'shelf_system'
+  | 'car_unit'
+  | 'professional';
+
+export type AtracType = 'v1' | 'v2' | 'v3' | 'v3.5' | 'v4' | 'v4.5' | 'type_r' | 'type_s';
+
+export type ListingStatus = 'draft' | 'active' | 'sold' | 'archived' | 'flagged';
+export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunded' | 'disputed';
+export type ListingCategory = 'portable' | 'deck' | 'disc_blank' | 'disc_prerecorded' | 'disc_custom' | 'accessory' | 'remote' | 'cable' | 'other';
+export type ListingCondition = 'new' | 'like_new' | 'excellent' | 'good' | 'fair' | 'poor' | 'for_parts';
+export type LabelTemplateType = 'jcard_front' | 'jcard_back' | 'jcard_full' | 'spine' | 'disc_label';
+export type TransferFormat = 'sp' | 'lp2' | 'lp4';
+
+// ---------- Database type for supabase-js ----------
+
 export type Database = {
   public: {
     Tables: {
@@ -30,10 +52,41 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['profiles']['Row']> & {
+        Insert: {
           id: string;
+          username?: string | null;
+          display_name?: string | null;
+          avatar_url?: string | null;
+          bio?: string | null;
+          location?: string | null;
+          website?: string | null;
+          role?: 'user' | 'seller' | 'admin' | 'moderator';
+          stripe_customer_id?: string | null;
+          stripe_account_id?: string | null;
+          stripe_onboarding_complete?: boolean;
+          seller_rating?: number | null;
+          seller_review_count?: number;
+          created_at?: string;
+          updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['profiles']['Row']>;
+        Update: {
+          id?: string;
+          username?: string | null;
+          display_name?: string | null;
+          avatar_url?: string | null;
+          bio?: string | null;
+          location?: string | null;
+          website?: string | null;
+          role?: 'user' | 'seller' | 'admin' | 'moderator';
+          stripe_customer_id?: string | null;
+          stripe_account_id?: string | null;
+          stripe_onboarding_complete?: boolean;
+          seller_rating?: number | null;
+          seller_review_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       devices: {
         Row: {
@@ -72,12 +125,118 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['devices']['Row']> & {
+        Insert: {
+          id?: string;
           name: string;
+          manufacturer?: string;
           model_number: string;
           device_type: DeviceType;
+          usb_vid?: string | null;
+          usb_pid?: string | null;
+          year_released?: number | null;
+          year_discontinued?: number | null;
+          atrac_version?: AtracType | null;
+          has_mdlp?: boolean;
+          has_himd?: boolean;
+          has_type_s?: boolean;
+          has_optical_in?: boolean;
+          has_optical_out?: boolean;
+          has_line_in?: boolean;
+          has_line_out?: boolean;
+          has_mic_in?: boolean;
+          has_usb?: boolean;
+          has_recording?: boolean;
+          usb_speed?: string | null;
+          transfer_speed?: string | null;
+          battery_type?: string | null;
+          display_type?: string | null;
+          weight_grams?: number | null;
+          image_url?: string | null;
+          description?: string | null;
+          notes?: string | null;
+          netmd_js_compatible?: boolean;
+          webusb_filter?: Json | null;
+          submitted_by?: string | null;
+          verified?: boolean;
+          created_at?: string;
+          updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['devices']['Row']>;
+        Update: {
+          id?: string;
+          name?: string;
+          manufacturer?: string;
+          model_number?: string;
+          device_type?: DeviceType;
+          usb_vid?: string | null;
+          usb_pid?: string | null;
+          year_released?: number | null;
+          year_discontinued?: number | null;
+          atrac_version?: AtracType | null;
+          has_mdlp?: boolean;
+          has_himd?: boolean;
+          has_type_s?: boolean;
+          has_optical_in?: boolean;
+          has_optical_out?: boolean;
+          has_line_in?: boolean;
+          has_line_out?: boolean;
+          has_mic_in?: boolean;
+          has_usb?: boolean;
+          has_recording?: boolean;
+          usb_speed?: string | null;
+          transfer_speed?: string | null;
+          battery_type?: string | null;
+          display_type?: string | null;
+          weight_grams?: number | null;
+          image_url?: string | null;
+          description?: string | null;
+          notes?: string | null;
+          netmd_js_compatible?: boolean;
+          webusb_filter?: Json | null;
+          submitted_by?: string | null;
+          verified?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      device_reports: {
+        Row: {
+          id: string;
+          device_id: string;
+          user_id: string;
+          works_with_webusb: boolean | null;
+          works_with_netmd_js: boolean | null;
+          operating_system: string | null;
+          browser: string | null;
+          browser_version: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          device_id: string;
+          user_id: string;
+          works_with_webusb?: boolean | null;
+          works_with_netmd_js?: boolean | null;
+          operating_system?: string | null;
+          browser?: string | null;
+          browser_version?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          device_id?: string;
+          user_id?: string;
+          works_with_webusb?: boolean | null;
+          works_with_netmd_js?: boolean | null;
+          operating_system?: string | null;
+          browser?: string | null;
+          browser_version?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       listings: {
         Row: {
@@ -103,15 +262,53 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['listings']['Row']> & {
+        Insert: {
+          id?: string;
           seller_id: string;
           title: string;
           description: string;
           category: ListingCategory;
           condition: ListingCondition;
           price_cents: number;
+          currency?: string;
+          shipping_price_cents?: number;
+          shipping_domestic_only?: boolean;
+          quantity?: number;
+          status?: ListingStatus;
+          images?: string[];
+          device_id?: string | null;
+          brand?: string | null;
+          model?: string | null;
+          tags?: string[] | null;
+          view_count?: number;
+          favorite_count?: number;
+          created_at?: string;
+          updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['listings']['Row']>;
+        Update: {
+          id?: string;
+          seller_id?: string;
+          title?: string;
+          description?: string;
+          category?: ListingCategory;
+          condition?: ListingCondition;
+          price_cents?: number;
+          currency?: string;
+          shipping_price_cents?: number;
+          shipping_domestic_only?: boolean;
+          quantity?: number;
+          status?: ListingStatus;
+          images?: string[];
+          device_id?: string | null;
+          brand?: string | null;
+          model?: string | null;
+          tags?: string[] | null;
+          view_count?: number;
+          favorite_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       orders: {
         Row: {
@@ -138,16 +335,55 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['orders']['Row']> & {
+        Insert: {
+          id?: string;
           buyer_id: string;
           seller_id: string;
           listing_id: string;
+          quantity?: number;
           subtotal_cents: number;
           shipping_cents: number;
           platform_fee_cents: number;
           total_cents: number;
+          currency?: string;
+          status?: OrderStatus;
+          stripe_payment_intent_id?: string | null;
+          stripe_transfer_id?: string | null;
+          shipping_address?: Json | null;
+          tracking_number?: string | null;
+          tracking_url?: string | null;
+          shipped_at?: string | null;
+          delivered_at?: string | null;
+          buyer_notes?: string | null;
+          seller_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['orders']['Row']>;
+        Update: {
+          id?: string;
+          buyer_id?: string;
+          seller_id?: string;
+          listing_id?: string;
+          quantity?: number;
+          subtotal_cents?: number;
+          shipping_cents?: number;
+          platform_fee_cents?: number;
+          total_cents?: number;
+          currency?: string;
+          status?: OrderStatus;
+          stripe_payment_intent_id?: string | null;
+          stripe_transfer_id?: string | null;
+          shipping_address?: Json | null;
+          tracking_number?: string | null;
+          tracking_url?: string | null;
+          shipped_at?: string | null;
+          delivered_at?: string | null;
+          buyer_notes?: string | null;
+          seller_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       label_designs: {
         Row: {
@@ -171,12 +407,85 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['label_designs']['Row']> & {
+        Insert: {
+          id?: string;
           user_id: string;
           title: string;
+          template_type?: LabelTemplateType;
           canvas_data: Json;
+          thumbnail_url?: string | null;
+          is_public?: boolean;
+          discogs_release_id?: number | null;
+          musicbrainz_release_id?: string | null;
+          artist_name?: string | null;
+          album_title?: string | null;
+          tracklist?: Json | null;
+          cover_art_url?: string | null;
+          tags?: string[] | null;
+          fork_of?: string | null;
+          fork_count?: number;
+          download_count?: number;
+          created_at?: string;
+          updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['label_designs']['Row']>;
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          template_type?: LabelTemplateType;
+          canvas_data?: Json;
+          thumbnail_url?: string | null;
+          is_public?: boolean;
+          discogs_release_id?: number | null;
+          musicbrainz_release_id?: string | null;
+          artist_name?: string | null;
+          album_title?: string | null;
+          tracklist?: Json | null;
+          cover_art_url?: string | null;
+          tags?: string[] | null;
+          fork_of?: string | null;
+          fork_count?: number;
+          download_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      label_templates: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          template_type: LabelTemplateType;
+          canvas_data: Json;
+          thumbnail_url: string | null;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          template_type: LabelTemplateType;
+          canvas_data: Json;
+          thumbnail_url?: string | null;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          template_type?: LabelTemplateType;
+          canvas_data?: Json;
+          thumbnail_url?: string | null;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       transfer_history: {
         Row: {
@@ -194,37 +503,133 @@ export type Database = {
           completed_at: string | null;
           success: boolean | null;
         };
-        Insert: Partial<Database['public']['Tables']['transfer_history']['Row']> & {
+        Insert: {
+          id?: string;
           user_id: string;
+          device_id?: string | null;
           device_name: string;
+          disc_title?: string | null;
           tracks: Json;
           transfer_format: TransferFormat;
           total_tracks: number;
           total_duration_seconds: number;
           total_bytes: number;
+          started_at?: string;
+          completed_at?: string | null;
+          success?: boolean | null;
         };
-        Update: Partial<Database['public']['Tables']['transfer_history']['Row']>;
+        Update: {
+          id?: string;
+          user_id?: string;
+          device_id?: string | null;
+          device_name?: string;
+          disc_title?: string | null;
+          tracks?: Json;
+          transfer_format?: TransferFormat;
+          total_tracks?: number;
+          total_duration_seconds?: number;
+          total_bytes?: number;
+          started_at?: string;
+          completed_at?: string | null;
+          success?: boolean | null;
+        };
+        Relationships: [];
+      };
+      favorites: {
+        Row: {
+          user_id: string;
+          listing_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          listing_id: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          listing_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      reviews: {
+        Row: {
+          id: string;
+          order_id: string;
+          reviewer_id: string;
+          reviewee_id: string;
+          rating: number;
+          comment: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          reviewer_id: string;
+          reviewee_id: string;
+          rating: number;
+          comment?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          reviewer_id?: string;
+          reviewee_id?: string;
+          rating?: number;
+          comment?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      messages: {
+        Row: {
+          id: string;
+          order_id: string;
+          sender_id: string;
+          body: string;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          sender_id: string;
+          body: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          sender_id?: string;
+          body?: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      stripe_events: {
+        Row: {
+          event_id: string;
+          event_type: string;
+          processed_at: string;
+        };
+        Insert: {
+          event_id: string;
+          event_type: string;
+          processed_at?: string;
+        };
+        Update: {
+          event_id?: string;
+          event_type?: string;
+          processed_at?: string;
+        };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
   };
 };
-
-export type DeviceType =
-  | 'portable_netmd'
-  | 'portable_himd'
-  | 'portable_standard'
-  | 'deck_netmd'
-  | 'deck_standard'
-  | 'deck_es'
-  | 'shelf_system'
-  | 'car_unit'
-  | 'professional';
-
-export type AtracType = 'v1' | 'v2' | 'v3' | 'v3.5' | 'v4' | 'v4.5' | 'type_r' | 'type_s';
-
-export type ListingStatus = 'draft' | 'active' | 'sold' | 'archived' | 'flagged';
-export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunded' | 'disputed';
-export type ListingCategory = 'portable' | 'deck' | 'disc_blank' | 'disc_prerecorded' | 'disc_custom' | 'accessory' | 'remote' | 'cable' | 'other';
-export type ListingCondition = 'new' | 'like_new' | 'excellent' | 'good' | 'fair' | 'poor' | 'for_parts';
-export type LabelTemplateType = 'jcard_front' | 'jcard_back' | 'jcard_full' | 'spine' | 'disc_label';
-export type TransferFormat = 'sp' | 'lp2' | 'lp4';

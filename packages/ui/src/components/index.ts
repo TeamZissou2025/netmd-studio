@@ -5,3 +5,5 @@ export { Card } from './Card';
 export { Badge } from './Badge';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs';
 export { Skeleton } from './Skeleton';
+export { Select } from './Select';
+export { Slider } from './Slider';
