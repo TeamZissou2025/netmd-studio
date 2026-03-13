@@ -49,7 +49,7 @@ export const useTransferStore = create<TransferStore>((set, get) => ({
   isPaused: false,
   currentTrackIndex: -1,
   overallProgress: 0,
-  selectedFormat: 'lp2',
+  selectedFormat: 'sp',
 
   // Device actions
   setConnectionStatus: (connectionStatus) => set({ connectionStatus }),

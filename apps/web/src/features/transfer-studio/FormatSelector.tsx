@@ -9,24 +9,31 @@ const FORMAT_OPTIONS: Array<{
   label: string;
   description: string;
   badge: 'cyan' | 'magenta' | 'amber';
+  disabled: boolean;
+  disabledReason?: string;
 }> = [
   {
     value: 'sp',
     label: 'SP',
     description: `ATRAC1 · ${FORMAT_BITRATES.sp} kbps · ${MD_80_CAPACITY.sp.label}`,
     badge: 'cyan',
+    disabled: false,
   },
   {
     value: 'lp2',
     label: 'LP2',
     description: `ATRAC3 · ${FORMAT_BITRATES.lp2} kbps · ${MD_80_CAPACITY.lp2.label}`,
     badge: 'magenta',
+    disabled: true,
+    disabledReason: 'Coming soon — requires ATRAC WASM encoder',
   },
   {
     value: 'lp4',
     label: 'LP4',
     description: `ATRAC3 · ${FORMAT_BITRATES.lp4} kbps · ${MD_80_CAPACITY.lp4.label}`,
     badge: 'amber',
+    disabled: true,
+    disabledReason: 'Coming soon — requires ATRAC WASM encoder',
   },
 ];
 
@@ -52,23 +59,32 @@ export function FormatSelector() {
           const remaining = capacity - usedSeconds - totalQueuedDuration;
 
           return (
-            <button
-              key={opt.value}
-              onClick={() => setSelectedFormat(opt.value)}
-              className={`w-full text-left px-3 py-2.5 rounded-studio border transition-colors ${
-                isSelected
-                  ? 'border-studio-cyan-border bg-studio-cyan-muted'
-                  : 'border-studio-border bg-studio-black hover:border-studio-border-bright'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <Badge variant={opt.badge}>{opt.label}</Badge>
-                <span className={`text-2xs font-mono ${remaining < 0 ? 'text-studio-error' : 'text-studio-text-dim'}`}>
-                  {formatDuration(Math.max(0, remaining))} remaining
-                </span>
-              </div>
-              <p className="text-2xs text-studio-text-dim">{opt.description}</p>
-            </button>
+            <div key={opt.value} className="relative group">
+              <button
+                onClick={() => !opt.disabled && setSelectedFormat(opt.value)}
+                disabled={opt.disabled}
+                className={`w-full text-left px-3 py-2.5 rounded-studio border transition-colors ${
+                  opt.disabled
+                    ? 'border-studio-border bg-studio-black opacity-40 cursor-not-allowed'
+                    : isSelected
+                      ? 'border-studio-cyan-border bg-studio-cyan-muted'
+                      : 'border-studio-border bg-studio-black hover:border-studio-border-bright'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <Badge variant={opt.badge}>{opt.label}</Badge>
+                  <span className={`text-2xs font-mono ${remaining < 0 ? 'text-studio-error' : 'text-studio-text-dim'}`}>
+                    {formatDuration(Math.max(0, remaining))} remaining
+                  </span>
+                </div>
+                <p className="text-2xs text-studio-text-dim">{opt.description}</p>
+              </button>
+              {opt.disabled && opt.disabledReason && (
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 px-2 py-1 bg-studio-surface-active border border-studio-border rounded text-2xs text-studio-text-muted whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                  {opt.disabledReason}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
