@@ -34,8 +34,6 @@ export function initConnection(): void {
     // Only relay 'connecting' to the store.
     // 'connected' is handled by the batched onConnected event.
     // 'disconnected' is handled by the batched onDisconnect event.
-    // 'error' is NEVER relayed — the connection class now goes straight
-    // to 'disconnected' on failure, so this shouldn't fire, but guard anyway.
     if (status === 'connecting') {
       useTransferStore.getState().setConnectionStatus(status);
     }
@@ -104,4 +102,3 @@ export async function sendTrack(
   if (!conn) return false;
   return conn.sendTrack(data, format, title, onProgress);
 }
-

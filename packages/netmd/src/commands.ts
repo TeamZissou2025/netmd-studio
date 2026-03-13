@@ -29,9 +29,7 @@ export class NetMDCommands {
   }
 
   get freeSeconds(): number {
-    const toc = this.connection.toc;
-    if (!toc) return 0;
-    return toc.totalSeconds - toc.usedSeconds;
+    return this.connection.toc?.freeSeconds ?? 0;
   }
 
   async renameTrack(index: number, title: string): Promise<boolean> {

@@ -1,20 +1,51 @@
-import { NETMD_DEVICE_FILTERS, identifyDevice, type NetMDDeviceEntry } from './devices';
+/**
+ * NetMD Connection Layer
+ *
+ * Adapted from Web MiniDisc Pro (asivery/webminidisc) patterns.
+ * Uses netmd-js openNewDevice() / openPairedDevice() which handle
+ * the full USB lifecycle (requestDevice + open + selectConfiguration +
+ * claimInterface) internally. No raw WebUSB calls.
+ *
+ * Manual connect only — no auto-reconnect.
+ */
+import {
+  openNewDevice,
+  openPairedDevice,
+  listContent,
+  renameDisc as njsRenameDisc,
+  prepareDownload,
+  MDSession,
+  MDTrack,
+  Wireformat,
+  Encoding,
+  TrackFlag,
+  type NetMDInterface,
+  type Disc as NJSDisc,
+  type Track as NJSTrack,
+} from 'netmd-js';
+import { identifyDevice, type NetMDDeviceEntry } from './devices';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
 export interface DiscTOC {
   title: string;
+  fullWidthTitle: string;
   trackCount: number;
   usedSeconds: number;
+  freeSeconds: number;
   totalSeconds: number;
+  writable: boolean;
+  writeProtected: boolean;
   tracks: DiscTrack[];
 }
 
 export interface DiscTrack {
   index: number;
   title: string;
+  fullWidthTitle: string;
   durationSeconds: number;
   encoding: 'sp' | 'lp2' | 'lp4';
+  channel: number;
   isProtected: boolean;
 }
 
@@ -28,10 +59,13 @@ export interface NetMDConnectionEvents {
 }
 
 // Capacity in seconds for an 80-minute standard MD disc
-const MD_80_TOTAL_SECONDS = 4800; // 80 minutes
+const MD_80_TOTAL_SECONDS = 4800;
 const SP_CAPACITY_SECONDS = MD_80_TOTAL_SECONDS;
 const LP2_CAPACITY_SECONDS = MD_80_TOTAL_SECONDS * 2;
 const LP4_CAPACITY_SECONDS = MD_80_TOTAL_SECONDS * 4;
+
+// netmd-js uses 512-byte frames for duration. 1 second = 512 frames in SP.
+const FRAMES_PER_SECOND = 512;
 
 export function getCapacityForFormat(format: 'sp' | 'lp2' | 'lp4'): number {
   switch (format) {
@@ -41,13 +75,72 @@ export function getCapacityForFormat(format: 'sp' | 'lp2' | 'lp4'): number {
   }
 }
 
+/** Map netmd-js Wireformat enum to our format string */
+const WIREFORMAT_MAP: Record<'sp' | 'lp2' | 'lp4', Wireformat> = {
+  sp: Wireformat.pcm,
+  lp2: Wireformat.lp2,
+  lp4: Wireformat.lp4,
+};
+
+/** Map netmd-js Encoding enum to our format string */
+function encodingToFormat(encoding: Encoding): 'sp' | 'lp2' | 'lp4' {
+  switch (encoding) {
+    case Encoding.sp: return 'sp';
+    case Encoding.lp2: return 'lp2';
+    case Encoding.lp4: return 'lp4';
+    default: return 'sp';
+  }
+}
+
+/** Convert netmd-js Disc to our DiscTOC */
+function convertDisc(disc: NJSDisc): DiscTOC {
+  const tracks: DiscTrack[] = [];
+  for (const group of disc.groups) {
+    for (const track of group.tracks) {
+      tracks.push(convertTrack(track));
+    }
+  }
+  tracks.sort((a, b) => a.index - b.index);
+
+  const usedSeconds = Math.ceil(disc.used / FRAMES_PER_SECOND);
+  const totalSeconds = Math.ceil(disc.total / FRAMES_PER_SECOND);
+  const freeSeconds = Math.ceil(disc.left / FRAMES_PER_SECOND);
+
+  return {
+    title: disc.title,
+    fullWidthTitle: disc.fullWidthTitle,
+    trackCount: disc.trackCount,
+    usedSeconds,
+    freeSeconds,
+    totalSeconds,
+    writable: disc.writable,
+    writeProtected: disc.writeProtected,
+    tracks,
+  };
+}
+
+/** Convert a netmd-js Track to our DiscTrack */
+function convertTrack(track: NJSTrack): DiscTrack {
+  return {
+    index: track.index,
+    title: track.title ?? '',
+    fullWidthTitle: track.fullWidthTitle ?? '',
+    durationSeconds: Math.ceil(track.duration / FRAMES_PER_SECOND),
+    encoding: encodingToFormat(track.encoding),
+    channel: track.channel,
+    isProtected: track.protected === TrackFlag.protected,
+  };
+}
+
 export class NetMDConnection {
-  private usbDevice: USBDevice | null = null;
+  private netmdInterface: NetMDInterface | null = null;
+  private currentSession: MDSession | null = null;
+  private cachedDisc: NJSDisc | null = null;
   private events: Partial<NetMDConnectionEvents> = {};
   private _status: ConnectionStatus = 'disconnected';
   private _deviceInfo: NetMDDeviceEntry | null = null;
   private _toc: DiscTOC | null = null;
-  private _connecting = false; // Lock to prevent concurrent connection attempts
+  private _connecting = false;
 
   get status(): ConnectionStatus {
     return this._status;
@@ -59,10 +152,6 @@ export class NetMDConnection {
 
   get toc(): DiscTOC | null {
     return this._toc;
-  }
-
-  get device(): USBDevice | null {
-    return this.usbDevice;
   }
 
   on<K extends keyof NetMDConnectionEvents>(event: K, handler: NetMDConnectionEvents[K]): void {
@@ -78,41 +167,44 @@ export class NetMDConnection {
     return typeof navigator !== 'undefined' && 'usb' in navigator;
   }
 
+  /**
+   * Open the browser's device picker and connect to a new device.
+   * Uses netmd-js openNewDevice() which handles requestDevice + open +
+   * selectConfiguration + claimInterface internally.
+   */
   async requestDevice(): Promise<boolean> {
     if (!NetMDConnection.isSupported()) {
       this.events.onError?.('WebUSB is not supported in this browser');
       return false;
     }
 
-    // Lock: prevent concurrent connection attempts
     if (this._connecting) {
       console.warn('[NetMD] requestDevice blocked — connection already in progress');
       return false;
     }
 
-    // Guard: already connected
     if (this._status === 'connected') {
       return true;
     }
 
     this._connecting = true;
     try {
-      console.log('[NetMD] %s requestDevice — opening device picker', new Date().toISOString());
+      console.log('[NetMD] requestDevice — opening device picker');
       this.setStatus('connecting');
-      const device = await navigator.usb.requestDevice({ filters: NETMD_DEVICE_FILTERS });
-      console.log('[NetMD] %s Device selected: VID=%s PID=%s', new Date().toISOString(),
-        device.vendorId.toString(16).padStart(4, '0'),
-        device.productId.toString(16).padStart(4, '0'));
-      return await this.connectDevice(device);
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'NotFoundError') {
-        // User cancelled device picker — not an error
-        console.log('[NetMD] %s Device picker cancelled by user', new Date().toISOString());
+
+      // netmd-js handles the entire USB lifecycle:
+      // requestDevice({filters}) → device.open() → selectConfiguration(1) → claimInterface(0)
+      const iface = await openNewDevice(navigator.usb);
+      if (iface === null) {
+        // User cancelled the device picker
+        console.log('[NetMD] Device picker cancelled by user');
         this.setStatus('disconnected');
         return false;
       }
-      console.error('[NetMD] %s requestDevice failed:', new Date().toISOString(), err);
-      // Go to disconnected, NOT error — avoids UI thrashing
+
+      return await this.initializeDevice(iface);
+    } catch (err) {
+      console.error('[NetMD] requestDevice failed:', err);
       this.setStatus('disconnected');
       this.events.onError?.(err instanceof Error ? err.message : 'Failed to request device');
       return false;
@@ -121,280 +213,315 @@ export class NetMDConnection {
     }
   }
 
-  async autoReconnect(): Promise<boolean> {
+  /**
+   * Reconnect to a previously paired device without showing the picker.
+   * Uses netmd-js openPairedDevice() which calls getDevices() + open +
+   * selectConfiguration + claimInterface internally.
+   *
+   * This is NOT called automatically. It's available for explicit
+   * "reconnect" button use only.
+   */
+  async reconnectPaired(): Promise<boolean> {
     if (!NetMDConnection.isSupported()) return false;
 
-    // Lock: prevent concurrent connection attempts
     if (this._connecting) {
-      console.warn('[NetMD] autoReconnect blocked — connection already in progress');
+      console.warn('[NetMD] reconnectPaired blocked — connection already in progress');
       return false;
     }
 
-    // Guard: already connected
     if (this._status === 'connected') {
       return true;
     }
 
     this._connecting = true;
     try {
-      console.log('[NetMD] %s autoReconnect — checking for previously paired devices', new Date().toISOString());
-      const devices = await navigator.usb.getDevices();
-      if (devices.length === 0) {
-        console.log('[NetMD] %s autoReconnect — no paired devices found', new Date().toISOString());
+      console.log('[NetMD] reconnectPaired — checking for previously paired devices');
+      this.setStatus('connecting');
+
+      const iface = await openPairedDevice(navigator.usb);
+      if (iface === null) {
+        console.log('[NetMD] No previously paired device found');
+        this.setStatus('disconnected');
         return false;
       }
 
-      // Try to connect to the first previously-authorized device
-      for (const device of devices) {
-        const entry = identifyDevice(device.vendorId, device.productId);
-        if (entry) {
-          console.log('[NetMD] %s autoReconnect — found %s, attempting connection', new Date().toISOString(), entry.name);
-          return await this.connectDevice(device);
-        }
-      }
-      return false;
+      return await this.initializeDevice(iface);
     } catch (err) {
-      console.error('[NetMD] %s autoReconnect failed:', new Date().toISOString(), err);
+      console.error('[NetMD] reconnectPaired failed:', err);
+      this.setStatus('disconnected');
+      this.events.onError?.(err instanceof Error ? err.message : 'Failed to reconnect to device');
       return false;
     } finally {
       this._connecting = false;
     }
   }
 
-  private async connectDevice(device: USBDevice): Promise<boolean> {
+  /**
+   * Initialize a connected device: identify it, read the TOC, and
+   * fire the batched onConnected event.
+   */
+  private async initializeDevice(iface: NetMDInterface): Promise<boolean> {
     try {
-      this.setStatus('connecting');
+      this.netmdInterface = iface;
 
-      // Step 1: Open device
-      console.log('[NetMD] %s Step 1/4: device.open()', new Date().toISOString());
-      await device.open();
-      console.log('[NetMD] %s Step 1/4: device.open() — OK', new Date().toISOString());
+      // Identify the device from its USB IDs
+      const vendorId = iface.netMd.getVendor();
+      const productId = iface.netMd.getProduct();
+      const deviceName = iface.netMd.getDeviceName();
 
-      // Step 2: Select configuration
-      if (device.configuration === null) {
-        console.log('[NetMD] %s Step 2/4: selectConfiguration(1)', new Date().toISOString());
-        await device.selectConfiguration(1);
-        console.log('[NetMD] %s Step 2/4: selectConfiguration(1) — OK', new Date().toISOString());
-      } else {
-        console.log('[NetMD] %s Step 2/4: configuration already set (%d)', new Date().toISOString(), device.configuration.configurationValue);
-      }
-
-      // Step 3: Claim interface
-      console.log('[NetMD] %s Step 3/4: claimInterface(0)', new Date().toISOString());
-      try {
-        await device.claimInterface(0);
-      } catch (claimErr) {
-        // claimInterface failure is common — another tab/process has the device
-        console.error('[NetMD] %s Step 3/4: claimInterface(0) — FAILED:', new Date().toISOString(), claimErr);
-        // Clean up: close the device we just opened
-        try { await device.close(); } catch { /* ignore */ }
-        this.setStatus('disconnected');
-        this.events.onError?.('Could not claim device. Close Web MiniDisc or any other tab using this device and try again.');
-        return false;
-      }
-      console.log('[NetMD] %s Step 3/4: claimInterface(0) — OK', new Date().toISOString());
-
-      this.usbDevice = device;
-      this._deviceInfo = identifyDevice(device.vendorId, device.productId) ?? {
-        vendorId: device.vendorId,
-        productId: device.productId,
-        name: device.productName || 'Unknown NetMD Device',
-        manufacturer: device.manufacturerName || 'Unknown',
+      this._deviceInfo = identifyDevice(vendorId, productId) ?? {
+        vendorId,
+        productId,
+        name: deviceName || 'Unknown NetMD Device',
+        manufacturer: 'Unknown',
         modelNumber: 'Unknown',
         isHiMD: false,
       };
 
-      // Listen for disconnect — added AFTER successful claim only
+      console.log('[NetMD] Device identified: %s (VID=%s PID=%s)',
+        this._deviceInfo.name,
+        vendorId.toString(16).padStart(4, '0'),
+        productId.toString(16).padStart(4, '0'));
+
+      // Listen for USB disconnect events
       navigator.usb.addEventListener('disconnect', this.handleDisconnect);
 
-      // Step 4: Read disc TOC
-      console.log('[NetMD] %s Step 4/4: readTOC()', new Date().toISOString());
-      await this.readTOC();
-      console.log('[NetMD] %s Step 4/4: readTOC() — OK', new Date().toISOString());
+      // Read the disc TOC
+      console.log('[NetMD] Reading disc TOC...');
+      await this.readTOCInternal(true);
+      console.log('[NetMD] TOC read complete: %d tracks', this._toc?.trackCount ?? 0);
 
-      // Fire a single batched event with all connection data at once.
-      // This avoids multiple rapid state updates that cause UI jitter.
+      // Fire a single batched event with all connection data
       this._status = 'connected';
       this.events.onConnected?.(this._deviceInfo, this._toc);
-      console.log('[NetMD] %s Connection complete: %s', new Date().toISOString(), this._deviceInfo.name);
+      console.log('[NetMD] Connection complete: %s', this._deviceInfo.name);
 
       return true;
     } catch (err) {
-      console.error('[NetMD] %s connectDevice failed:', new Date().toISOString(), err);
-      // Clean up: try to close the device if we opened it
-      try { await device.close(); } catch { /* ignore */ }
-      // Go to disconnected, NOT error — prevents UI thrashing from error state
-      this.usbDevice = null;
-      this._deviceInfo = null;
-      this._toc = null;
+      console.error('[NetMD] initializeDevice failed:', err);
+      await this.cleanupDevice();
       this.setStatus('disconnected');
-      this.events.onError?.(err instanceof Error ? err.message : 'Failed to connect to device');
+      this.events.onError?.(err instanceof Error ? err.message : 'Failed to initialize device');
       return false;
     }
   }
 
   private handleDisconnect = (event: USBConnectionEvent): void => {
-    if (event.device === this.usbDevice) {
-      console.log('[NetMD] %s USB disconnect event for %s — cleaning up, NO reconnect', new Date().toISOString(), this._deviceInfo?.name ?? 'unknown');
+    // Check if the disconnected device is ours
+    if (this.netmdInterface && this.netmdInterface.netMd.isDeviceConnected(event.device)) {
+      console.log('[NetMD] USB disconnect event for %s', this._deviceInfo?.name ?? 'unknown');
       navigator.usb.removeEventListener('disconnect', this.handleDisconnect);
-      this.usbDevice = null;
+      this.netmdInterface = null;
+      this.currentSession = null;
+      this.cachedDisc = null;
       this._deviceInfo = null;
       this._toc = null;
-      this._connecting = false; // Release lock so manual reconnect is possible later
+      this._connecting = false;
       this._status = 'disconnected';
-      // Fire a single disconnect event — the listener clears all store state at once.
-      // This does NOT trigger any reconnect attempt.
       this.events.onDisconnect?.();
     }
   };
 
-  async readTOC(): Promise<DiscTOC | null> {
-    if (!this.usbDevice) return null;
+  /**
+   * Read the disc TOC using netmd-js listContent().
+   * Caches the raw netmd-js Disc for subsequent operations.
+   */
+  private async readTOCInternal(dropCache = false): Promise<DiscTOC | null> {
+    if (!this.netmdInterface) return null;
 
-    // Track whether this is a post-connection refresh or initial read
-    const isRefresh = this._status === 'connected';
-
-    // In a real implementation, this would use netmd-js to read the disc TOC
-    // via bulk transfers (the correct Net MD protocol). We do NOT send a
-    // vendor control transfer here — that uses the wrong request type and
-    // can stall the USB control endpoint on real Net MD hardware (especially
-    // Sony MZ-NF810, MZ-N710, and similar models), causing the device to
-    // re-enumerate on the USB bus and triggering spurious disconnect events.
-    //
-    // For now we return a blank TOC. When netmd-js integration lands, this
-    // will use: const netmd = new NetMD(this.usbDevice);
-    //           const factory = await NetMDFactory.make(netmd);
-    //           const session = new MDSession(factory);
-    //           etc.
-    this._toc = {
-      title: '',
-      trackCount: 0,
-      usedSeconds: 0,
-      totalSeconds: SP_CAPACITY_SECONDS,
-      tracks: [],
-    };
-
-    // Only fire onTOCRead for post-connection refreshes.
-    // During initial connection, TOC is included in the batched onConnected event.
-    if (isRefresh) {
-      this.events.onTOCRead?.(this._toc);
+    if (dropCache || !this.cachedDisc) {
+      this.cachedDisc = await listContent(this.netmdInterface);
     }
 
+    this._toc = convertDisc(this.cachedDisc);
     return this._toc;
   }
 
+  /**
+   * Public TOC refresh — reads from device and fires onTOCRead event.
+   */
+  async readTOC(): Promise<DiscTOC | null> {
+    if (!this.netmdInterface) return null;
+
+    const isRefresh = this._status === 'connected';
+    const toc = await this.readTOCInternal(true);
+
+    if (isRefresh && toc) {
+      this.events.onTOCRead?.(toc);
+    }
+
+    return toc;
+  }
+
+  /**
+   * Rename a track on the disc using netmd-js.
+   */
   async setTrackTitle(trackIndex: number, title: string): Promise<boolean> {
-    if (!this.usbDevice || !this._toc) return false;
+    if (!this.netmdInterface) return false;
 
     try {
-      // In production, this uses netmd-js: session.setTrackTitle(trackIndex, title)
-      // For now, update local TOC state
-      const track = this._toc.tracks.find((t) => t.index === trackIndex);
-      if (track) {
-        track.title = title;
+      await this.netmdInterface.setTrackTitle(trackIndex, title);
+
+      // Update cache
+      if (this.cachedDisc) {
+        for (const group of this.cachedDisc.groups) {
+          for (const track of group.tracks) {
+            if (track.index === trackIndex) {
+              track.title = title;
+            }
+          }
+        }
+        this._toc = convertDisc(this.cachedDisc);
         this.events.onTOCRead?.(this._toc);
       }
+
       return true;
-    } catch {
+    } catch (err) {
+      console.error('[NetMD] setTrackTitle failed:', err);
+      this.events.onError?.(err instanceof Error ? err.message : 'Failed to rename track');
       return false;
     }
   }
 
+  /**
+   * Rename the disc using netmd-js.
+   */
   async setDiscTitle(title: string): Promise<boolean> {
-    if (!this.usbDevice || !this._toc) return false;
+    if (!this.netmdInterface) return false;
 
     try {
-      this._toc.title = title;
-      this.events.onTOCRead?.(this._toc);
+      await njsRenameDisc(this.netmdInterface, title);
+
+      // Update cache
+      if (this.cachedDisc) {
+        this.cachedDisc.title = title;
+        this._toc = convertDisc(this.cachedDisc);
+        this.events.onTOCRead?.(this._toc);
+      }
+
       return true;
-    } catch {
+    } catch (err) {
+      console.error('[NetMD] setDiscTitle failed:', err);
+      this.events.onError?.(err instanceof Error ? err.message : 'Failed to rename disc');
       return false;
     }
   }
 
+  /**
+   * Delete a track from the disc using netmd-js.
+   */
+  async deleteTrack(trackIndex: number): Promise<boolean> {
+    if (!this.netmdInterface) return false;
+
+    try {
+      await this.netmdInterface.eraseTrack(trackIndex);
+
+      // Drop the cache and re-read since track indices shift
+      this.cachedDisc = null;
+      await this.readTOCInternal(true);
+      if (this._toc) {
+        this.events.onTOCRead?.(this._toc);
+      }
+
+      return true;
+    } catch (err) {
+      console.error('[NetMD] deleteTrack failed:', err);
+      this.events.onError?.(err instanceof Error ? err.message : 'Failed to delete track');
+      return false;
+    }
+  }
+
+  /**
+   * Upload a track to the disc using netmd-js MDSession.
+   *
+   * Following Web MiniDisc Pro's pattern:
+   * 1. prepareDownload() (yes, this is the upload prep — netmd-js naming)
+   * 2. MDSession.init()
+   * 3. MDSession.downloadTrack() (sends track TO device)
+   * 4. MDSession.close()
+   * 5. NetMDInterface.release()
+   */
   async sendTrack(
     data: ArrayBuffer,
     format: 'sp' | 'lp2' | 'lp4',
     title: string,
     onProgress?: (percent: number) => void
   ): Promise<boolean> {
-    if (!this.usbDevice) return false;
+    if (!this.netmdInterface) return false;
 
     try {
-      // In production, this would use netmd-js:
-      // const netmd = new NetMD(this.usbDevice);
-      // const factory = await NetMDFactory.make(netmd);
-      // const session = new MDSession(factory);
-      // await session.pair();
-      // await session.sendTrack(wireformat, data, title, progressCallback);
-      // await session.unpair();
+      // Prepare for upload session
+      await prepareDownload(this.netmdInterface);
 
-      // Simulate transfer with progress
-      const totalChunks = 100;
-      for (let i = 0; i <= totalChunks; i++) {
-        await new Promise((r) => setTimeout(r, 20));
-        onProgress?.((i / totalChunks) * 100);
-      }
+      const session = new MDSession(this.netmdInterface);
+      this.currentSession = session;
+      await session.init();
 
-      // Add track to local TOC
+      const wireformat = WIREFORMAT_MAP[format];
+      const total = data.byteLength;
+
+      // Create the MDTrack with title and wireformat
+      const mdTrack = new MDTrack(title, wireformat, data, 0x400);
+
+      // Send to device with progress callback
+      await session.downloadTrack(mdTrack, (progress) => {
+        if (total > 0) {
+          const percent = (progress.writtenBytes / total) * 100;
+          onProgress?.(Math.min(percent, 100));
+        }
+      });
+
+      // Finalize the session
+      await session.close();
+      await this.netmdInterface.release();
+      this.currentSession = null;
+
+      // Drop cache and re-read TOC to reflect the new track
+      this.cachedDisc = null;
+      await this.readTOCInternal(true);
       if (this._toc) {
-        const durationSeconds = Math.floor(data.byteLength / (44100 * 2 * 2)); // rough estimate
-        this._toc.tracks.push({
-          index: this._toc.trackCount,
-          title,
-          durationSeconds,
-          encoding: format,
-          isProtected: false,
-        });
-        this._toc.trackCount++;
-        this._toc.usedSeconds += durationSeconds;
         this.events.onTOCRead?.(this._toc);
       }
 
       return true;
     } catch (err) {
+      console.error('[NetMD] sendTrack failed:', err);
+      this.currentSession = null;
       this.events.onError?.(err instanceof Error ? err.message : 'Transfer failed');
       return false;
     }
   }
 
-  async deleteTrack(trackIndex: number): Promise<boolean> {
-    if (!this.usbDevice || !this._toc) return false;
-
-    try {
-      const track = this._toc.tracks.find((t) => t.index === trackIndex);
-      if (track) {
-        this._toc.tracks = this._toc.tracks.filter((t) => t.index !== trackIndex);
-        this._toc.trackCount--;
-        this._toc.usedSeconds -= track.durationSeconds;
-        // Reindex remaining tracks
-        this._toc.tracks.forEach((t, i) => { t.index = i; });
-        this.events.onTOCRead?.(this._toc);
-      }
-      return true;
-    } catch {
-      return false;
-    }
+  /**
+   * Cleanly disconnect from the device.
+   */
+  async disconnect(): Promise<void> {
+    console.log('[NetMD] disconnect() called');
+    await this.cleanupDevice();
+    this._status = 'disconnected';
+    this.events.onDisconnect?.();
   }
 
-  async disconnect(): Promise<void> {
-    console.log('[NetMD] %s disconnect() called', new Date().toISOString());
-    if (this.usbDevice) {
+  private async cleanupDevice(): Promise<void> {
+    navigator.usb.removeEventListener('disconnect', this.handleDisconnect);
+
+    if (this.currentSession) {
       try {
-        navigator.usb.removeEventListener('disconnect', this.handleDisconnect);
-        await this.usbDevice.releaseInterface(0);
-        await this.usbDevice.close();
-      } catch {
-        // Device may already be disconnected
-      }
-      this.usbDevice = null;
-      this._deviceInfo = null;
-      this._toc = null;
-      this._connecting = false;
-      this._status = 'disconnected';
-      // Fire single disconnect event to clear all state at once in the store.
-      // This does NOT trigger any reconnect attempt.
-      this.events.onDisconnect?.();
+        await this.currentSession.close();
+      } catch { /* ignore */ }
+      this.currentSession = null;
     }
+
+    if (this.netmdInterface) {
+      try {
+        await this.netmdInterface.netMd.finalize();
+      } catch { /* ignore */ }
+      this.netmdInterface = null;
+    }
+
+    this.cachedDisc = null;
+    this._deviceInfo = null;
+    this._toc = null;
+    this._connecting = false;
   }
 }

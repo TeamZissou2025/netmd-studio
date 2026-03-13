@@ -10,7 +10,8 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@netmd-studio/types": "workspace:*"
+    "@netmd-studio/types": "workspace:*",
+    "netmd-js": "^4.4"
   },
   "devDependencies": {
     "@netmd-studio/typescript-config": "workspace:*",
