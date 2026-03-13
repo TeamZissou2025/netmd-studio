@@ -83,6 +83,11 @@ export class NetMDConnection {
       return false;
     }
 
+    // Guard: already connected or in the middle of connecting
+    if (this._status === 'connected' || this._status === 'connecting') {
+      return this._status === 'connected';
+    }
+
     try {
       this.setStatus('connecting');
       const device = await navigator.usb.requestDevice({ filters: NETMD_DEVICE_FILTERS });
@@ -101,6 +106,11 @@ export class NetMDConnection {
 
   async autoReconnect(): Promise<boolean> {
     if (!NetMDConnection.isSupported()) return false;
+
+    // Guard: already connected or in the middle of connecting
+    if (this._status === 'connected' || this._status === 'connecting') {
+      return this._status === 'connected';
+    }
 
     try {
       const devices = await navigator.usb.getDevices();
@@ -174,44 +184,33 @@ export class NetMDConnection {
     // Track whether this is a post-connection refresh or initial read
     const isRefresh = this._status === 'connected';
 
-    try {
-      // In a real implementation, this would use netmd-js to read the disc TOC.
-      // For now, we simulate the TOC structure.
-      const result = await this.usbDevice.controlTransferIn(
-        { requestType: 'vendor', recipient: 'interface', request: 0x01, value: 0, index: 0 },
-        64
-      );
+    // In a real implementation, this would use netmd-js to read the disc TOC
+    // via bulk transfers (the correct Net MD protocol). We do NOT send a
+    // vendor control transfer here — that uses the wrong request type and
+    // can stall the USB control endpoint on real Net MD hardware (especially
+    // Sony MZ-NF810, MZ-N710, and similar models), causing the device to
+    // re-enumerate on the USB bus and triggering spurious disconnect events.
+    //
+    // For now we return a blank TOC. When netmd-js integration lands, this
+    // will use: const netmd = new NetMD(this.usbDevice);
+    //           const factory = await NetMDFactory.make(netmd);
+    //           const session = new MDSession(factory);
+    //           etc.
+    this._toc = {
+      title: '',
+      trackCount: 0,
+      usedSeconds: 0,
+      totalSeconds: SP_CAPACITY_SECONDS,
+      tracks: [],
+    };
 
-      if (result.status === 'ok') {
-        this._toc = {
-          title: '',
-          trackCount: 0,
-          usedSeconds: 0,
-          totalSeconds: SP_CAPACITY_SECONDS,
-          tracks: [],
-        };
-        // Only fire onTOCRead for post-connection refreshes.
-        // During initial connection, TOC is included in the batched onConnected event.
-        if (isRefresh) {
-          this.events.onTOCRead?.(this._toc);
-        }
-        return this._toc;
-      }
-
-      return null;
-    } catch {
-      this._toc = {
-        title: '',
-        trackCount: 0,
-        usedSeconds: 0,
-        totalSeconds: SP_CAPACITY_SECONDS,
-        tracks: [],
-      };
-      if (isRefresh) {
-        this.events.onTOCRead?.(this._toc);
-      }
-      return this._toc;
+    // Only fire onTOCRead for post-connection refreshes.
+    // During initial connection, TOC is included in the batched onConnected event.
+    if (isRefresh) {
+      this.events.onTOCRead?.(this._toc);
     }
+
+    return this._toc;
   }
 
   async setTrackTitle(trackIndex: number, title: string): Promise<boolean> {

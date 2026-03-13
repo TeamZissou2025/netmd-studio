@@ -4,7 +4,7 @@ import type { TransferTrack } from '@netmd-studio/types';
 import { ACCEPTED_AUDIO_TYPES, ACCEPTED_AUDIO_EXTENSIONS } from '@netmd-studio/types';
 import { useTransferStore } from './store';
 import { useAudioPipeline } from './useAudioPipeline';
-import { useDeviceConnection } from './useDeviceConnection';
+import { sendTrack } from './connection';
 import { supabase } from '../../lib/supabase';
 
 let trackIdCounter = 0;
@@ -48,7 +48,6 @@ export function useTransferQueue() {
   const pausedRef = useRef(false);
 
   const { encodeTrack, cancelEncoding, updateTrackTransferProgress, updateTrackStatus, updateOverallProgress } = useAudioPipeline();
-  const { sendTrack } = useDeviceConnection();
 
   const addFiles = useCallback(
     (files: FileList | File[]) => {
@@ -159,7 +158,6 @@ export function useTransferQueue() {
   }, [
     connectionStatus,
     encodeTrack,
-    sendTrack,
     setIsTransferring,
     setIsPaused,
     setCurrentTrackIndex,

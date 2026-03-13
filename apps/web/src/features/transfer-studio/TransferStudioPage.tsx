@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Usb } from 'lucide-react';
 import { NetMDConnection } from '@netmd-studio/netmd';
 import { BrowserCheck } from './BrowserCheck';
@@ -7,9 +8,21 @@ import { FormatSelector } from './FormatSelector';
 import { TransferQueue } from './TransferQueue';
 import { SEOHead } from '../../app/SEOHead';
 import { useTransferStore } from './store';
+import { initConnection, autoReconnect, destroyConnection } from './connection';
 
 export function TransferStudioPage() {
   const connectionStatus = useTransferStore((s) => s.connectionStatus);
+
+  // Initialise the singleton connection ONCE when this page mounts.
+  // This is the only place in the app that calls initConnection / autoReconnect.
+  useEffect(() => {
+    initConnection();
+    autoReconnect();
+    return () => {
+      // Tear down on unmount (only matters for HMR / route away)
+      destroyConnection();
+    };
+  }, []);
 
   // Check WebUSB support
   if (!NetMDConnection.isSupported()) {
@@ -34,15 +47,17 @@ export function TransferStudioPage() {
         </div>
       </div>
 
-      {/* Main layout: sidebar + content
-          Use a stable grid that doesn't shift when panels appear/disappear */}
+      {/* Main layout: sidebar + content */}
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
         {/* Left sidebar — always rendered, stable height */}
         <div className="space-y-4">
           <DeviceConnectionPanel />
-          {/* Stable container for connected-only panels to prevent layout shift */}
+          {/* Stable container for connected-only panels to prevent layout shift.
+              Uses opacity + overflow-hidden instead of conditional mount/unmount
+              so FormatSelector and DiscTOCPanel do NOT re-mount (and thus do NOT
+              re-trigger any hooks) when the connection status toggles. */}
           <div
-            className={`space-y-4 transition-opacity duration-200 ${
+            className={`space-y-4 ${
               isConnected ? 'opacity-100' : 'opacity-0 pointer-events-none h-0 overflow-hidden'
             }`}
           >
