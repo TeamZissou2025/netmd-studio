@@ -23,6 +23,7 @@ import {
   type Disc as NJSDisc,
   type Track as NJSTrack,
 } from 'netmd-js';
+import { makeGetAsyncPacketIteratorOnWorkerThread } from 'netmd-js/dist/web-encrypt-worker';
 import { identifyDevice, type NetMDDeviceEntry } from './devices';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
@@ -449,6 +450,8 @@ export class NetMDConnection {
   ): Promise<boolean> {
     if (!this.netmdInterface) return false;
 
+    let encryptWorker: Worker | null = null;
+
     try {
       // Prepare for upload session
       await prepareDownload(this.netmdInterface);
@@ -459,17 +462,42 @@ export class NetMDConnection {
 
       const wireformat = WIREFORMAT_MAP[format];
       const total = data.byteLength;
+      let written = 0;
+      let encrypted = 0;
 
-      // Create the MDTrack with title and wireformat
-      const mdTrack = new MDTrack(title, wireformat, data, 0x400);
+      // Create the encryption worker (required by netmd-js for DES packet encryption)
+      // Matches Web MiniDisc Pro's pattern exactly.
+      encryptWorker = new Worker(
+        new URL('./encrypt-worker.ts', import.meta.url),
+        { type: 'module' }
+      );
+
+      const encryptIterator = makeGetAsyncPacketIteratorOnWorkerThread(
+        encryptWorker,
+        ({ encryptedBytes }) => {
+          encrypted = encryptedBytes;
+          if (total > 0) {
+            const percent = ((written + encrypted) / (total * 2)) * 100;
+            onProgress?.(Math.min(percent, 100));
+          }
+        }
+      );
+
+      // Create the MDTrack with title, wireformat, and encryption iterator
+      const mdTrack = new MDTrack(title, wireformat, data, 0x400, '', encryptIterator);
 
       // Send to device with progress callback
       await session.downloadTrack(mdTrack, (progress) => {
+        written = progress.writtenBytes;
         if (total > 0) {
-          const percent = (progress.writtenBytes / total) * 100;
+          const percent = ((written + encrypted) / (total * 2)) * 100;
           onProgress?.(Math.min(percent, 100));
         }
       });
+
+      // Cleanup encrypt worker
+      encryptWorker.terminate();
+      encryptWorker = null;
 
       // Finalize the session
       await session.close();
@@ -486,6 +514,7 @@ export class NetMDConnection {
       return true;
     } catch (err) {
       console.error('[NetMD] sendTrack failed:', err);
+      encryptWorker?.terminate();
       this.currentSession = null;
       this.events.onError?.(err instanceof Error ? err.message : 'Transfer failed');
       return false;
