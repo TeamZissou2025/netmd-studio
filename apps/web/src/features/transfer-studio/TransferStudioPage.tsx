@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Usb } from 'lucide-react';
 import { NetMDConnection } from '@netmd-studio/netmd';
 import { BrowserCheck } from './BrowserCheck';
@@ -8,22 +7,13 @@ import { FormatSelector } from './FormatSelector';
 import { TransferQueue } from './TransferQueue';
 import { SEOHead } from '../../app/SEOHead';
 import { useTransferStore } from './store';
-import { initConnection, destroyConnection } from './connection';
 
 export function TransferStudioPage() {
   const connectionStatus = useTransferStore((s) => s.connectionStatus);
 
-  // Initialise the singleton connection ONCE when this page mounts.
-  // Auto-reconnect is DISABLED — it conflicts with manual connect on some
-  // devices (e.g., Sony MZ-NF810) that need a clean user-gesture-initiated
-  // connection. Users must click "Connect Device" explicitly.
-  useEffect(() => {
-    initConnection();
-    return () => {
-      // Tear down on unmount (only matters for HMR / route away)
-      destroyConnection();
-    };
-  }, []);
+  // NO useEffect here. Zero automatic connection attempts on page load.
+  // The singleton connection is lazily initialized when the user clicks
+  // "Connect Device" — connectDevice() calls initConnection() internally.
 
   // Check WebUSB support
   if (!NetMDConnection.isSupported()) {

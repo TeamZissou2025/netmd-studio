@@ -85,11 +85,6 @@ export async function refreshTOC(): Promise<void> {
   await conn.readTOC();
 }
 
-export async function autoReconnect(): Promise<boolean> {
-  initConnection();
-  return getConnection().autoReconnect();
-}
-
 export async function renameTrack(index: number, title: string): Promise<boolean> {
   if (!conn) return false;
   return conn.setTrackTitle(index, title);
@@ -110,13 +105,3 @@ export async function sendTrack(
   return conn.sendTrack(data, format, title, onProgress);
 }
 
-/**
- * Tear down the singleton. Only needed for hot-module-replacement cleanup.
- */
-export function destroyConnection(): void {
-  if (conn) {
-    conn.disconnect();
-    conn = null;
-  }
-  initialized = false;
-}
