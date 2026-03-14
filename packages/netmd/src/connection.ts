@@ -433,14 +433,77 @@ export class NetMDConnection {
   }
 
   /**
-   * Upload a track to the disc using netmd-js MDSession.
+   * Prepare the device for a batch of track uploads.
    *
-   * Following Web MiniDisc Pro's pattern:
-   * 1. prepareDownload() (yes, this is the upload prep — netmd-js naming)
-   * 2. MDSession.init()
-   * 3. MDSession.downloadTrack() (sends track TO device)
-   * 4. MDSession.close()
-   * 5. NetMDInterface.release()
+   * Following Web MiniDisc Pro's pattern exactly:
+   *   prepareUpload() once → upload() per track → finalizeUpload() once
+   *
+   * This opens a single MDSession that persists across all tracks in the batch.
+   * Call sendTrack() for each track, then call finalizeUpload() when done.
+   */
+  async prepareUpload(): Promise<boolean> {
+    if (!this.netmdInterface) return false;
+
+    try {
+      await prepareDownload(this.netmdInterface);
+      const session = new MDSession(this.netmdInterface);
+      this.currentSession = session;
+      await session.init();
+      console.log('[NetMD] Upload session initialized');
+      return true;
+    } catch (err) {
+      console.error('[NetMD] prepareUpload failed:', err);
+      this.currentSession = null;
+      this.events.onError?.(err instanceof Error ? err.message : 'Failed to prepare upload session');
+      return false;
+    }
+  }
+
+  /**
+   * Finalize the upload session. MUST be called after all tracks are sent,
+   * even if a transfer failed. This closes the MDSession and releases the
+   * device so it's ready for the next batch without a power cycle.
+   */
+  async finalizeUpload(): Promise<void> {
+    try {
+      if (this.currentSession) {
+        await this.currentSession.close();
+        console.log('[NetMD] Session closed');
+      }
+    } catch (err) {
+      console.warn('[NetMD] session.close() failed (non-fatal):', err);
+    }
+
+    try {
+      if (this.netmdInterface) {
+        await this.netmdInterface.release();
+        console.log('[NetMD] Interface released');
+      }
+    } catch (err) {
+      console.warn('[NetMD] release() failed (non-fatal):', err);
+    }
+
+    this.currentSession = null;
+
+    // Re-read TOC to reflect any new tracks
+    this.cachedDisc = null;
+    try {
+      await this.readTOCInternal(true);
+      if (this._toc) {
+        this.events.onTOCRead?.(this._toc);
+      }
+    } catch (err) {
+      console.warn('[NetMD] TOC re-read after finalize failed (non-fatal):', err);
+    }
+  }
+
+  /**
+   * Upload a single track within an active upload session.
+   *
+   * MUST be called between prepareUpload() and finalizeUpload().
+   * For convenience, if no session is active, this method will open and
+   * close one automatically (single-track mode), but callers transferring
+   * multiple tracks should use the batch API for reliability.
    */
   async sendTrack(
     data: ArrayBuffer,
@@ -450,23 +513,22 @@ export class NetMDConnection {
   ): Promise<boolean> {
     if (!this.netmdInterface) return false;
 
+    // If no session is active, run in single-track mode with full lifecycle
+    const isSingleTrackMode = this.currentSession === null;
+    if (isSingleTrackMode) {
+      const prepared = await this.prepareUpload();
+      if (!prepared) return false;
+    }
+
     let encryptWorker: Worker | null = null;
 
     try {
-      // Prepare for upload session
-      await prepareDownload(this.netmdInterface);
-
-      const session = new MDSession(this.netmdInterface);
-      this.currentSession = session;
-      await session.init();
-
       const wireformat = WIREFORMAT_MAP[format];
       const total = data.byteLength;
       let written = 0;
       let encrypted = 0;
 
-      // Create the encryption worker (required by netmd-js for DES packet encryption)
-      // Matches Web MiniDisc Pro's pattern exactly.
+      // Create a fresh encryption worker per track (matches Web MiniDisc Pro)
       encryptWorker = new Worker(
         new URL('./encrypt-worker.ts', import.meta.url),
         { type: 'module' }
@@ -487,7 +549,7 @@ export class NetMDConnection {
       const mdTrack = new MDTrack(title, wireformat, data, 0x400, '', encryptIterator);
 
       // Send to device with progress callback
-      await session.downloadTrack(mdTrack, (progress) => {
+      await this.currentSession!.downloadTrack(mdTrack, (progress) => {
         written = progress.writtenBytes;
         if (total > 0) {
           const percent = ((written + encrypted) / (total * 2)) * 100;
@@ -495,30 +557,73 @@ export class NetMDConnection {
         }
       });
 
-      // Cleanup encrypt worker
+      // Terminate worker after this track (fresh worker per track)
       encryptWorker.terminate();
       encryptWorker = null;
 
-      // Finalize the session
-      await session.close();
-      await this.netmdInterface.release();
-      this.currentSession = null;
-
-      // Drop cache and re-read TOC to reflect the new track
+      // Drop cached content so next TOC read is fresh
       this.cachedDisc = null;
-      await this.readTOCInternal(true);
-      if (this._toc) {
-        this.events.onTOCRead?.(this._toc);
-      }
 
       return true;
     } catch (err) {
       console.error('[NetMD] sendTrack failed:', err);
       encryptWorker?.terminate();
-      this.currentSession = null;
+
+      // Attempt session recovery on "Rejected" errors
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.toLowerCase().includes('rejected')) {
+        console.warn('[NetMD] Device rejected transfer — attempting session recovery');
+        await this.recoverSession();
+      }
+
       this.events.onError?.(err instanceof Error ? err.message : 'Transfer failed');
       return false;
+    } finally {
+      // In single-track mode, always finalize even on failure
+      if (isSingleTrackMode) {
+        await this.finalizeUpload();
+      }
     }
+  }
+
+  /**
+   * Attempt to recover from a "Rejected" device state by tearing down
+   * and re-initializing the session. This avoids requiring a power cycle.
+   */
+  private async recoverSession(): Promise<boolean> {
+    console.log('[NetMD] Recovering session...');
+
+    // Tear down the current session
+    try {
+      if (this.currentSession) {
+        await this.currentSession.close();
+      }
+    } catch { /* ignore — session may already be dead */ }
+
+    try {
+      if (this.netmdInterface) {
+        await this.netmdInterface.release();
+      }
+    } catch { /* ignore */ }
+
+    this.currentSession = null;
+
+    // Wait for the device firmware to settle
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Try to re-read TOC to confirm the device is responsive
+    try {
+      if (this.netmdInterface) {
+        this.cachedDisc = null;
+        await this.readTOCInternal(true);
+        console.log('[NetMD] Session recovery successful — device responsive');
+        return true;
+      }
+    } catch (err) {
+      console.error('[NetMD] Session recovery failed — device may need power cycle:', err);
+    }
+
+    return false;
   }
 
   /**

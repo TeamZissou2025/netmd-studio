@@ -4,7 +4,7 @@ import type { TransferTrack } from '@netmd-studio/types';
 import { ACCEPTED_AUDIO_TYPES, ACCEPTED_AUDIO_EXTENSIONS } from '@netmd-studio/types';
 import { useTransferStore } from './store';
 import { useAudioPipeline } from './useAudioPipeline';
-import { sendTrack } from './connection';
+import { sendTrack, prepareUpload, finalizeUpload } from './connection';
 import { supabase } from '../../lib/supabase';
 
 let trackIdCounter = 0;
@@ -100,50 +100,65 @@ export function useTransferQueue() {
     let completedCount = 0;
     const trackDetails: Array<{ title: string; format: string; duration_seconds: number; size_bytes: number }> = [];
 
-    for (let i = 0; i < queuedTracks.length; i++) {
-      if (cancelledRef.current) break;
+    // Open a single MDSession for the entire batch (matches Web MiniDisc Pro)
+    const sessionReady = await prepareUpload();
+    if (!sessionReady) {
+      toast.error('Failed to initialize upload session');
+      setIsTransferring(false);
+      return;
+    }
 
-      // Wait while paused
-      while (pausedRef.current && !cancelledRef.current) {
-        await new Promise((r) => setTimeout(r, 200));
-      }
-      if (cancelledRef.current) break;
-
-      const track = queuedTracks[i];
-      setCurrentTrackIndex(useTransferStore.getState().tracks.findIndex((t) => t.id === track.id));
-
-      try {
-        // Phase 1: Encode
-        const { data, durationSeconds } = await encodeTrack(track.id, track.file, track.format);
-
+    try {
+      for (let i = 0; i < queuedTracks.length; i++) {
         if (cancelledRef.current) break;
 
-        // Phase 2: Transfer to device
-        updateTrackStatus(track.id, 'transferring');
-        const success = await sendTrack(data, track.format, track.title, (percent) => {
-          updateTrackTransferProgress(track.id, percent);
-          updateOverallProgress();
-        });
-
-        if (success) {
-          updateTrackStatus(track.id, 'done');
-          updateTrackTransferProgress(track.id, 100);
-          completedCount++;
-          trackDetails.push({
-            title: track.title,
-            format: track.format,
-            duration_seconds: Math.round(durationSeconds),
-            size_bytes: data.byteLength,
-          });
-        } else {
-          updateTrackStatus(track.id, 'error');
+        // Wait while paused
+        while (pausedRef.current && !cancelledRef.current) {
+          await new Promise((r) => setTimeout(r, 200));
         }
-      } catch (err) {
-        // Error already set by pipeline
-        console.error(`Transfer failed for ${track.title}:`, err);
-      }
+        if (cancelledRef.current) break;
 
-      updateOverallProgress();
+        const track = queuedTracks[i];
+        setCurrentTrackIndex(useTransferStore.getState().tracks.findIndex((t) => t.id === track.id));
+
+        try {
+          // Phase 1: Encode
+          const { data, durationSeconds } = await encodeTrack(track.id, track.file, track.format);
+
+          if (cancelledRef.current) break;
+
+          // Phase 2: Transfer to device (session already open)
+          updateTrackStatus(track.id, 'transferring');
+          const success = await sendTrack(data, track.format, track.title, (percent) => {
+            updateTrackTransferProgress(track.id, percent);
+            updateOverallProgress();
+          });
+
+          if (success) {
+            updateTrackStatus(track.id, 'done');
+            updateTrackTransferProgress(track.id, 100);
+            completedCount++;
+            trackDetails.push({
+              title: track.title,
+              format: track.format,
+              duration_seconds: Math.round(durationSeconds),
+              size_bytes: data.byteLength,
+            });
+          } else {
+            updateTrackStatus(track.id, 'error');
+          }
+        } catch (err) {
+          // Error already set by pipeline
+          console.error(`Transfer failed for ${track.title}:`, err);
+        }
+
+        updateOverallProgress();
+      }
+    } finally {
+      // ALWAYS finalize the session — even on error or cancel.
+      // This closes the MDSession and releases the device so it's
+      // ready for the next batch without a power cycle.
+      await finalizeUpload();
     }
 
     setIsTransferring(false);

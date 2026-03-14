@@ -93,6 +93,16 @@ export async function renameDisc(title: string): Promise<boolean> {
   return conn.setDiscTitle(title);
 }
 
+export async function prepareUpload(): Promise<boolean> {
+  if (!conn) return false;
+  return conn.prepareUpload();
+}
+
+export async function finalizeUpload(): Promise<void> {
+  if (!conn) return;
+  await conn.finalizeUpload();
+}
+
 export async function sendTrack(
   data: ArrayBuffer,
   format: 'sp' | 'lp2' | 'lp4',
