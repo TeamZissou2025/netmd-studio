@@ -1,4 +1,7 @@
 {
+  "installCommand": "cd ../.. && pnpm install",
+  "buildCommand": "cd ../.. && npx turbo build --filter=@netmd-studio/web",
+  "outputDirectory": "dist",
   "headers": [
     {
       "source": "/wasm/(.*)",
