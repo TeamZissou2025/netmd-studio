@@ -114,9 +114,14 @@ function convertTrack(track: WMDTrack): DiscTrack {
     encoding = 'lp4';
   }
 
+  const title = track.title ?? '';
+  if (!title && track.index === 0) {
+    console.log('[NetMD] Track %d title is empty (raw: %o, fullWidth: %o)', track.index, track.title, track.fullWidthTitle);
+  }
+
   return {
     index: track.index,
-    title: track.title ?? '',
+    title,
     fullWidthTitle: track.fullWidthTitle ?? '',
     durationSeconds: track.duration,
     encoding,

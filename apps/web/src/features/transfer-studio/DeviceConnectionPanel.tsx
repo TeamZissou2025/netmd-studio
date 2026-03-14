@@ -32,9 +32,17 @@ export function DeviceConnectionPanel() {
         {isConnected && (
           <button
             onClick={refreshTOC}
-            className="transition-colors"
+            className="transition-all duration-300"
             style={{ color: 'var(--text-tertiary)' }}
             title="Refresh disc info"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--accent)';
+              e.currentTarget.style.transform = 'rotate(180deg)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--text-tertiary)';
+              e.currentTarget.style.transform = 'rotate(0deg)';
+            }}
           >
             <RefreshCw size={14} />
           </button>

@@ -13,7 +13,6 @@ export function DiscTOCPanel() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState('');
 
-  // Confirmation modal state
   const [confirmAction, setConfirmAction] = useState<{
     type: 'eraseDisc' | 'deleteTrack';
     trackIndex?: number;
@@ -84,23 +83,25 @@ export function DiscTOCPanel() {
   return (
     <>
       <div className="rounded-lg" style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}>
+        {/* Header */}
         <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
           <h3 className="text-nav font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <List size={16} style={{ color: 'var(--pillar-transfer)' }} />
             Disc Contents
           </h3>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span className="text-tag font-mono" style={{ color: 'var(--text-tertiary)' }}>
               {toc.trackCount} track{toc.trackCount !== 1 ? 's' : ''}
             </span>
             {toc.trackCount > 0 && (
               <button
                 onClick={() => setConfirmAction({ type: 'eraseDisc' })}
-                className="p-1 rounded transition-colors hover:bg-[var(--surface-2)]"
-                style={{ color: 'var(--text-tertiary)' }}
                 title="Erase disc"
+                style={{ color: 'var(--error)', opacity: 0.6 }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.6'; }}
               >
-                <Trash2 size={14} />
+                <Trash2 size={15} />
               </button>
             )}
           </div>
@@ -123,7 +124,7 @@ export function DiscTOCPanel() {
                 autoFocus
                 maxLength={120}
               />
-              <button onClick={confirmEditTitle} style={{ color: 'var(--success)' }} className="hover:opacity-80">
+              <button onClick={confirmEditTitle} style={{ color: 'var(--success)' }}>
                 <Check size={14} />
               </button>
               <button onClick={cancelEditTitle} style={{ color: 'var(--text-tertiary)' }}>
@@ -161,6 +162,7 @@ export function DiscTOCPanel() {
                   className="px-4 py-2 flex items-center gap-3 group"
                   style={{ borderBottom: '1px solid var(--border)' }}
                 >
+                  {/* Track number */}
                   <span className="text-tag font-mono w-5 text-right shrink-0" style={{ color: 'var(--text-tertiary)' }}>
                     {track.index + 1}
                   </span>
@@ -180,7 +182,7 @@ export function DiscTOCPanel() {
                         autoFocus
                         maxLength={120}
                       />
-                      <button onClick={confirmEditTrack} style={{ color: 'var(--success)' }} className="hover:opacity-80">
+                      <button onClick={confirmEditTrack} style={{ color: 'var(--success)' }}>
                         <Check size={14} />
                       </button>
                       <button onClick={cancelEditTrack} style={{ color: 'var(--text-tertiary)' }}>
@@ -189,34 +191,43 @@ export function DiscTOCPanel() {
                     </div>
                   ) : (
                     <>
+                      {/* Title */}
                       <span className="flex-1 text-label truncate" style={{ color: 'var(--text-primary)' }}>
                         {track.title || 'Untitled'}
                       </span>
+
+                      {/* Encoding badge */}
                       {formatBadge(track.encoding)}
+
+                      {/* Duration */}
                       <span className="text-tag font-mono w-10 text-right shrink-0" style={{ color: 'var(--text-tertiary)' }}>
                         {formatDuration(track.durationSeconds)}
                       </span>
-                      <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
-                        <button
-                          onClick={() => startEditTrack(track)}
-                          style={{ color: 'var(--text-tertiary)' }}
-                          title="Rename"
-                        >
-                          <Pencil size={12} />
-                        </button>
-                        <button
-                          onClick={() => setConfirmAction({
-                            type: 'deleteTrack',
-                            trackIndex: track.index,
-                            trackTitle: track.title || 'Untitled',
-                          })}
-                          style={{ color: 'var(--text-tertiary)' }}
-                          title="Delete track"
-                          className="hover:!text-[var(--error)]"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
+
+                      {/* Rename — hover only */}
+                      <button
+                        onClick={() => startEditTrack(track)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ color: 'var(--text-tertiary)' }}
+                        title="Rename"
+                      >
+                        <Pencil size={12} />
+                      </button>
+
+                      {/* Delete — always visible */}
+                      <button
+                        onClick={() => setConfirmAction({
+                          type: 'deleteTrack',
+                          trackIndex: track.index,
+                          trackTitle: track.title || 'Untitled',
+                        })}
+                        title="Delete track"
+                        style={{ color: 'var(--text-tertiary)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--error)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-tertiary)'; }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </>
                   )}
                 </li>
