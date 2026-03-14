@@ -9,6 +9,7 @@ import { useTransferStore } from './store';
 export function DeviceConnectionPanel() {
   const { connectionStatus, deviceInfo, toc, connect, disconnect, refreshTOC } = useDeviceConnection();
   const selectedFormat = useTransferStore((s) => s.selectedFormat);
+  const tracks = useTransferStore((s) => s.tracks);
 
   const isConnected = connectionStatus === 'connected';
   const isConnecting = connectionStatus === 'connecting';
@@ -18,11 +19,39 @@ export function DeviceConnectionPanel() {
   const spTotal = toc?.totalSeconds ?? 0;
   const spUsed = toc?.usedSeconds ?? 0;
   const spFree = toc?.freeSeconds ?? 0;
-  const totalCapacity = spSecondsToFormat(spTotal, selectedFormat);
-  const usedSeconds = spSecondsToFormat(spUsed, selectedFormat);
-  const freeSeconds = spSecondsToFormat(spFree, selectedFormat);
-  // usedPercent is ratio-independent (same percentage regardless of format)
+
+  const usedForFormat = spSecondsToFormat(spUsed, selectedFormat);
+  const freeForFormat = spSecondsToFormat(spFree, selectedFormat);
+
+  // Queued duration: sum of non-done, non-error tracks
+  const queuedDuration = tracks
+    .filter((t) => t.status !== 'done' && t.status !== 'error')
+    .reduce((sum, t) => sum + t.duration, 0);
+
+  // Bar percentages (based on physical byte ratio — format-independent)
   const usedPercent = spTotal > 0 ? (spUsed / spTotal) * 100 : 0;
+  // Queued percent: convert queued duration (in real seconds) back to SP-equivalent
+  // to get the byte-proportional bar width.
+  const spQueuedEquiv = spTotal > 0
+    ? queuedDuration / (spSecondsToFormat(spTotal, selectedFormat)) * spTotal
+    : 0;
+  const queuedPercent = spTotal > 0 ? (spQueuedEquiv / spTotal) * 100 : 0;
+  // Clamp so used + queued doesn't exceed 100%
+  const clampedQueued = Math.min(queuedPercent, 100 - usedPercent);
+
+  // Remaining free time after queued tracks
+  const remainingFree = Math.max(0, freeForFormat - queuedDuration);
+
+  // Free time color: cyan normally, warning < 5 min, error at 0
+  const freeColor = remainingFree <= 0
+    ? 'var(--error)'
+    : remainingFree < 300
+      ? 'var(--warning)'
+      : 'var(--accent)';
+
+  const freeLabel = remainingFree <= 0
+    ? 'Disc full'
+    : `${formatDuration(remainingFree)} free`;
 
   return (
     <div
@@ -115,20 +144,37 @@ export function DeviceConnectionPanel() {
               </span>
             </div>
 
-            {/* Capacity bar */}
+            {/* 3-segment capacity bar: used (magenta) | queued (cyan 50%) | free (gap) */}
             <div className="space-y-1">
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-2)' }}>
+              <div className="h-1.5 rounded-full overflow-hidden flex" style={{ background: 'var(--surface-2)' }}>
+                {/* Used portion */}
                 <div
-                  className="h-full rounded-full transition-[width] duration-300"
-                  style={{ width: `${Math.min(usedPercent, 100)}%`, background: 'var(--pillar-transfer)' }}
+                  className="h-full transition-[width] duration-300 shrink-0"
+                  style={{
+                    width: `${Math.min(usedPercent, 100)}%`,
+                    background: 'var(--pillar-transfer)',
+                    borderRadius: clampedQueued > 0 ? '9999px 0 0 9999px' : '9999px',
+                  }}
                 />
+                {/* Queued portion */}
+                {clampedQueued > 0.1 && (
+                  <div
+                    className="h-full transition-[width] duration-300 shrink-0"
+                    style={{
+                      width: `${clampedQueued}%`,
+                      background: 'var(--accent)',
+                      opacity: 0.5,
+                      borderRadius: usedPercent > 0 ? '0 9999px 9999px 0' : '9999px',
+                    }}
+                  />
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-tag font-mono" style={{ color: 'var(--text-tertiary)' }}>
-                  {formatDuration(usedSeconds)} used
+                  {formatDuration(usedForFormat)} used
                 </span>
-                <span className="text-tag font-mono" style={{ color: 'var(--success)' }}>
-                  {formatDuration(Math.max(0, freeSeconds))} free
+                <span className="text-tag font-mono" style={{ color: freeColor }}>
+                  {freeLabel}
                 </span>
               </div>
             </div>
@@ -143,4 +189,3 @@ export function DeviceConnectionPanel() {
     </div>
   );
 }
-
