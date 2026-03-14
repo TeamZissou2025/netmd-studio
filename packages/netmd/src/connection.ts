@@ -52,12 +52,13 @@ export interface NetMDConnectionEvents {
 /**
  * Convert WMD Disc type to our DiscTOC.
  *
- * WMD's convertDiscToWMD divides netmd-js raw byte counts by 512 to get
- * "WMD frames." Because netmd-js stores time as (seconds * 512 + subframes),
- * dividing by 512 gives seconds (with minor rounding from subframes).
+ * WMD's convertDiscToWMD divides netmd-js raw frame counts by 512 to get
+ * seconds for disc.left and disc.total. However, disc.used is NOT divided
+ * by 512 (it passes through via object spread unchanged). This is a quirk
+ * of WMD's convertDiscToWMD implementation.
  *
- * disc.used, disc.left, disc.total are ALL in seconds (after WMD conversion).
- * Track durations are also in seconds (after WMD conversion).
+ * To get correct used seconds, we compute: total - left (both in seconds).
+ * Track durations are in seconds (WMD divides by 512 in convertTrackToWMD).
  */
 function convertDisc(disc: WMDDisc): DiscTOC {
   const tracks: DiscTrack[] = [];
@@ -68,13 +69,12 @@ function convertDisc(disc: WMDDisc): DiscTOC {
   }
   tracks.sort((a, b) => a.index - b.index);
 
-  // disc.total, disc.used, disc.left are all in seconds after WMD's
-  // convertDiscToWMD divides netmd-js raw frames by 512.
-  // Use the device-reported values directly — they come from getDiscCapacity()
-  // which returns the actual hardware-reported used/total/left times.
+  // disc.left and disc.total are in SP-equivalent seconds (divided by 512
+  // in WMD's convertDiscToWMD). disc.used is NOT divided — it's still raw
+  // frames. Compute usedSeconds from the two correct values instead.
   const totalSeconds = disc.total;
-  const usedSeconds = disc.used;
   const freeSeconds = disc.left;
+  const usedSeconds = Math.max(0, totalSeconds - freeSeconds);
 
   console.log('[NetMD] Disc capacity: total=%ds (%s), used=%ds (%s), free=%ds (%s), tracks=%d',
     totalSeconds, formatTime(totalSeconds),

@@ -14,13 +14,13 @@ export function DeviceConnectionPanel() {
   const isConnected = connectionStatus === 'connected';
   const isConnecting = connectionStatus === 'connecting';
 
-  // Device reports capacity in SP-equivalent seconds. Convert to selected format
-  // using actual bitrate ratio (292/132 ≈ 2.21x for LP2, 292/66 ≈ 4.42x for LP4).
+  // Device reports capacity in SP-equivalent seconds.
+  // Used time is format-independent (already recorded on disc).
+  // Free time converts to selected format (same bytes = more time at lower bitrate).
   const spTotal = toc?.totalSeconds ?? 0;
   const spUsed = toc?.usedSeconds ?? 0;
   const spFree = toc?.freeSeconds ?? 0;
 
-  const usedForFormat = spSecondsToFormat(spUsed, selectedFormat);
   const freeForFormat = spSecondsToFormat(spFree, selectedFormat);
 
   // Queued duration: sum of non-done, non-error tracks
@@ -171,7 +171,7 @@ export function DeviceConnectionPanel() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-tag font-mono" style={{ color: 'var(--text-tertiary)' }}>
-                  {formatDuration(usedForFormat)} used
+                  {formatDuration(spUsed)} used
                 </span>
                 <span className="text-tag font-mono" style={{ color: freeColor }}>
                   {freeLabel}
