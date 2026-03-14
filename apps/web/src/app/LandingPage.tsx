@@ -2,6 +2,24 @@ import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react'
 import { Disc3, Radio, Database, ShoppingBag, Check, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
+// ── Light-mode landing page colors ───────────────────────────
+const C = {
+  bg: '#F5F3EE',
+  text: '#1A1A1A',
+  textMuted: '#5A5A5A',
+  textDim: '#6B6B6B',
+  accent: '#4AACA0',
+  pillBg: '#E8EFED',
+  pillDot: '#5BA89D',
+  cardBg: '#FFFFFF',
+  cardBorder: '#E0DDD6',
+  inputBg: '#FFFFFF',
+  inputBorder: '#D4D1CA',
+  footerBorder: '#E0DDD6',
+  success: '#2E8B6E',
+  error: '#C53030',
+} as const;
+
 // ── Hero word cycler ─────────────────────────────────────────
 const CYCLE_WORDS = ['MiniDisc', 'Recording', 'Collecting', 'Discovery', 'MiniDisc'];
 const WORD_DISPLAY_MS = 1100;
@@ -14,7 +32,6 @@ function HeroCycler() {
   const wrapperRef = useRef<HTMLSpanElement>(null);
   const measureRef = useRef<HTMLSpanElement>(null);
 
-  // Measure max word width once
   useEffect(() => {
     if (!wrapperRef.current || !measureRef.current) return;
     let maxW = 0;
@@ -27,22 +44,17 @@ function HeroCycler() {
     wrapperRef.current.style.minWidth = maxW + 'px';
   }, []);
 
-  // Cycle state machine
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
-
     if (phase === 'in') {
       const isLast = currentIndex === CYCLE_WORDS.length - 1;
-      const holdTime = isLast ? HOLD_LAST_MS : WORD_DISPLAY_MS;
-      timer = setTimeout(() => setPhase('out'), holdTime);
+      timer = setTimeout(() => setPhase('out'), isLast ? HOLD_LAST_MS : WORD_DISPLAY_MS);
     } else if (phase === 'out') {
       timer = setTimeout(() => {
-        const isLast = currentIndex === CYCLE_WORDS.length - 1;
-        setCurrentIndex(isLast ? 0 : currentIndex + 1);
+        setCurrentIndex(currentIndex === CYCLE_WORDS.length - 1 ? 0 : currentIndex + 1);
         setPhase('in');
       }, TRANSITION_OUT_MS + 50);
     }
-
     return () => clearTimeout(timer);
   }, [currentIndex, phase]);
 
@@ -52,14 +64,7 @@ function HeroCycler() {
       className="inline-block relative overflow-hidden"
       style={{ height: '1.1em', verticalAlign: 'bottom' }}
     >
-      {/* Hidden measurer */}
-      <span
-        ref={measureRef}
-        className="invisible absolute whitespace-nowrap"
-        style={{ font: 'inherit' }}
-        aria-hidden="true"
-      />
-
+      <span ref={measureRef} className="invisible absolute whitespace-nowrap" style={{ font: 'inherit' }} aria-hidden="true" />
       {CYCLE_WORDS.map((word, i) => {
         const isActive = i === currentIndex;
         let transform = 'translateY(100%)';
@@ -67,31 +72,18 @@ function HeroCycler() {
         let transition = 'none';
 
         if (isActive && phase === 'in') {
-          transform = 'translateY(0)';
-          opacity = 1;
-          transition = 'opacity 0.225s cubic-bezier(0.22, 1, 0.36, 1), transform 0.225s cubic-bezier(0.22, 1, 0.36, 1)';
+          transform = 'translateY(0)'; opacity = 1;
+          transition = 'opacity 0.225s cubic-bezier(0.22,1,0.36,1), transform 0.225s cubic-bezier(0.22,1,0.36,1)';
         } else if (isActive && phase === 'hold') {
-          transform = 'translateY(0)';
-          opacity = 1;
+          transform = 'translateY(0)'; opacity = 1;
         } else if (isActive && phase === 'out') {
-          transform = 'translateY(-100%)';
-          opacity = 0;
-          transition = 'opacity 0.175s cubic-bezier(0.55, 0, 1, 0.45), transform 0.175s cubic-bezier(0.55, 0, 1, 0.45)';
+          transform = 'translateY(-100%)'; opacity = 0;
+          transition = 'opacity 0.175s cubic-bezier(0.55,0,1,0.45), transform 0.175s cubic-bezier(0.55,0,1,0.45)';
         }
 
         return (
-          <span
-            key={`${word}-${i}`}
-            className="absolute left-0 w-full text-left"
-            style={{
-              color: 'var(--accent)',
-              opacity,
-              transform,
-              transition,
-            }}
-          >
-            {word}
-            <span style={{ color: 'var(--text-primary)' }}>.</span>
+          <span key={`${word}-${i}`} className="absolute left-0 w-full text-left" style={{ color: C.accent, opacity, transform, transition }}>
+            {word}<span style={{ color: C.text }}>.</span>
           </span>
         );
       })}
@@ -99,7 +91,7 @@ function HeroCycler() {
   );
 }
 
-// ── Fade-in-on-scroll wrapper ────────────────────────────────
+// ── Fade-in-on-scroll ────────────────────────────────────────
 function FadeInSection({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -122,7 +114,7 @@ function FadeInSection({ children, className = '', delay = 0 }: { children: Reac
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(24px)',
-        transition: `opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms`,
+        transition: `opacity 0.6s cubic-bezier(0.22,1,0.36,1) ${delay}ms, transform 0.6s cubic-bezier(0.22,1,0.36,1) ${delay}ms`,
       }}
     >
       {children}
@@ -130,36 +122,12 @@ function FadeInSection({ children, className = '', delay = 0 }: { children: Reac
   );
 }
 
-// ── Pillar cards data ────────────────────────────────────────
+// ── Pillar cards ─────────────────────────────────────────────
 const pillars = [
-  {
-    icon: Disc3,
-    title: 'Label Studio',
-    desc: 'Design J-cards and spine labels',
-    color: 'var(--pillar-label)',
-    colorHex: '#00d4ff',
-  },
-  {
-    icon: Radio,
-    title: 'Transfer Studio',
-    desc: 'Transfer audio via WebUSB',
-    color: 'var(--pillar-transfer)',
-    colorHex: '#ff0066',
-  },
-  {
-    icon: Database,
-    title: 'Device Library',
-    desc: 'Community hardware database',
-    color: 'var(--pillar-device)',
-    colorHex: '#ffaa00',
-  },
-  {
-    icon: ShoppingBag,
-    title: 'Marketplace',
-    desc: 'Buy and sell MiniDisc gear',
-    color: 'var(--pillar-market)',
-    colorHex: '#00cc88',
-  },
+  { icon: Disc3, title: 'Label Studio', desc: 'Design J-cards and spine labels', colorHex: '#4AACA0' },
+  { icon: Radio, title: 'Transfer Studio', desc: 'Transfer audio via WebUSB', colorHex: '#D4577A' },
+  { icon: Database, title: 'Device Library', desc: 'Community hardware database', colorHex: '#C8923C' },
+  { icon: ShoppingBag, title: 'Marketplace', desc: 'Buy and sell MiniDisc gear', colorHex: '#3BA37A' },
 ];
 
 // ── Email signup form ────────────────────────────────────────
@@ -171,45 +139,30 @@ function WaitlistForm() {
   const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     const trimmed = email.trim();
-
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setStatus('error');
-      setErrorMsg('Please enter a valid email address');
-      return;
+      setStatus('error'); setErrorMsg('Please enter a valid email address'); return;
     }
-
     setStatus('submitting');
     try {
       const { error } = await (supabase as any).from('waitlist').insert({ email: trimmed });
       if (error) {
-        if (error.code === '23505') {
-          // Unique constraint violation — already signed up
-          setStatus('success');
-        } else {
-          setStatus('error');
-          setErrorMsg('Something went wrong. Please try again.');
-        }
+        if (error.code === '23505') setStatus('success');
+        else { setStatus('error'); setErrorMsg('Something went wrong. Please try again.'); }
       } else {
         setStatus('success');
       }
     } catch {
-      setStatus('error');
-      setErrorMsg('Something went wrong. Please try again.');
+      setStatus('error'); setErrorMsg('Something went wrong. Please try again.');
     }
   }, [email]);
 
   if (status === 'success') {
     return (
       <div className="flex items-center justify-center gap-2 py-3">
-        <div
-          className="w-6 h-6 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(0,204,136,0.15)' }}
-        >
-          <Check size={14} style={{ color: 'var(--success)' }} />
+        <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#E6F4EE' }}>
+          <Check size={14} style={{ color: C.success }} />
         </div>
-        <span className="font-medium" style={{ color: 'var(--success)', fontSize: '14px' }}>
-          You're on the list!
-        </span>
+        <span className="font-medium" style={{ color: C.success, fontSize: '14px' }}>You're on the list!</span>
       </div>
     );
   }
@@ -223,21 +176,21 @@ function WaitlistForm() {
         onChange={(e) => { setEmail(e.target.value); if (status === 'error') setStatus('idle'); }}
         className="flex-1 h-10 px-4 rounded-lg font-mono outline-none transition-colors"
         style={{
-          background: 'var(--surface-1)',
-          border: status === 'error' ? '1px solid var(--error)' : '1px solid var(--border)',
-          color: 'var(--text-primary)',
+          background: C.inputBg,
+          border: `1px solid ${status === 'error' ? C.error : C.inputBorder}`,
+          color: C.text,
           fontSize: '13px',
         }}
-        onFocus={(e) => { if (status !== 'error') e.currentTarget.style.borderColor = 'var(--accent)'; }}
-        onBlur={(e) => { if (status !== 'error') e.currentTarget.style.borderColor = 'var(--border)'; }}
+        onFocus={(e) => { if (status !== 'error') e.currentTarget.style.borderColor = C.accent; }}
+        onBlur={(e) => { if (status !== 'error') e.currentTarget.style.borderColor = C.inputBorder; }}
       />
       <button
         type="submit"
         disabled={status === 'submitting'}
         className="h-10 px-6 rounded-lg font-medium transition-opacity whitespace-nowrap"
         style={{
-          background: 'var(--accent)',
-          color: '#0a0a0b',
+          background: C.accent,
+          color: '#FFFFFF',
           fontSize: '13px',
           opacity: status === 'submitting' ? 0.6 : 1,
         }}
@@ -245,7 +198,7 @@ function WaitlistForm() {
         {status === 'submitting' ? 'Joining...' : 'Notify Me'}
       </button>
       {status === 'error' && (
-        <p className="text-xs sm:absolute sm:mt-12" style={{ color: 'var(--error)' }}>{errorMsg}</p>
+        <p className="text-xs sm:absolute sm:mt-12" style={{ color: C.error }}>{errorMsg}</p>
       )}
     </form>
   );
@@ -254,17 +207,12 @@ function WaitlistForm() {
 // ── Main landing page ────────────────────────────────────────
 export function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0a0a0b' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: C.bg, fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       {/* ── Section 1: Top bar ── */}
       <div className="text-center pt-6 pb-4">
         <span
           className="inline-block font-mono uppercase tracking-widest px-4 py-2 rounded-full"
-          style={{
-            background: 'var(--surface-1)',
-            color: 'var(--accent)',
-            fontSize: '11px',
-            letterSpacing: '0.12em',
-          }}
+          style={{ background: C.pillBg, color: C.accent, fontSize: '11px', letterSpacing: '0.12em' }}
         >
           Spring 2026
         </span>
@@ -276,21 +224,15 @@ export function LandingPage() {
           {/* Pill */}
           <div
             className="inline-flex items-center gap-2 rounded-full px-5 py-2 mb-8"
-            style={{
-              background: 'rgba(0,212,255,0.06)',
-              border: '1px solid rgba(0,212,255,0.12)',
-            }}
+            style={{ background: C.pillBg }}
           >
             <span
               className="w-2 h-2 rounded-full"
-              style={{
-                background: 'var(--accent)',
-                animation: 'pulse-dot 2s ease-in-out infinite',
-              }}
+              style={{ background: C.pillDot, animation: 'pulse-dot 2s ease-in-out infinite' }}
             />
             <span
               className="font-mono uppercase tracking-widest"
-              style={{ color: 'var(--accent)', fontSize: '11px', letterSpacing: '0.12em' }}
+              style={{ color: C.textMuted, fontSize: '11px', letterSpacing: '0.12em' }}
             >
               The all-in-one MiniDisc platform
             </span>
@@ -303,7 +245,7 @@ export function LandingPage() {
               fontSize: 'clamp(36px, 6vw, 72px)',
               lineHeight: 1.1,
               letterSpacing: '-0.03em',
-              color: 'var(--text-primary)',
+              color: C.text,
               whiteSpace: 'nowrap',
             }}
           >
@@ -311,10 +253,7 @@ export function LandingPage() {
           </h1>
 
           {/* Subtitle */}
-          <p
-            className="mt-6 mx-auto max-w-md"
-            style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: 1.6 }}
-          >
+          <p className="mt-6 mx-auto max-w-md" style={{ color: C.textMuted, fontSize: '15px', lineHeight: 1.6 }}>
             Design labels. Transfer audio. Explore hardware. Trade gear.
             <br />
             All in one studio built for the community.
@@ -325,11 +264,7 @@ export function LandingPage() {
             <a
               href="/auth/signup"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-lg font-medium transition-opacity hover:opacity-90"
-              style={{
-                background: 'var(--accent)',
-                color: '#0a0a0b',
-                fontSize: '14px',
-              }}
+              style={{ background: C.accent, color: '#FFFFFF', fontSize: '14px' }}
             >
               Get Early Access
               <ArrowRight size={16} />
@@ -347,31 +282,27 @@ export function LandingPage() {
               return (
                 <FadeInSection key={p.title} delay={i * 80}>
                   <div
-                    className="rounded-xl p-6 transition-colors duration-200 h-full"
-                    style={{
-                      background: 'var(--surface-1)',
-                      border: '1px solid var(--border)',
-                    }}
+                    className="rounded-xl p-6 transition-all duration-200 h-full"
+                    style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
                     onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.borderColor = `${p.colorHex}33`;
+                      (e.currentTarget as HTMLElement).style.borderColor = p.colorHex;
+                      (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px ${p.colorHex}18`;
                     }}
                     onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+                      (e.currentTarget as HTMLElement).style.borderColor = C.cardBorder;
+                      (e.currentTarget as HTMLElement).style.boxShadow = 'none';
                     }}
                   >
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                      style={{ background: `${p.colorHex}12` }}
+                      style={{ background: `${p.colorHex}14` }}
                     >
-                      <Icon size={20} style={{ color: p.color }} />
+                      <Icon size={20} style={{ color: p.colorHex }} />
                     </div>
-                    <h3
-                      className="font-semibold mb-1"
-                      style={{ color: 'var(--text-primary)', fontSize: '14px' }}
-                    >
+                    <h3 className="font-semibold mb-1" style={{ color: C.text, fontSize: '14px' }}>
                       {p.title}
                     </h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.5 }}>
+                    <p style={{ color: C.textMuted, fontSize: '13px', lineHeight: 1.5 }}>
                       {p.desc}
                     </p>
                   </div>
@@ -385,16 +316,10 @@ export function LandingPage() {
       {/* ── Section 4: Email Signup ── */}
       <FadeInSection className="px-6 pb-24">
         <div className="max-w-lg mx-auto text-center">
-          <h2
-            className="font-bold tracking-tight mb-2"
-            style={{ color: 'var(--text-primary)', fontSize: '20px' }}
-          >
+          <h2 className="font-bold tracking-tight mb-2" style={{ color: C.text, fontSize: '20px' }}>
             Get notified when we launch
           </h2>
-          <p
-            className="mb-6"
-            style={{ color: 'var(--text-secondary)', fontSize: '14px' }}
-          >
+          <p className="mb-6" style={{ color: C.textMuted, fontSize: '14px' }}>
             Join the waitlist. No spam, just one email when NetMD Studio goes live.
           </p>
           <WaitlistForm />
@@ -402,41 +327,29 @@ export function LandingPage() {
       </FadeInSection>
 
       {/* ── Section 5: Footer ── */}
-      <footer
-        className="px-6 py-8 text-center space-y-3"
-        style={{ borderTop: '1px solid var(--border)' }}
-      >
-        <p style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>
-          &copy; 2026 Squircle Labs
-        </p>
+      <footer className="px-6 py-8 text-center space-y-3" style={{ borderTop: `1px solid ${C.footerBorder}` }}>
+        <p style={{ color: C.textDim, fontSize: '12px' }}>&copy; 2026 Squircle Labs</p>
         <div className="flex items-center justify-center gap-4" style={{ fontSize: '12px' }}>
-          <a href="#" className="transition-colors" style={{ color: 'var(--text-tertiary)' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)'; }}
-          >Privacy</a>
-          <span style={{ color: 'var(--text-dim)' }}>&middot;</span>
-          <a href="#" className="transition-colors" style={{ color: 'var(--text-tertiary)' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)'; }}
-          >Terms</a>
+          <a href="#" className="transition-colors hover:underline" style={{ color: C.textDim }}>Privacy</a>
+          <span style={{ color: '#C0BDB6' }}>&middot;</span>
+          <a href="#" className="transition-colors hover:underline" style={{ color: C.textDim }}>Terms</a>
         </div>
-        <p style={{ color: 'var(--text-dim)', fontSize: '11px' }}>
+        <p style={{ color: '#9A9790', fontSize: '11px' }}>
           NetMD Studio is open source &middot;{' '}
           <a
             href="https://github.com/TeamZissou2025/netmd-studio"
             target="_blank"
             rel="noopener noreferrer"
             className="underline transition-colors"
-            style={{ color: 'var(--text-tertiary)' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--accent)'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)'; }}
+            style={{ color: C.textDim }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = C.accent; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = C.textDim; }}
           >
             GitHub
           </a>
         </p>
       </footer>
 
-      {/* Pulse-dot animation (used by the pill) */}
       <style>{`
         @keyframes pulse-dot {
           0%, 100% { opacity: 1; }
