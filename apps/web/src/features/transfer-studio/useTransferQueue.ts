@@ -4,7 +4,7 @@ import type { TransferTrack } from '@netmd-studio/types';
 import { ACCEPTED_AUDIO_TYPES, ACCEPTED_AUDIO_EXTENSIONS } from '@netmd-studio/types';
 import { useTransferStore } from './store';
 import { useAudioPipeline } from './useAudioPipeline';
-import { sendTrack, prepareUpload, finalizeUpload } from './connection';
+import { sendTrack, prepareUpload, finalizeUpload, refreshTOC } from './connection';
 import { supabase } from '../../lib/supabase';
 
 let trackIdCounter = 0;
@@ -144,6 +144,15 @@ export function useTransferQueue() {
               duration_seconds: Math.round(durationSeconds),
               size_bytes: data.byteLength,
             });
+
+            // Re-read TOC so Disc Contents panel updates in real-time.
+            // readTOC() returns null on failure — silently skip if device
+            // is busy, the next track or finalizeUpload will refresh again.
+            try {
+              await refreshTOC();
+            } catch {
+              // Non-fatal: TOC will be refreshed after finalizeUpload
+            }
           } else {
             updateTrackStatus(track.id, 'error');
           }
