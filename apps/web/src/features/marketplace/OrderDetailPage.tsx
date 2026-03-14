@@ -40,7 +40,7 @@ export function OrderDetailPage() {
   if (error || !order || !user) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-md text-studio-error mb-4">{error || 'Order not found'}</p>
+        <p className="text-body text-[var(--error)] mb-4">{error || 'Order not found'}</p>
         <Link to="/dashboard/orders">
           <Button variant="secondary">
             <ArrowLeft size={14} /> Back to orders
@@ -86,7 +86,7 @@ export function OrderDetailPage() {
       {/* Breadcrumb */}
       <Link
         to="/dashboard/orders"
-        className="inline-flex items-center gap-1.5 text-sm text-studio-text-muted hover:text-studio-cyan transition-colors w-fit"
+        className="inline-flex items-center gap-1.5 text-nav text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors w-fit"
       >
         <ArrowLeft size={14} />
         Back to orders
@@ -95,15 +95,15 @@ export function OrderDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-studio-text">
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
             Order {order.id.slice(0, 8)}...
           </h1>
-          <p className="text-sm text-studio-text-muted">
+          <p className="text-nav text-[var(--text-secondary)]">
             {formatRelativeTime(order.created_at)}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-lg font-semibold text-studio-text">
+          <p className="text-studio-title font-semibold text-[var(--text-primary)]">
             {formatPrice(order.total_cents, order.currency)}
           </p>
         </div>
@@ -111,7 +111,7 @@ export function OrderDetailPage() {
 
       {/* Timeline */}
       <Card>
-        <h2 className="text-sm font-semibold text-studio-text mb-4">Order status</h2>
+        <h2 className="text-nav font-semibold text-[var(--text-primary)] mb-4">Order status</h2>
         <OrderTimeline
           status={order.status}
           shippedAt={order.shipped_at}
@@ -123,23 +123,23 @@ export function OrderDetailPage() {
       {/* Listing info */}
       <Card>
         <div className="flex gap-4">
-          <div className="w-16 h-16 rounded-studio border border-studio-border overflow-hidden flex-shrink-0 bg-studio-black">
+          <div className="w-16 h-16 rounded-md border border-[var(--border)] overflow-hidden flex-shrink-0 bg-[var(--surface-0)]">
             {order.listing?.images?.[0] ? (
               <img src={order.listing.images[0]} alt="" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Package size={20} className="text-studio-border" />
+                <Package size={20} className="text-[var(--border)]" />
               </div>
             )}
           </div>
           <div className="flex-1">
             <Link
               to={`/marketplace/${order.listing_id}`}
-              className="text-sm font-medium text-studio-text hover:text-studio-cyan transition-colors"
+              className="text-nav font-medium text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
             >
               {order.listing?.title || 'Listing'}
             </Link>
-            <div className="flex items-center gap-3 mt-1 text-xs text-studio-text-muted">
+            <div className="flex items-center gap-3 mt-1 text-label text-[var(--text-secondary)]">
               <span>Qty: {order.quantity}</span>
               <span>Subtotal: {formatPrice(order.subtotal_cents, order.currency)}</span>
               <span>Shipping: {formatPrice(order.shipping_cents, order.currency)}</span>
@@ -151,7 +151,7 @@ export function OrderDetailPage() {
       {/* Seller actions */}
       {isSeller && order.status === 'paid' && (
         <Card>
-          <h2 className="text-sm font-semibold text-studio-text mb-3">
+          <h2 className="text-nav font-semibold text-[var(--text-primary)] mb-3">
             <Truck size={14} className="inline mr-1.5" />
             Ship this order
           </h2>
@@ -179,14 +179,14 @@ export function OrderDetailPage() {
       {/* Tracking info */}
       {order.tracking_number && (
         <Card>
-          <h2 className="text-sm font-semibold text-studio-text mb-2">Tracking</h2>
-          <p className="text-sm font-mono text-studio-cyan">{order.tracking_number}</p>
+          <h2 className="text-nav font-semibold text-[var(--text-primary)] mb-2">Tracking</h2>
+          <p className="text-nav font-mono text-[var(--accent)]">{order.tracking_number}</p>
           {order.tracking_url && (
             <a
               href={order.tracking_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-studio-cyan hover:text-studio-cyan-hover flex items-center gap-1 mt-1"
+              className="text-nav text-[var(--accent)] hover:text-[var(--accent)] flex items-center gap-1 mt-1"
             >
               Track shipment <ExternalLink size={12} />
             </a>
@@ -197,8 +197,8 @@ export function OrderDetailPage() {
       {/* Buyer: confirm delivery */}
       {isBuyer && order.status === 'shipped' && (
         <Card>
-          <h2 className="text-sm font-semibold text-studio-text mb-3">Confirm delivery</h2>
-          <p className="text-sm text-studio-text-muted mb-3">
+          <h2 className="text-nav font-semibold text-[var(--text-primary)] mb-3">Confirm delivery</h2>
+          <p className="text-nav text-[var(--text-secondary)] mb-3">
             Have you received this item?
           </p>
           <Button onClick={handleConfirmDelivery} disabled={updating}>
@@ -213,7 +213,7 @@ export function OrderDetailPage() {
         <Card>
           {review ? (
             <>
-              <h2 className="text-sm font-semibold text-studio-text mb-3">Your review</h2>
+              <h2 className="text-nav font-semibold text-[var(--text-primary)] mb-3">Your review</h2>
               <ReviewDisplay
                 rating={review.rating}
                 comment={review.comment}
@@ -239,8 +239,8 @@ export function OrderDetailPage() {
 
       {/* Messages */}
       <Card className="p-0 overflow-hidden">
-        <div className="px-4 pt-3 pb-2 border-b border-studio-border">
-          <h2 className="text-sm font-semibold text-studio-text">
+        <div className="px-4 pt-3 pb-2 border-b border-[var(--border)]">
+          <h2 className="text-nav font-semibold text-[var(--text-primary)]">
             Messages with {counterparty?.display_name || 'User'}
           </h2>
         </div>

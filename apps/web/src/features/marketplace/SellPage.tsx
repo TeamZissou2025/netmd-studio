@@ -225,7 +225,7 @@ export function SellPage() {
   if (authLoading || profileLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 size={24} className="animate-spin text-studio-cyan" />
+        <Loader2 size={24} className="animate-spin text-[var(--accent)]" />
       </div>
     );
   }
@@ -233,9 +233,9 @@ export function SellPage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <CreditCard size={48} className="text-studio-border mb-4" />
-        <h2 className="text-lg font-semibold text-studio-text mb-2">Sign in to sell</h2>
-        <p className="text-sm text-studio-text-muted mb-4">You need an account to create listings</p>
+        <CreditCard size={48} className="text-[var(--border)] mb-4" />
+        <h2 className="text-studio-title font-semibold text-[var(--text-primary)] mb-2">Sign in to sell</h2>
+        <p className="text-nav text-[var(--text-secondary)] mb-4">You need an account to create listings</p>
         <Link to="/auth/login">
           <Button>Sign in</Button>
         </Link>
@@ -251,7 +251,7 @@ export function SellPage() {
       <div className="flex flex-col gap-6">
         <Link
           to="/marketplace"
-          className="inline-flex items-center gap-1.5 text-sm text-studio-text-muted hover:text-studio-cyan transition-colors w-fit"
+          className="inline-flex items-center gap-1.5 text-nav text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors w-fit"
         >
           <ArrowLeft size={14} />
           Back to Marketplace
@@ -260,18 +260,18 @@ export function SellPage() {
         <div className="flex flex-col items-center justify-center py-12 text-center">
           {profile?.stripe_account_id && !profile.stripe_onboarding_complete ? (
             <>
-              <Loader2 size={48} className="text-studio-warning mb-4" />
-              <h2 className="text-lg font-semibold text-studio-text mb-2">Complete payment setup</h2>
-              <p className="text-sm text-studio-text-muted mb-6 max-w-md">
+              <Loader2 size={48} className="text-[var(--warning)] mb-4" />
+              <h2 className="text-studio-title font-semibold text-[var(--text-primary)] mb-2">Complete payment setup</h2>
+              <p className="text-nav text-[var(--text-secondary)] mb-6 max-w-md">
                 Your Stripe account has been created but onboarding is not yet complete.
                 Please finish setting up your payment information to start selling.
               </p>
             </>
           ) : (
             <>
-              <CreditCard size={48} className="text-studio-border mb-4" />
-              <h2 className="text-lg font-semibold text-studio-text mb-2">Start selling on NetMD Studio</h2>
-              <p className="text-sm text-studio-text-muted mb-6 max-w-md">
+              <CreditCard size={48} className="text-[var(--border)] mb-4" />
+              <h2 className="text-studio-title font-semibold text-[var(--text-primary)] mb-2">Start selling on NetMD Studio</h2>
+              <p className="text-nav text-[var(--text-secondary)] mb-6 max-w-md">
                 Set up your seller account with Stripe to receive payments directly.
                 Platform fee is 10% per sale.
               </p>
@@ -306,7 +306,7 @@ export function SellPage() {
   if (loadingEdit) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 size={24} className="animate-spin text-studio-cyan" />
+        <Loader2 size={24} className="animate-spin text-[var(--accent)]" />
       </div>
     );
   }
@@ -317,16 +317,16 @@ export function SellPage() {
       <div className="flex items-center gap-4">
         <Link
           to="/marketplace"
-          className="inline-flex items-center gap-1.5 text-sm text-studio-text-muted hover:text-studio-cyan transition-colors"
+          className="inline-flex items-center gap-1.5 text-nav text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
         >
           <ArrowLeft size={14} />
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold text-studio-text">
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
             {editId ? 'Edit listing' : 'Create listing'}
           </h1>
-          <p className="text-sm text-studio-text-muted mt-0.5 flex items-center gap-1">
-            <CheckCircle size={12} className="text-studio-success" />
+          <p className="text-nav text-[var(--text-secondary)] mt-0.5 flex items-center gap-1">
+            <CheckCircle size={12} className="text-[var(--success)]" />
             Seller account active
           </p>
         </div>
@@ -343,14 +343,14 @@ export function SellPage() {
         />
 
         <div>
-          <label className="text-sm font-medium text-studio-text-muted block mb-1">Description</label>
+          <label className="text-nav font-medium text-[var(--text-secondary)] block mb-1">Description</label>
           <textarea
             value={form.description}
             onChange={(e) => updateForm({ description: e.target.value })}
             placeholder="Describe your item in detail: condition, what's included, any defects..."
             rows={5}
             maxLength={5000}
-            className="w-full bg-studio-black border border-studio-border rounded-studio px-3 py-2 text-sm text-studio-text placeholder:text-studio-text-dim focus:border-studio-cyan focus:ring-1 focus:ring-studio-cyan-border outline-none resize-none"
+            className="w-full bg-[var(--surface-0)] border border-[var(--border)] rounded-md px-3 py-2 text-nav text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--border-accent)] outline-none resize-none"
           />
         </div>
 
@@ -402,9 +402,9 @@ export function SellPage() {
             type="checkbox"
             checked={form.shippingDomesticOnly}
             onChange={(e) => updateForm({ shippingDomesticOnly: e.target.checked })}
-            className="rounded border-studio-border bg-studio-black text-studio-cyan focus:ring-studio-cyan-border accent-studio-cyan w-3.5 h-3.5"
+            className="rounded border-[var(--border)] bg-[var(--surface-0)] text-[var(--accent)] accent-[var(--accent)] w-3.5 h-3.5"
           />
-          <span className="text-sm text-studio-text-muted">Domestic shipping only</span>
+          <span className="text-nav text-[var(--text-secondary)]">Domestic shipping only</span>
         </label>
 
         <ImageUploader
@@ -435,7 +435,7 @@ export function SellPage() {
         />
 
         {/* Actions */}
-        <div className="flex items-center gap-3 pt-2 border-t border-studio-border">
+        <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
           <Button onClick={() => handleSave('active')} disabled={saving}>
             {saving ? 'Saving...' : editId ? 'Update & publish' : 'Publish listing'}
           </Button>

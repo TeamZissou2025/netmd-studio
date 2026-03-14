@@ -12,9 +12,7 @@ interface ModalProps {
 export function Modal({ open, onClose, title, children, className = '' }: ModalProps) {
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [open, onClose]);
@@ -22,20 +20,28 @@ export function Modal({ open, onClose, title, children, className = '' }: ModalP
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose} role="dialog" aria-modal="true" aria-label={title || 'Dialog'}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title || 'Dialog'}
+    >
       <div
-        className={`bg-studio-surface border border-studio-border rounded-studio-xl shadow-studio-lg max-w-lg w-full mx-4 ${className}`}
+        className={`rounded-xl max-w-[480px] w-full mx-4 ${className}`}
+        style={{ background: 'var(--surface-1)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between px-5 py-3 border-b border-studio-border">
-            <h2 className="text-lg font-semibold text-studio-text">{title}</h2>
-            <button onClick={onClose} className="text-studio-text-muted hover:text-studio-text transition-colors" aria-label="Close dialog">
-              <X size={16} aria-hidden="true" />
+          <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+            <h2 className="text-studio-title font-semibold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+            <button onClick={onClose} className="transition-colors cursor-pointer" style={{ color: 'var(--text-tertiary)' }} aria-label="Close dialog">
+              <X size={18} aria-hidden="true" />
             </button>
           </div>
         )}
-        <div className="p-5">{children}</div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   );

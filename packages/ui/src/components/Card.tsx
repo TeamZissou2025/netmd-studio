@@ -6,15 +6,28 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ active, hoverable, className = '', ...props }, ref) => {
+  ({ active, hoverable, className = '', style, ...props }, ref) => {
     return (
       <div
         ref={ref}
-        className={`bg-studio-surface border rounded-studio-lg p-4 ${
-          active
-            ? 'border-studio-cyan-border bg-studio-cyan-muted'
-            : 'border-studio-border'
-        } ${hoverable ? 'hover:border-studio-border-bright transition-colors cursor-pointer' : ''} ${className}`}
+        className={`rounded-xl p-4 transition-all duration-300 ${hoverable ? 'cursor-pointer' : ''} ${className}`}
+        style={{
+          background: active ? 'var(--accent-dim)' : 'var(--surface-1)',
+          border: active ? '1px solid var(--border-accent)' : '1px solid var(--border)',
+          ...style,
+        }}
+        onMouseEnter={hoverable ? (e) => {
+          if (!active) {
+            (e.currentTarget as HTMLElement).style.background = 'var(--surface-2)';
+            (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-hover)';
+          }
+        } : undefined}
+        onMouseLeave={hoverable ? (e) => {
+          if (!active) {
+            (e.currentTarget as HTMLElement).style.background = 'var(--surface-1)';
+            (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+          }
+        } : undefined}
         {...props}
       />
     );

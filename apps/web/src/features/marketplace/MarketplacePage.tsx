@@ -39,8 +39,8 @@ export function MarketplacePage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-studio-text">Marketplace</h1>
-          <p className="text-sm text-studio-text-muted mt-1">
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Marketplace</h1>
+          <p className="text-nav text-[var(--text-secondary)] mt-1">
             Buy and sell MiniDisc hardware, discs, and accessories
           </p>
         </div>
@@ -59,18 +59,18 @@ export function MarketplacePage() {
       {/* Search + mobile filter toggle */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-studio-text-dim" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
           <input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search listings..."
-            className="w-full h-8 bg-studio-black border border-studio-border rounded-studio pl-8 pr-3 text-sm text-studio-text placeholder:text-studio-text-dim focus:border-studio-cyan focus:ring-1 focus:ring-studio-cyan-border outline-none"
+            className="w-full h-8 bg-[var(--surface-0)] border border-[var(--border)] rounded-md pl-8 pr-3 text-nav text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--border-accent)] outline-none"
           />
         </div>
         <button
           onClick={() => setMobileFiltersOpen(true)}
-          className="lg:hidden h-8 px-3 bg-studio-surface border border-studio-border rounded-studio text-sm text-studio-text-muted hover:text-studio-text hover:border-studio-border-bright transition-colors flex items-center gap-1.5"
+          className="lg:hidden h-8 px-3 bg-[var(--surface-1)] border border-[var(--border)] rounded-md text-nav text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-hover)] transition-colors flex items-center gap-1.5"
         >
           <SlidersHorizontal size={14} />
           Filters
@@ -101,9 +101,9 @@ export function MarketplacePage() {
             </div>
           ) : listings.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <ShoppingBag size={48} className="text-studio-border mb-4" />
-              <p className="text-md text-studio-text-muted">No listings found</p>
-              <p className="text-sm text-studio-text-dim mt-1">
+              <ShoppingBag size={48} className="text-[var(--border)] mb-4" />
+              <p className="text-body text-[var(--text-secondary)]">No listings found</p>
+              <p className="text-nav text-[var(--text-tertiary)] mt-1">
                 {filters.search ? 'Try different search terms' : 'Be the first to sell something'}
               </p>
               {user && (
@@ -134,7 +134,7 @@ export function MarketplacePage() {
       {mobileFiltersOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileFiltersOpen(false)} />
-          <div className="absolute right-0 top-0 bottom-0 w-80 bg-studio-surface border-l border-studio-border overflow-y-auto">
+          <div className="absolute right-0 top-0 bottom-0 w-80 bg-[var(--surface-1)] border-l border-[var(--border)] overflow-y-auto">
             <ListingFiltersPanel
               filters={filters}
               onChange={setFilters}

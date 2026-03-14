@@ -32,21 +32,25 @@ export function TransferQueue() {
 
       {/* Queue */}
       {tracks.length > 0 && (
-        <div className="bg-studio-surface border border-studio-border rounded-studio-lg overflow-hidden">
+        <div
+          className="rounded-lg overflow-hidden"
+          style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
+        >
           {/* Queue header */}
-          <div className="px-4 py-3 border-b border-studio-border flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-studio-text flex items-center gap-2">
-              <ListMusic size={16} className="text-studio-magenta" />
+          <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
+            <h3 className="text-nav font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <ListMusic size={16} style={{ color: 'var(--pillar-transfer)' }} />
               Transfer Queue
             </h3>
             <div className="flex items-center gap-2">
-              <span className="text-2xs text-studio-text-dim">
+              <span className="text-tag" style={{ color: 'var(--text-tertiary)' }}>
                 {doneCount}/{tracks.length} complete
               </span>
               {!isTransferring && tracks.length > 0 && (
                 <button
                   onClick={clearQueue}
-                  className="text-studio-text-dim hover:text-studio-error transition-colors"
+                  className="transition-colors"
+                  style={{ color: 'var(--text-tertiary)' }}
                   title="Clear queue"
                 >
                   <Trash2 size={14} />
@@ -57,26 +61,26 @@ export function TransferQueue() {
 
           {/* Overall progress bar */}
           {isTransferring && (
-            <div className="px-4 py-2 border-b border-studio-border bg-studio-black/50">
+            <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--border)', background: 'color-mix(in srgb, var(--surface-0) 50%, transparent)' }}>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-2xs text-studio-text-muted">
+                <span className="text-tag" style={{ color: 'var(--text-secondary)' }}>
                   {isPaused ? 'Paused' : `Transferring track ${currentTrackIndex + 1} of ${tracks.length}`}
                 </span>
-                <span className="text-2xs font-mono text-studio-magenta">
+                <span className="text-tag font-mono" style={{ color: 'var(--pillar-transfer)' }}>
                   {Math.round(overallProgress)}%
                 </span>
               </div>
-              <div className="h-1.5 bg-studio-surface-hover rounded-full overflow-hidden">
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-2)' }}>
                 <div
-                  className="h-full bg-gradient-to-r from-studio-cyan to-studio-magenta rounded-full transition-[width] duration-300"
-                  style={{ width: `${overallProgress}%` }}
+                  className="h-full rounded-full transition-[width] duration-300"
+                  style={{ width: `${overallProgress}%`, background: 'linear-gradient(to right, var(--accent), var(--pillar-transfer))' }}
                 />
               </div>
             </div>
           )}
 
           {/* Track list */}
-          <div className="max-h-[400px] overflow-y-auto divide-y divide-studio-border">
+          <div className="max-h-[400px] overflow-y-auto">
             {tracks.map((track, i) => (
               <QueueTrackItem
                 key={track.id}
@@ -92,7 +96,7 @@ export function TransferQueue() {
           </div>
 
           {/* Queue controls */}
-          <div className="px-4 py-3 border-t border-studio-border flex items-center gap-2">
+          <div className="px-4 py-3 flex items-center gap-2" style={{ borderTop: '1px solid var(--border)' }}>
             {!isTransferring ? (
               <Button
                 variant="primary"

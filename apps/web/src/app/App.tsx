@@ -34,32 +34,25 @@ export function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<HomePage />} />
-            {/* Label Studio */}
             <Route path="labels" element={<Suspense fallback={<PageLoader />}><LabelStudioPage /></Suspense>} />
             <Route path="labels/gallery" element={<Suspense fallback={<PageLoader />}><GalleryPage /></Suspense>} />
-            {/* Transfer Studio */}
             <Route path="transfer" element={<Suspense fallback={<PageLoader />}><TransferStudioPage /></Suspense>} />
-            {/* Device Library */}
             <Route path="devices" element={<Suspense fallback={<PageLoader />}><DeviceLibraryPage /></Suspense>} />
             <Route path="devices/submit" element={<Suspense fallback={<PageLoader />}><DeviceSubmitPage /></Suspense>} />
             <Route path="devices/:id" element={<Suspense fallback={<PageLoader />}><DeviceDetailPage /></Suspense>} />
             <Route path="admin/devices" element={<Suspense fallback={<PageLoader />}><AdminDevicesPage /></Suspense>} />
-            {/* Marketplace */}
             <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><MarketplacePage /></Suspense>} />
             <Route path="marketplace/sell" element={<Suspense fallback={<PageLoader />}><SellPage /></Suspense>} />
             <Route path="marketplace/sell/:id" element={<Suspense fallback={<PageLoader />}><SellPage /></Suspense>} />
             <Route path="marketplace/checkout/:id" element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />
             <Route path="marketplace/:id" element={<Suspense fallback={<PageLoader />}><ListingDetailPage /></Suspense>} />
-            {/* Dashboard */}
             <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
             <Route path="dashboard/orders" element={<Suspense fallback={<PageLoader />}><OrdersPage /></Suspense>} />
             <Route path="dashboard/orders/:id" element={<Suspense fallback={<PageLoader />}><OrderDetailPage /></Suspense>} />
             <Route path="dashboard/selling" element={<Suspense fallback={<PageLoader />}><SellerDashboardPage /></Suspense>} />
-            {/* Auth */}
             <Route path="auth/login" element={<Suspense fallback={<PageLoader />}><LoginPage /></Suspense>} />
             <Route path="auth/signup" element={<Suspense fallback={<PageLoader />}><SignupPage /></Suspense>} />
             <Route path="auth/callback" element={<Suspense fallback={<PageLoader />}><AuthCallbackPage /></Suspense>} />
-            {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
@@ -67,11 +60,12 @@ export function App() {
           position="bottom-right"
           toastOptions={{
             style: {
-              background: '#141417',
-              color: '#e8e8ec',
-              border: '1px solid #2a2a32',
-              borderRadius: '6px',
+              background: 'var(--surface-1)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
               fontSize: '13px',
+              boxShadow: 'var(--shadow-md)',
             },
           }}
         />

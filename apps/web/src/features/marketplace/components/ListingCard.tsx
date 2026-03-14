@@ -17,10 +17,10 @@ export function ListingCard({ listing, isFavorited, onToggleFavorite }: ListingC
   return (
     <Link
       to={`/marketplace/${listing.id}`}
-      className="bg-studio-surface border border-studio-border rounded-studio-lg overflow-hidden hover:border-studio-border-bright transition-colors group"
+      className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg overflow-hidden hover:border-[var(--border-hover)] transition-colors group"
     >
       {/* Image */}
-      <div className="aspect-square bg-studio-black relative overflow-hidden">
+      <div className="aspect-square bg-[var(--surface-0)] relative overflow-hidden">
         {firstImage ? (
           <img
             src={firstImage}
@@ -28,7 +28,7 @@ export function ListingCard({ listing, isFavorited, onToggleFavorite }: ListingC
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-studio-border">
+          <div className="w-full h-full flex items-center justify-center text-[var(--border)]">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="8.5" cy="8.5" r="1.5" />
@@ -45,11 +45,11 @@ export function ListingCard({ listing, isFavorited, onToggleFavorite }: ListingC
               e.stopPropagation();
               onToggleFavorite(listing.id);
             }}
-            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-studio-black/70 backdrop-blur-sm flex items-center justify-center hover:bg-studio-black/90 transition-colors"
+            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[var(--surface-0)] backdrop-blur-sm flex items-center justify-center hover:bg-[var(--surface-0)] transition-colors"
           >
             <Heart
               size={14}
-              className={isFavorited ? 'fill-studio-magenta text-studio-magenta' : 'text-studio-text-muted'}
+              className={isFavorited ? 'fill-[var(--pillar-transfer)] text-[var(--pillar-transfer)]' : 'text-[var(--text-secondary)]'}
             />
           </button>
         )}
@@ -64,8 +64,8 @@ export function ListingCard({ listing, isFavorited, onToggleFavorite }: ListingC
 
       {/* Info */}
       <div className="p-3">
-        <h3 className="text-sm font-medium text-studio-text truncate">{listing.title}</h3>
-        <p className="text-lg font-semibold text-studio-success mt-1">
+        <h3 className="text-nav font-medium text-[var(--text-primary)] truncate">{listing.title}</h3>
+        <p className="text-studio-title font-semibold text-[var(--success)] mt-1">
           {formatPrice(listing.price_cents, listing.currency)}
         </p>
         <div className="flex items-center justify-between mt-2">
@@ -73,20 +73,20 @@ export function ListingCard({ listing, isFavorited, onToggleFavorite }: ListingC
             {listing.seller?.avatar_url ? (
               <img src={listing.seller.avatar_url} alt="" className="w-4 h-4 rounded-full" />
             ) : (
-              <div className="w-4 h-4 rounded-full bg-studio-surface-active" />
+              <div className="w-4 h-4 rounded-full bg-[var(--surface-3)]" />
             )}
-            <span className="text-2xs text-studio-text-muted truncate">
+            <span className="text-tag text-[var(--text-secondary)] truncate">
               {listing.seller?.display_name || 'Seller'}
             </span>
           </div>
-          <span className="text-2xs text-studio-text-dim flex-shrink-0">
+          <span className="text-tag text-[var(--text-tertiary)] flex-shrink-0">
             {formatRelativeTime(listing.created_at)}
           </span>
         </div>
         {listing.shipping_price_cents === 0 && (
           <div className="flex items-center gap-1 mt-1.5">
-            <MapPin size={10} className="text-studio-success" />
-            <span className="text-2xs text-studio-success">Free shipping</span>
+            <MapPin size={10} className="text-[var(--success)]" />
+            <span className="text-tag text-[var(--success)]">Free shipping</span>
           </div>
         )}
       </div>

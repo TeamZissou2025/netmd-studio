@@ -55,8 +55,8 @@ export function GalleryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-studio-text">Label Gallery</h1>
-          <p className="text-sm text-studio-text-muted mt-1">
+          <h1 className="text-card-title font-semibold" style={{ color: 'var(--text-primary)' }}>Label Gallery</h1>
+          <p className="text-nav mt-1" style={{ color: 'var(--text-secondary)' }}>
             Community label designs. Browse, preview, and fork.
           </p>
         </div>
@@ -72,7 +72,7 @@ export function GalleryPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
           />
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-studio-text-dim" />
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-tertiary)' }} />
         </div>
         <Select
           options={templateOptions}
@@ -97,9 +97,9 @@ export function GalleryPage() {
         </div>
       ) : designs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <SlidersHorizontal size={32} className="text-studio-text-dim mb-3" />
-          <p className="text-sm text-studio-text-muted">No public designs yet</p>
-          <p className="text-2xs text-studio-text-dim mt-1">Create and share your first label design!</p>
+          <SlidersHorizontal size={32} className="mb-3" style={{ color: 'var(--text-tertiary)' }} />
+          <p className="text-nav" style={{ color: 'var(--text-secondary)' }}>No public designs yet</p>
+          <p className="text-tag mt-1" style={{ color: 'var(--text-tertiary)' }}>Create and share your first label design!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

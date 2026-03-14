@@ -61,7 +61,7 @@ export function ExportPanel({
 
   return (
     <div className="p-3 space-y-3">
-      <h3 className="text-sm font-medium text-studio-text-muted">Export & Save</h3>
+      <h3 className="text-nav font-medium" style={{ color: 'var(--text-secondary)' }}>Export & Save</h3>
 
       <Input
         label="Design Title"
@@ -74,16 +74,17 @@ export function ExportPanel({
       <div className="flex items-center gap-2">
         <button
           onClick={() => setIsPublic(!isPublic)}
-          className={`flex items-center gap-1.5 h-7 px-2 rounded-studio text-2xs font-medium transition-colors ${
+          className="flex items-center gap-1.5 h-7 px-2 rounded-md text-tag font-medium transition-colors border"
+          style={
             isPublic
-              ? 'bg-studio-cyan-muted text-studio-cyan border border-studio-cyan-border'
-              : 'bg-studio-surface-hover text-studio-text-muted border border-studio-border'
-          }`}
+              ? { background: 'var(--accent-dim)', color: 'var(--accent)', borderColor: 'var(--border-accent)' }
+              : { background: 'var(--surface-2)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
+          }
         >
           {isPublic ? <Globe size={12} /> : <Lock size={12} />}
           {isPublic ? 'Public' : 'Private'}
         </button>
-        <span className="text-2xs text-studio-text-dim">
+        <span className="text-tag" style={{ color: 'var(--text-tertiary)' }}>
           {isPublic ? 'Visible in gallery' : 'Only you can see this'}
         </span>
       </div>
@@ -106,7 +107,7 @@ export function ExportPanel({
         </div>
       </div>
 
-      <p className="text-2xs text-studio-text-dim">
+      <p className="text-tag" style={{ color: 'var(--text-tertiary)' }}>
         Export dimensions: {config.widthMm}mm x {config.heightMm}mm at 300 DPI
       </p>
     </div>

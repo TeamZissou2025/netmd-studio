@@ -26,13 +26,13 @@ interface DashboardStats {
 }
 
 const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  pending: 'text-studio-warning',
-  paid: 'text-studio-cyan',
-  shipped: 'text-studio-cyan',
-  delivered: 'text-studio-success',
-  cancelled: 'text-studio-text-dim',
-  refunded: 'text-studio-warning',
-  disputed: 'text-studio-error',
+  pending: 'text-[var(--warning)]',
+  paid: 'text-[var(--accent)]',
+  shipped: 'text-[var(--accent)]',
+  delivered: 'text-[var(--success)]',
+  cancelled: 'text-[var(--text-tertiary)]',
+  refunded: 'text-[var(--warning)]',
+  disputed: 'text-[var(--error)]',
 };
 
 export function DashboardPage() {
@@ -112,7 +112,7 @@ export function DashboardPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 size={24} className="animate-spin text-studio-cyan" />
+        <Loader2 size={24} className="animate-spin text-[var(--accent)]" />
       </div>
     );
   }
@@ -123,8 +123,8 @@ export function DashboardPage() {
     <div className="flex flex-col gap-6">
       <SEOHead title="Dashboard" />
       <div>
-        <h1 className="text-2xl font-semibold text-studio-text">Dashboard</h1>
-        <p className="text-sm text-studio-text-muted mt-1">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Dashboard</h1>
+        <p className="text-nav text-[var(--text-secondary)] mt-1">
           Your activity across NetMD Studio
         </p>
       </div>
@@ -138,12 +138,12 @@ export function DashboardPage() {
         </div>
       ) : stats && (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <StatCard icon={Disc3} label="Label Designs" value={stats.labelCount} color="text-pillar-label bg-pillar-label/10" to="/labels" />
-          <StatCard icon={Usb} label="Transfers" value={stats.transferCount} color="text-pillar-transfer bg-pillar-transfer/10" to="/transfer" />
-          <StatCard icon={Database} label="Device Reports" value={stats.deviceReportCount} color="text-pillar-device bg-pillar-device/10" to="/devices" />
-          <StatCard icon={ShoppingBag} label="Active Listings" value={stats.activeListings} color="text-pillar-market bg-pillar-market/10" to="/dashboard/selling" />
-          <StatCard icon={Package} label="Orders" value={stats.orderCount} color="text-studio-cyan bg-studio-cyan-muted" to="/dashboard/orders" />
-          <StatCard icon={Heart} label="Favorites" value={stats.favoriteCount} color="text-studio-magenta bg-studio-magenta-muted" to="/marketplace" />
+          <StatCard icon={Disc3} label="Label Designs" value={stats.labelCount} color="text-[var(--pillar-label)] bg-[var(--pillar-label)]" to="/labels" />
+          <StatCard icon={Usb} label="Transfers" value={stats.transferCount} color="text-[var(--pillar-transfer)] bg-[var(--pillar-transfer)]" to="/transfer" />
+          <StatCard icon={Database} label="Device Reports" value={stats.deviceReportCount} color="text-[var(--pillar-device)] bg-[var(--pillar-device)]" to="/devices" />
+          <StatCard icon={ShoppingBag} label="Active Listings" value={stats.activeListings} color="text-[var(--pillar-market)] bg-[var(--pillar-market)]" to="/dashboard/selling" />
+          <StatCard icon={Package} label="Orders" value={stats.orderCount} color="text-[var(--accent)] bg-[var(--accent-dim)]" to="/dashboard/orders" />
+          <StatCard icon={Heart} label="Favorites" value={stats.favoriteCount} color="text-[var(--pillar-transfer)] bg-[var(--pillar-transfer)]/10" to="/marketplace" />
         </div>
       )}
 
@@ -152,8 +152,8 @@ export function DashboardPage() {
         {/* Recent Orders */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-studio-text">Recent Orders</h2>
-            <Link to="/dashboard/orders" className="text-2xs text-studio-cyan hover:text-studio-cyan-hover transition-colors flex items-center gap-1">
+            <h2 className="text-nav font-semibold text-[var(--text-primary)]">Recent Orders</h2>
+            <Link to="/dashboard/orders" className="text-tag text-[var(--accent)] hover:text-[var(--accent)] transition-colors flex items-center gap-1">
               View all <ArrowRight size={10} />
             </Link>
           </div>
@@ -162,24 +162,24 @@ export function DashboardPage() {
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
           ) : recentOrders.length === 0 ? (
-            <p className="text-sm text-studio-text-dim py-4 text-center">No orders yet</p>
+            <p className="text-nav text-[var(--text-tertiary)] py-4 text-center">No orders yet</p>
           ) : (
             <div className="space-y-2">
               {recentOrders.map((order) => (
                 <Link
                   key={order.id}
                   to={`/dashboard/orders/${order.id}`}
-                  className="flex items-center justify-between py-2 px-2 rounded-studio hover:bg-studio-surface-hover transition-colors -mx-2"
+                  className="flex items-center justify-between py-2 px-2 rounded-md hover:bg-[var(--surface-2)] transition-colors -mx-2"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-studio-text truncate">{order.listing_title}</p>
-                    <p className="text-2xs text-studio-text-dim">{formatRelativeTime(order.created_at)}</p>
+                    <p className="text-label text-[var(--text-primary)] truncate">{order.listing_title}</p>
+                    <p className="text-tag text-[var(--text-tertiary)]">{formatRelativeTime(order.created_at)}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`text-2xs font-medium capitalize ${ORDER_STATUS_COLORS[order.status]}`}>
+                    <span className={`text-tag font-medium capitalize ${ORDER_STATUS_COLORS[order.status]}`}>
                       {order.status}
                     </span>
-                    <span className="text-xs font-mono text-studio-text-muted">
+                    <span className="text-label font-mono text-[var(--text-secondary)]">
                       {formatPrice(order.total_cents, order.currency)}
                     </span>
                   </div>
@@ -192,8 +192,8 @@ export function DashboardPage() {
         {/* Recent Labels */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-studio-text">Recent Labels</h2>
-            <Link to="/labels" className="text-2xs text-studio-cyan hover:text-studio-cyan-hover transition-colors flex items-center gap-1">
+            <h2 className="text-nav font-semibold text-[var(--text-primary)]">Recent Labels</h2>
+            <Link to="/labels" className="text-tag text-[var(--accent)] hover:text-[var(--accent)] transition-colors flex items-center gap-1">
               Open editor <ArrowRight size={10} />
             </Link>
           </div>
@@ -202,29 +202,29 @@ export function DashboardPage() {
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
           ) : recentLabels.length === 0 ? (
-            <p className="text-sm text-studio-text-dim py-4 text-center">No label designs yet</p>
+            <p className="text-nav text-[var(--text-tertiary)] py-4 text-center">No label designs yet</p>
           ) : (
             <div className="space-y-2">
               {recentLabels.map((label) => (
                 <Link
                   key={label.id}
                   to={`/labels?edit=${label.id}`}
-                  className="flex items-center gap-3 py-2 px-2 rounded-studio hover:bg-studio-surface-hover transition-colors -mx-2"
+                  className="flex items-center gap-3 py-2 px-2 rounded-md hover:bg-[var(--surface-2)] transition-colors -mx-2"
                 >
                   {label.thumbnail_url ? (
-                    <img src={label.thumbnail_url} alt="" className="w-8 h-8 rounded border border-studio-border object-cover" />
+                    <img src={label.thumbnail_url} alt="" className="w-8 h-8 rounded border border-[var(--border)] object-cover" />
                   ) : (
-                    <div className="w-8 h-8 rounded border border-studio-border bg-studio-surface flex items-center justify-center">
-                      <Disc3 size={12} className="text-studio-text-dim" />
+                    <div className="w-8 h-8 rounded border border-[var(--border)] bg-[var(--surface-1)] flex items-center justify-center">
+                      <Disc3 size={12} className="text-[var(--text-tertiary)]" />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-studio-text truncate">{label.title}</p>
-                    <p className="text-2xs text-studio-text-dim">
+                    <p className="text-label text-[var(--text-primary)] truncate">{label.title}</p>
+                    <p className="text-tag text-[var(--text-tertiary)]">
                       {label.artist_name ? `${label.artist_name} — ${label.album_title}` : label.template_type.replace('_', ' ')}
                     </p>
                   </div>
-                  <span className="text-2xs text-studio-text-dim flex-shrink-0">
+                  <span className="text-tag text-[var(--text-tertiary)] flex-shrink-0">
                     {formatRelativeTime(label.updated_at)}
                   </span>
                 </Link>
@@ -236,8 +236,8 @@ export function DashboardPage() {
         {/* Recent Transfers */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-studio-text">Recent Transfers</h2>
-            <Link to="/transfer" className="text-2xs text-studio-cyan hover:text-studio-cyan-hover transition-colors flex items-center gap-1">
+            <h2 className="text-nav font-semibold text-[var(--text-primary)]">Recent Transfers</h2>
+            <Link to="/transfer" className="text-tag text-[var(--accent)] hover:text-[var(--accent)] transition-colors flex items-center gap-1">
               Transfer Studio <ArrowRight size={10} />
             </Link>
           </div>
@@ -246,7 +246,7 @@ export function DashboardPage() {
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
           ) : recentTransfers.length === 0 ? (
-            <p className="text-sm text-studio-text-dim py-4 text-center">No transfers yet</p>
+            <p className="text-nav text-[var(--text-tertiary)] py-4 text-center">No transfers yet</p>
           ) : (
             <div className="space-y-2">
               {recentTransfers.map((transfer) => (
@@ -255,10 +255,10 @@ export function DashboardPage() {
                   className="flex items-center justify-between py-2 px-2 -mx-2"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-studio-text truncate">
+                    <p className="text-label text-[var(--text-primary)] truncate">
                       {transfer.disc_title || transfer.device_name}
                     </p>
-                    <p className="text-2xs text-studio-text-dim">
+                    <p className="text-tag text-[var(--text-tertiary)]">
                       {transfer.total_tracks} tracks · {transfer.transfer_format.toUpperCase()}
                     </p>
                   </div>
@@ -270,7 +270,7 @@ export function DashboardPage() {
                     ) : (
                       <Badge>In progress</Badge>
                     )}
-                    <span className="text-2xs text-studio-text-dim">
+                    <span className="text-tag text-[var(--text-tertiary)]">
                       {formatRelativeTime(transfer.started_at)}
                     </span>
                   </div>
@@ -282,12 +282,12 @@ export function DashboardPage() {
 
         {/* Quick Actions */}
         <Card>
-          <h2 className="text-sm font-semibold text-studio-text mb-3">Quick Actions</h2>
+          <h2 className="text-nav font-semibold text-[var(--text-primary)] mb-3">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-2">
-            <QuickAction to="/labels" icon={Disc3} label="New label design" color="text-pillar-label" />
-            <QuickAction to="/transfer" icon={Usb} label="Transfer audio" color="text-pillar-transfer" />
-            <QuickAction to="/marketplace/sell" icon={DollarSign} label="Sell an item" color="text-pillar-market" />
-            <QuickAction to="/devices/submit" icon={Database} label="Submit a device" color="text-pillar-device" />
+            <QuickAction to="/labels" icon={Disc3} label="New label design" color="text-[var(--pillar-label)]" />
+            <QuickAction to="/transfer" icon={Usb} label="Transfer audio" color="text-[var(--pillar-transfer)]" />
+            <QuickAction to="/marketplace/sell" icon={DollarSign} label="Sell an item" color="text-[var(--pillar-market)]" />
+            <QuickAction to="/devices/submit" icon={Database} label="Submit a device" color="text-[var(--pillar-device)]" />
           </div>
         </Card>
       </div>
@@ -305,12 +305,12 @@ function StatCard({ icon: Icon, label, value, color, to }: {
   return (
     <Link to={to}>
       <Card hoverable className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-studio-lg flex items-center justify-center ${color}`}>
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
           <Icon size={18} />
         </div>
         <div>
-          <p className="text-2xs text-studio-text-muted">{label}</p>
-          <p className="text-xl font-semibold text-studio-text">{value}</p>
+          <p className="text-tag text-[var(--text-secondary)]">{label}</p>
+          <p className="text-xl font-semibold text-[var(--text-primary)]">{value}</p>
         </div>
       </Card>
     </Link>
@@ -326,10 +326,10 @@ function QuickAction({ to, icon: Icon, label, color }: {
   return (
     <Link
       to={to}
-      className="flex items-center gap-2 p-3 rounded-studio bg-studio-black border border-studio-border hover:border-studio-border-bright transition-colors"
+      className="flex items-center gap-2 p-3 rounded-md bg-[var(--surface-0)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors"
     >
       <Icon size={14} className={color} />
-      <span className="text-xs text-studio-text-muted">{label}</span>
+      <span className="text-label text-[var(--text-secondary)]">{label}</span>
     </Link>
   );
 }

@@ -1,4 +1,7 @@
 {
   "extends": "@netmd-studio/typescript-config/react-library.json",
+  "compilerOptions": {
+    "rootDir": "src"
+  },
   "include": ["src"]
 }

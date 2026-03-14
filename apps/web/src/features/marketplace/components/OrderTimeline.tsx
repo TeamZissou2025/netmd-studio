@@ -33,13 +33,13 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 export const ORDER_STATUS_VARIANTS: Record<OrderStatus, string> = {
-  pending: 'text-studio-warning',
-  paid: 'text-studio-cyan',
-  shipped: 'text-studio-cyan',
-  delivered: 'text-studio-success',
-  cancelled: 'text-studio-text-dim',
-  refunded: 'text-studio-warning',
-  disputed: 'text-studio-error',
+  pending: 'text-[var(--warning)]',
+  paid: 'text-[var(--accent)]',
+  shipped: 'text-[var(--accent)]',
+  delivered: 'text-[var(--success)]',
+  cancelled: 'text-[var(--text-tertiary)]',
+  refunded: 'text-[var(--warning)]',
+  disputed: 'text-[var(--error)]',
 };
 
 export function OrderTimeline({ status, shippedAt, deliveredAt, createdAt }: OrderTimelineProps) {
@@ -49,7 +49,7 @@ export function OrderTimeline({ status, shippedAt, deliveredAt, createdAt }: Ord
     return (
       <div className="flex items-center gap-2 py-3">
         <Icon size={16} className={ORDER_STATUS_VARIANTS[status]} />
-        <span className={`text-sm font-medium ${ORDER_STATUS_VARIANTS[status]}`}>
+        <span className={`text-nav font-medium ${ORDER_STATUS_VARIANTS[status]}`}>
           {ORDER_STATUS_LABELS[status]}
         </span>
       </div>
@@ -72,9 +72,9 @@ export function OrderTimeline({ status, shippedAt, deliveredAt, createdAt }: Ord
                 className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
                   isCompleted
                     ? isCurrent
-                      ? 'border-studio-cyan bg-studio-cyan-muted'
-                      : 'border-studio-success bg-emerald-500/10'
-                    : 'border-studio-border bg-studio-surface'
+                      ? 'border-[var(--border-accent)] bg-[var(--accent-dim)]'
+                      : 'border-[var(--success)] bg-emerald-500/10'
+                    : 'border-[var(--border)] bg-[var(--surface-1)]'
                 }`}
               >
                 <Icon
@@ -82,21 +82,21 @@ export function OrderTimeline({ status, shippedAt, deliveredAt, createdAt }: Ord
                   className={
                     isCompleted
                       ? isCurrent
-                        ? 'text-studio-cyan'
-                        : 'text-studio-success'
-                      : 'text-studio-text-dim'
+                        ? 'text-[var(--accent)]'
+                        : 'text-[var(--success)]'
+                      : 'text-[var(--text-tertiary)]'
                   }
                 />
               </div>
               <span
-                className={`text-2xs font-medium ${
-                  isCompleted ? 'text-studio-text' : 'text-studio-text-dim'
+                className={`text-tag font-medium ${
+                  isCompleted ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'
                 }`}
               >
                 {step.label}
               </span>
               {/* Timestamps */}
-              <span className="text-2xs text-studio-text-dim">
+              <span className="text-tag text-[var(--text-tertiary)]">
                 {step.key === 'pending' || step.key === 'paid'
                   ? isCompleted
                     ? new Date(createdAt).toLocaleDateString()
@@ -113,7 +113,7 @@ export function OrderTimeline({ status, shippedAt, deliveredAt, createdAt }: Ord
             {i < STATUS_STEPS.length - 1 && (
               <div
                 className={`flex-1 h-0.5 mx-1 mt-[-20px] ${
-                  i < currentIndex ? 'bg-studio-success' : 'bg-studio-border'
+                  i < currentIndex ? 'bg-[var(--success)]' : 'bg-[var(--border)]'
                 }`}
               />
             )}

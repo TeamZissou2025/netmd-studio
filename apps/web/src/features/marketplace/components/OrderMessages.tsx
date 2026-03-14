@@ -35,7 +35,7 @@ export function OrderMessages({ messages, currentUserId, onSend, counterpartyNam
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[400px]">
         {messages.length === 0 && (
-          <p className="text-sm text-studio-text-dim text-center py-8">
+          <p className="text-nav text-[var(--text-tertiary)] text-center py-8">
             No messages yet. Start a conversation with {counterpartyName}.
           </p>
         )}
@@ -44,14 +44,14 @@ export function OrderMessages({ messages, currentUserId, onSend, counterpartyNam
           return (
             <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[75%] rounded-studio-lg px-3 py-2 ${
+                className={`max-w-[75%] rounded-lg px-3 py-2 ${
                   isOwn
-                    ? 'bg-studio-cyan-muted border border-studio-cyan-border'
-                    : 'bg-studio-surface border border-studio-border'
+                    ? 'bg-[var(--accent-dim)] border border-[var(--border-accent)]'
+                    : 'bg-[var(--surface-1)] border border-[var(--border)]'
                 }`}
               >
-                <p className="text-sm text-studio-text whitespace-pre-wrap break-words">{msg.body}</p>
-                <p className="text-2xs text-studio-text-dim mt-1">{formatRelativeTime(msg.created_at)}</p>
+                <p className="text-nav text-[var(--text-primary)] whitespace-pre-wrap break-words">{msg.body}</p>
+                <p className="text-tag text-[var(--text-tertiary)] mt-1">{formatRelativeTime(msg.created_at)}</p>
               </div>
             </div>
           );
@@ -60,7 +60,7 @@ export function OrderMessages({ messages, currentUserId, onSend, counterpartyNam
       </div>
 
       {/* Input */}
-      <div className="border-t border-studio-border p-3 flex gap-2">
+      <div className="border-t border-[var(--border)] p-3 flex gap-2">
         <input
           type="text"
           value={body}
@@ -72,7 +72,7 @@ export function OrderMessages({ messages, currentUserId, onSend, counterpartyNam
             }
           }}
           placeholder="Type a message..."
-          className="flex-1 h-8 bg-studio-black border border-studio-border rounded-studio px-3 text-sm text-studio-text placeholder:text-studio-text-dim focus:border-studio-cyan focus:ring-1 focus:ring-studio-cyan-border outline-none"
+          className="flex-1 h-8 bg-[var(--surface-0)] border border-[var(--border)] rounded-md px-3 text-nav text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--border-accent)] outline-none"
         />
         <Button onClick={handleSend} disabled={!body.trim() || sending}>
           <Send size={14} />

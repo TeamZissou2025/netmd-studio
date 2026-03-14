@@ -165,9 +165,9 @@ export function LabelEditor({ templateType, onBack, editDesignId }: LabelEditorP
   if (isMobile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
-        <Monitor size={48} className="text-studio-text-dim mb-4" />
-        <h2 className="text-lg font-semibold text-studio-text mb-2">Desktop Recommended</h2>
-        <p className="text-sm text-studio-text-muted mb-4 max-w-sm">
+        <Monitor size={48} className="mb-4" style={{ color: 'var(--text-tertiary)' }} />
+        <h2 className="text-studio-title font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Desktop Recommended</h2>
+        <p className="text-nav mb-4 max-w-sm" style={{ color: 'var(--text-secondary)' }}>
           The label editor works best on larger screens. Please use a desktop or tablet for the full editing experience.
         </p>
         <Button variant="secondary" onClick={onBack}>
@@ -186,8 +186,8 @@ export function LabelEditor({ templateType, onBack, editDesignId }: LabelEditorP
           <ArrowLeft size={16} />
         </Button>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-semibold text-studio-text truncate">{config.name}</h2>
-          <p className="text-sm text-studio-text-muted font-mono">
+          <h2 className="text-studio-title font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{config.name}</h2>
+          <p className="text-nav font-mono" style={{ color: 'var(--text-secondary)' }}>
             {config.widthMm}mm &times; {config.heightMm}mm &mdash; {DISPLAY_PPI} DPI preview &middot; exports at {EXPORT_PPI} DPI
           </p>
         </div>
@@ -218,7 +218,7 @@ export function LabelEditor({ templateType, onBack, editDesignId }: LabelEditorP
       {/* Main area: Canvas + Panels */}
       <div className="flex gap-3 flex-1 min-h-0">
         {/* Canvas area */}
-        <div className="flex-1 flex items-center justify-center bg-studio-surface border border-studio-border rounded-studio-lg p-6 overflow-auto min-h-[600px]">
+        <div className="flex-1 flex items-center justify-center rounded-lg p-6 overflow-auto min-h-[600px]" style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}>
           <div className="relative" style={{ width: canvasWidth, height: canvasHeight }}>
             <canvas ref={canvasElRef} />
             <CanvasOverlay
@@ -230,17 +230,17 @@ export function LabelEditor({ templateType, onBack, editDesignId }: LabelEditorP
         </div>
 
         {/* Right panel */}
-        <div className="w-[280px] min-w-[280px] flex-shrink-0 bg-studio-surface border border-studio-border rounded-studio-lg overflow-y-auto max-h-[calc(100vh-14rem)]">
+        <div className="w-[280px] min-w-[280px] flex-shrink-0 rounded-lg overflow-y-auto max-h-[calc(100vh-14rem)]" style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}>
           <PropertiesPanel
             selectedObject={editor.selectedObject}
             onUpdate={editor.saveState}
           />
-          <div className="border-t border-studio-border" />
+          <div style={{ borderTop: '1px solid var(--border)' }} />
           <LayersPanel
             canvas={editor.canvas}
             selectedObject={editor.selectedObject}
           />
-          <div className="border-t border-studio-border" />
+          <div style={{ borderTop: '1px solid var(--border)' }} />
           <ExportPanel
             templateType={templateType}
             exportDataURL={editor.exportDataURL}

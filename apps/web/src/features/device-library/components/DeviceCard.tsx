@@ -21,7 +21,7 @@ const TYPE_BADGE_VARIANT: Record<string, 'cyan' | 'magenta' | 'amber' | 'green' 
 function FeatureIcon({ active, icon: Icon, label }: { active: boolean; icon: typeof Disc3; label: string }) {
   if (!active) return null;
   return (
-    <span title={label} className="text-studio-text-dim">
+    <span title={label} className="text-[var(--text-tertiary)]">
       <Icon size={14} />
     </span>
   );
@@ -32,7 +32,7 @@ export function DeviceCard({ device }: { device: Device }) {
     <Link to={`/devices/${device.id}`}>
       <Card hoverable className="flex flex-col gap-3 h-full">
         {/* Device image or placeholder */}
-        <div className="aspect-[4/3] bg-studio-black rounded-studio flex items-center justify-center overflow-hidden">
+        <div className="aspect-[4/3] bg-[var(--surface-0)] rounded-md flex items-center justify-center overflow-hidden">
           {device.image_url ? (
             <img
               src={device.image_url}
@@ -40,14 +40,14 @@ export function DeviceCard({ device }: { device: Device }) {
               className="w-full h-full object-contain"
             />
           ) : (
-            <Disc3 size={40} className="text-studio-border" />
+            <Disc3 size={40} className="text-[var(--border)]" />
           )}
         </div>
 
         {/* Info */}
         <div className="flex flex-col gap-1.5 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-sm font-semibold text-studio-text leading-tight">{device.name}</h3>
+            <h3 className="text-nav font-semibold text-[var(--text-primary)] leading-tight">{device.name}</h3>
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -59,12 +59,12 @@ export function DeviceCard({ device }: { device: Device }) {
             )}
           </div>
 
-          <p className="text-2xs text-studio-text-muted">
+          <p className="text-tag text-[var(--text-secondary)]">
             {device.manufacturer} {device.model_number}
           </p>
 
           {/* Feature icons row */}
-          <div className="flex items-center gap-2 mt-auto pt-2 border-t border-studio-border">
+          <div className="flex items-center gap-2 mt-auto pt-2 border-t border-[var(--border)]">
             <FeatureIcon active={device.has_mdlp} icon={Disc3} label="MDLP" />
             <FeatureIcon active={device.has_type_s} icon={Radio} label="Type-S" />
             <FeatureIcon active={device.has_optical_in} icon={Wifi} label="Optical In" />
@@ -72,7 +72,7 @@ export function DeviceCard({ device }: { device: Device }) {
             <FeatureIcon active={device.has_mic_in} icon={Mic} label="Mic In" />
             <FeatureIcon active={device.has_line_out} icon={Headphones} label="Line Out" />
             {device.netmd_js_compatible && (
-              <span className="ml-auto text-2xs font-mono text-studio-cyan" title="WebUSB compatible">
+              <span className="ml-auto text-tag font-mono text-[var(--accent)]" title="WebUSB compatible">
                 WebUSB
               </span>
             )}

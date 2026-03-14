@@ -4,6 +4,9 @@ interface SkeletonProps {
 
 export function Skeleton({ className = '' }: SkeletonProps) {
   return (
-    <div className={`animate-pulse bg-studio-surface-hover rounded-studio ${className}`} />
+    <div
+      className={`animate-pulse rounded-md ${className}`}
+      style={{ background: 'var(--surface-2)' }}
+    />
   );
 }

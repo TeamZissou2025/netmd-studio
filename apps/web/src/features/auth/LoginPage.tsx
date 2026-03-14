@@ -36,11 +36,11 @@ export function LoginPage() {
   if (magicLinkSent) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="bg-studio-surface border border-studio-border rounded-studio-xl p-8 max-w-sm w-full text-center">
-          <Mail size={32} className="text-studio-cyan mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-studio-text mb-2">Check your email</h2>
-          <p className="text-sm text-studio-text-muted">
-            We sent a magic link to <span className="text-studio-text">{email}</span>
+        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-8 max-w-sm w-full text-center">
+          <Mail size={32} className="text-[var(--accent)] mx-auto mb-4" />
+          <h2 className="text-studio-title font-semibold text-[var(--text-primary)] mb-2">Check your email</h2>
+          <p className="text-nav text-[var(--text-secondary)]">
+            We sent a magic link to <span className="text-[var(--text-primary)]">{email}</span>
           </p>
         </div>
       </div>
@@ -49,10 +49,10 @@ export function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="bg-studio-surface border border-studio-border rounded-studio-xl p-8 max-w-sm w-full">
+      <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-8 max-w-sm w-full">
         <div className="flex items-center gap-2 mb-6">
-          <Disc3 size={24} className="text-studio-cyan" />
-          <h2 className="text-xl font-semibold text-studio-text">Sign In</h2>
+          <Disc3 size={24} className="text-[var(--accent)]" />
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">Sign In</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -74,16 +74,16 @@ export function LoginPage() {
               required
             />
           )}
-          {error && <p className="text-xs text-studio-error">{error}</p>}
+          {error && <p className="text-label text-[var(--error)]">{error}</p>}
           <Button type="submit" disabled={submitting} className="w-full mt-1">
             {mode === 'magic' ? 'Send Magic Link' : 'Sign In'}
           </Button>
         </form>
 
         <div className="flex items-center gap-3 my-4">
-          <div className="flex-1 h-px bg-studio-border" />
-          <span className="text-2xs text-studio-text-dim">or</span>
-          <div className="flex-1 h-px bg-studio-border" />
+          <div className="flex-1 h-px bg-[var(--border)]" />
+          <span className="text-tag text-[var(--text-tertiary)]">or</span>
+          <div className="flex-1 h-px bg-[var(--border)]" />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -93,15 +93,15 @@ export function LoginPage() {
           <button
             type="button"
             onClick={() => setMode(mode === 'password' ? 'magic' : 'password')}
-            className="text-xs text-studio-text-muted hover:text-studio-cyan transition-colors"
+            className="text-label text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
           >
             {mode === 'password' ? 'Use magic link instead' : 'Use password instead'}
           </button>
         </div>
 
-        <p className="text-xs text-studio-text-muted text-center mt-6">
+        <p className="text-label text-[var(--text-secondary)] text-center mt-6">
           Don't have an account?{' '}
-          <NavLink to="/auth/signup" className="text-studio-cyan hover:text-studio-cyan-hover">
+          <NavLink to="/auth/signup" className="text-[var(--accent)] hover:text-[var(--accent)]">
             Sign up
           </NavLink>
         </p>

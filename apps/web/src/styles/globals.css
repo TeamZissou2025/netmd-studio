@@ -1,75 +1,183 @@
 @import "tailwindcss";
 
-@theme {
+/* ────────────────────────────────────────────────────────
+   Theme System — CSS Custom Properties
+   Light theme is default. Dark theme via [data-theme="dark"].
+   ──────────────────────────────────────────────────────── */
+
+:root,
+[data-theme="light"] {
   /* Surfaces */
-  --color-studio-black: #0a0a0b;
-  --color-studio-surface: #141417;
-  --color-studio-surface-hover: #1a1a1f;
-  --color-studio-surface-active: #222228;
-  --color-studio-border: #2a2a32;
-  --color-studio-border-bright: #3a3a44;
+  --surface-0: #FAFAF8;
+  --surface-1: #FFFFFF;
+  --surface-2: #F2F1EE;
+  --surface-3: #E8E7E3;
 
   /* Text */
-  --color-studio-text: #e8e8ec;
-  --color-studio-text-muted: #8888a0;
-  --color-studio-text-dim: #555568;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --text-tertiary: #999999;
 
-  /* Accent — Electric Cyan */
-  --color-studio-cyan: #00d4ff;
-  --color-studio-cyan-hover: #00bfe6;
-  --color-studio-cyan-muted: #00d4ff1a;
-  --color-studio-cyan-border: #00d4ff33;
+  /* Brand & Accent */
+  --accent: #0A8F96;
+  --accent-dim: #E6F4F5;
+  --accent-hover: #087A80;
+  --warm: #C47A0A;
+  --warm-dim: #FFF3E0;
 
-  /* Secondary — Magenta */
-  --color-studio-magenta: #ff0066;
-  --color-studio-magenta-hover: #e6005c;
-  --color-studio-magenta-muted: #ff00661a;
+  /* Pillar Identity */
+  --pillar-label: #0A8F96;
+  --pillar-transfer: #C4406A;
+  --pillar-device: #C47A0A;
+  --pillar-market: #1A9E6E;
 
   /* Status */
-  --color-studio-success: #00cc88;
-  --color-studio-warning: #ffaa00;
-  --color-studio-error: #ff3344;
+  --success: #1A9E6E;
+  --warning: #C47A0A;
+  --error: #D4371C;
 
-  /* Pillar identity colors */
-  --color-pillar-label: #00d4ff;
-  --color-pillar-transfer: #ff0066;
-  --color-pillar-device: #ffaa00;
-  --color-pillar-market: #00cc88;
+  /* Borders */
+  --border: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.12);
+  --border-accent: rgba(10, 143, 150, 0.3);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-mockup: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  /* Selection */
+  --selection-bg: var(--text-primary);
+  --selection-text: var(--surface-0);
+
+  /* Scrollbar */
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] {
+  /* Surfaces */
+  --surface-0: #0a0a0b;
+  --surface-1: #141417;
+  --surface-2: #1a1a1f;
+  --surface-3: #222228;
+
+  /* Text */
+  --text-primary: #e8e8ec;
+  --text-secondary: #8888a0;
+  --text-tertiary: #555568;
+
+  /* Brand & Accent */
+  --accent: #00d4ff;
+  --accent-dim: rgba(0, 212, 255, 0.1);
+  --accent-hover: #00bfe6;
+  --warm: #ffaa00;
+  --warm-dim: rgba(255, 170, 0, 0.1);
+
+  /* Pillar Identity */
+  --pillar-label: #00d4ff;
+  --pillar-transfer: #ff0066;
+  --pillar-device: #ffaa00;
+  --pillar-market: #00cc88;
+
+  /* Status */
+  --success: #00cc88;
+  --warning: #ffaa00;
+  --error: #ff3344;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-accent: rgba(0, 212, 255, 0.2);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-mockup: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+
+  /* Selection */
+  --selection-bg: var(--accent);
+  --selection-text: var(--surface-0);
+
+  /* Scrollbar */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Easing ──────────────────────────────────────── */
+:root {
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Tailwind @theme tokens (referencing CSS vars) ── */
+@theme {
+  /* Surfaces */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  /* Text */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  /* Accent */
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-accent-hover: var(--accent-hover);
+
+  /* Warm */
+  --color-warm: var(--warm);
+  --color-warm-dim: var(--warm-dim);
+
+  /* Pillar */
+  --color-pillar-label: var(--pillar-label);
+  --color-pillar-transfer: var(--pillar-transfer);
+  --color-pillar-device: var(--pillar-device);
+  --color-pillar-market: var(--pillar-market);
+
+  /* Status */
+  --color-status-success: var(--success);
+  --color-status-warning: var(--warning);
+  --color-status-error: var(--error);
+
+  /* Borders */
+  --color-border-default: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-border-accent: var(--border-accent);
 
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Font sizes */
-  --text-2xs: 0.625rem;
-  --text-2xs--line-height: 0.875rem;
-  --text-xs: 0.6875rem;
-  --text-xs--line-height: 1rem;
-  --text-sm: 0.75rem;
-  --text-sm--line-height: 1.125rem;
-  --text-base: 0.8125rem;
-  --text-base--line-height: 1.25rem;
-  --text-md: 0.875rem;
-  --text-md--line-height: 1.375rem;
-  --text-lg: 1rem;
-  --text-lg--line-height: 1.5rem;
-  --text-xl: 1.125rem;
-  --text-xl--line-height: 1.75rem;
-  --text-2xl: 1.5rem;
-  --text-2xl--line-height: 2rem;
-  --text-3xl: 2rem;
-  --text-3xl--line-height: 2.5rem;
+  --text-micro: 0.5625rem;
+  --text-micro--line-height: 0.875rem;
+  --text-tag: 0.625rem;
+  --text-tag--line-height: 0.875rem;
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1rem;
+  --text-nav: 0.8125rem;
+  --text-nav--line-height: 1.25rem;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5rem;
+  --text-studio-title: 1.375rem;
+  --text-studio-title--line-height: 1.65rem;
+  --text-card-title: clamp(1.5rem, 1.25rem + 0.8vw, 2rem);
+  --text-card-title--line-height: 1.1;
+  --text-section-title: clamp(1.75rem, 1.5rem + 1vw, 2.5rem);
+  --text-section-title--line-height: 1.1;
+  --text-hero: clamp(2.5rem, 2rem + 3vw, 5rem);
+  --text-hero--line-height: 1.1;
 
-  /* Border radius */
-  --radius-studio: 6px;
-  --radius-studio-lg: 8px;
-  --radius-studio-xl: 12px;
-
-  /* Box shadows */
-  --shadow-studio: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-studio-lg: 0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
-  --shadow-studio-glow-cyan: 0 0 20px rgba(0,212,255,0.15);
-  --shadow-studio-glow-magenta: 0 0 20px rgba(255,0,102,0.15);
+  /* Shadows */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-mockup: var(--shadow-mockup);
 
   /* Animations */
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -78,9 +186,21 @@
 
 @source "../../../packages/ui/src/**/*.tsx";
 
+/* ── Base styles ─────────────────────────────────── */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+/* ── Scrollbar ───────────────────────────────────── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2a2a32 transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -93,15 +213,52 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #2a2a32;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #3a3a44;
+  background: var(--scrollbar-thumb-hover);
 }
 
-::selection {
-  background: rgba(0, 212, 255, 0.3);
-  color: #e8e8ec;
+/* ── Reduced Motion ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+  }
+}
+
+/* ── Hero animation ──────────────────────────────── */
+@keyframes word-reveal {
+  from {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.word-reveal {
+  display: inline-block;
+  overflow: hidden;
+}
+
+.word-reveal > span {
+  display: inline-block;
+  animation: word-reveal 0.7s var(--ease) both;
+}
+
+/* ── Waveform animation (Transfer pillar card) ──── */
+@keyframes waveform {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+.waveform-bar {
+  animation: waveform 1.5s ease-in-out infinite;
 }

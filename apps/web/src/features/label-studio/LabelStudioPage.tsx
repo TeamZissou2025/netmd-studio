@@ -39,12 +39,12 @@ export function LabelStudioPage() {
       {!selectedTemplate && (
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-studio-lg bg-studio-cyan-muted border border-studio-cyan-border flex items-center justify-center">
-              <Disc3 size={20} className="text-studio-cyan" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-dim)', border: '1px solid var(--border-accent)' }}>
+              <Disc3 size={20} style={{ color: 'var(--accent)' }} />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-studio-text">Label Studio</h1>
-              <p className="text-sm text-studio-text-muted">
+              <h1 className="text-card-title font-semibold" style={{ color: 'var(--text-primary)' }}>Label Studio</h1>
+              <p className="text-nav" style={{ color: 'var(--text-secondary)' }}>
                 Design J-cards, spine labels, and disc labels for your MiniDisc collection.
               </p>
             </div>

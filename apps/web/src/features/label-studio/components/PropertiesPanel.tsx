@@ -36,8 +36,8 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
   if (!selectedObject) {
     return (
       <div className="p-4">
-        <h3 className="text-sm font-medium text-studio-text-muted mb-2">Properties</h3>
-        <p className="text-xs text-studio-text-dim text-center py-4">Select an object to edit its properties</p>
+        <h3 className="text-nav font-medium" style={{ color: 'var(--text-secondary)' }}>Properties</h3>
+        <p className="text-label text-center py-4" style={{ color: 'var(--text-tertiary)' }}>Select an object to edit its properties</p>
       </div>
     );
   }
@@ -53,8 +53,8 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
   };
 
   return (
-    <div className="p-4 space-y-3 text-xs">
-      <h3 className="text-sm font-medium text-studio-text-muted">Properties</h3>
+    <div className="p-4 space-y-3 text-label">
+      <h3 className="text-nav font-medium" style={{ color: 'var(--text-secondary)' }}>Properties</h3>
 
       {/* Position */}
       <div className="grid grid-cols-2 gap-2">
@@ -63,14 +63,14 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
           type="number"
           value={Math.round(selectedObject.left ?? 0)}
           onChange={(e) => updateProp('left', Number(e.target.value))}
-          className="text-xs h-7"
+          className="text-label h-7"
         />
         <Input
           label="Y"
           type="number"
           value={Math.round(selectedObject.top ?? 0)}
           onChange={(e) => updateProp('top', Number(e.target.value))}
-          className="text-xs h-7"
+          className="text-label h-7"
         />
       </div>
 
@@ -84,7 +84,7 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
             const w = Number(e.target.value);
             updateProp('scaleX', w / (selectedObject.width ?? 1));
           }}
-          className="text-xs h-7"
+          className="text-label h-7"
         />
         <Input
           label="Height"
@@ -94,7 +94,7 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
             const h = Number(e.target.value);
             updateProp('scaleY', h / (selectedObject.height ?? 1));
           }}
-          className="text-xs h-7"
+          className="text-label h-7"
         />
       </div>
 
@@ -105,10 +105,10 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
           type="number"
           value={Math.round(selectedObject.angle ?? 0)}
           onChange={(e) => updateProp('angle', Number(e.target.value))}
-          className="text-xs h-7"
+          className="text-label h-7"
         />
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-studio-text-muted">Opacity</label>
+          <label className="text-nav font-medium" style={{ color: 'var(--text-secondary)' }}>Opacity</label>
           <input
             type="range"
             min="0"
@@ -116,7 +116,8 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
             step="0.05"
             value={selectedObject.opacity ?? 1}
             onChange={(e) => updateProp('opacity', Number(e.target.value))}
-            className="w-full h-1.5 bg-studio-border rounded-full appearance-none cursor-pointer accent-studio-cyan"
+            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+            style={{ background: 'var(--border)', accentColor: 'var(--accent)' }}
           />
         </div>
       </div>
@@ -124,36 +125,39 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
       {/* Fill + Stroke */}
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-studio-text-muted">Fill</label>
+          <label className="text-nav font-medium" style={{ color: 'var(--text-secondary)' }}>Fill</label>
           <div className="flex items-center gap-1">
             <input
               type="color"
               value={String(selectedObject.fill ?? '#000000')}
               onChange={(e) => updateProp('fill', e.target.value)}
-              className="w-7 h-7 rounded border border-studio-border bg-transparent cursor-pointer"
+              className="w-7 h-7 rounded bg-transparent cursor-pointer"
+              style={{ border: '1px solid var(--border)' }}
             />
             <input
               type="text"
               value={String(selectedObject.fill ?? '#000000')}
               onChange={(e) => updateProp('fill', e.target.value)}
-              className="flex-1 h-7 bg-studio-black border border-studio-border rounded-studio px-2 text-2xs text-studio-text font-mono outline-none focus:border-studio-cyan"
+              className="flex-1 h-7 rounded-md px-2 text-tag font-mono outline-none"
+              style={{ background: 'var(--surface-0)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
             />
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-studio-text-muted">Stroke</label>
+          <label className="text-nav font-medium" style={{ color: 'var(--text-secondary)' }}>Stroke</label>
           <div className="flex items-center gap-1">
             <input
               type="color"
               value={String(selectedObject.stroke ?? '#000000')}
               onChange={(e) => updateProp('stroke', e.target.value)}
-              className="w-7 h-7 rounded border border-studio-border bg-transparent cursor-pointer"
+              className="w-7 h-7 rounded bg-transparent cursor-pointer"
+              style={{ border: '1px solid var(--border)' }}
             />
             <Input
               type="number"
               value={selectedObject.strokeWidth ?? 0}
               onChange={(e) => updateProp('strokeWidth', Number(e.target.value))}
-              className="text-2xs h-7 w-14"
+              className="text-tag h-7 w-14"
               min={0}
             />
           </div>
@@ -163,15 +167,16 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
       {/* Text properties */}
       {textObj && (
         <>
-          <div className="border-t border-studio-border pt-3 mt-3">
-            <h4 className="text-sm font-medium text-studio-text-muted mb-2">Text</h4>
+          <div className="pt-3 mt-3" style={{ borderTop: '1px solid var(--border)' }}>
+            <h4 className="text-nav font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Text</h4>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-studio-text-muted">Font</label>
+            <label className="text-nav font-medium" style={{ color: 'var(--text-secondary)' }}>Font</label>
             <select
               value={textObj.fontFamily ?? 'Inter'}
               onChange={(e) => updateProp('fontFamily', e.target.value)}
-              className="h-7 bg-studio-black border border-studio-border rounded-studio px-2 text-xs text-studio-text outline-none focus:border-studio-cyan appearance-none"
+              className="h-7 rounded-md px-2 text-label outline-none appearance-none"
+              style={{ background: 'var(--surface-0)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
             >
               {FONT_OPTIONS.map((f) => (
                 <option key={f} value={f}>{f}</option>
@@ -184,16 +189,17 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
               type="number"
               value={textObj.fontSize ?? 16}
               onChange={(e) => updateProp('fontSize', Number(e.target.value))}
-              className="text-xs h-7"
+              className="text-label h-7"
               min={4}
               max={200}
             />
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-studio-text-muted">Weight</label>
+              <label className="text-nav font-medium" style={{ color: 'var(--text-secondary)' }}>Weight</label>
               <select
                 value={String(textObj.fontWeight ?? 'normal')}
                 onChange={(e) => updateProp('fontWeight', e.target.value)}
-                className="h-7 bg-studio-black border border-studio-border rounded-studio px-2 text-xs text-studio-text outline-none focus:border-studio-cyan appearance-none"
+                className="h-7 rounded-md px-2 text-label outline-none appearance-none"
+                style={{ background: 'var(--surface-0)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
               >
                 {FONT_WEIGHTS.map((w) => (
                   <option key={w.value} value={w.value}>{w.label}</option>
@@ -203,31 +209,34 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
           </div>
           <div className="grid grid-cols-3 gap-1">
             <button
-              className={`h-7 rounded-studio text-xs font-medium transition-colors ${
+              className="h-7 rounded-md text-label font-medium transition-colors border"
+              style={
                 textObj.textAlign === 'left'
-                  ? 'bg-studio-cyan-muted text-studio-cyan border border-studio-cyan-border'
-                  : 'bg-studio-surface-hover text-studio-text-muted border border-studio-border'
-              }`}
+                  ? { background: 'var(--accent-dim)', color: 'var(--accent)', borderColor: 'var(--border-accent)' }
+                  : { background: 'var(--surface-2)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
+              }
               onClick={() => updateProp('textAlign', 'left')}
             >
               Left
             </button>
             <button
-              className={`h-7 rounded-studio text-xs font-medium transition-colors ${
+              className="h-7 rounded-md text-label font-medium transition-colors border"
+              style={
                 textObj.textAlign === 'center'
-                  ? 'bg-studio-cyan-muted text-studio-cyan border border-studio-cyan-border'
-                  : 'bg-studio-surface-hover text-studio-text-muted border border-studio-border'
-              }`}
+                  ? { background: 'var(--accent-dim)', color: 'var(--accent)', borderColor: 'var(--border-accent)' }
+                  : { background: 'var(--surface-2)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
+              }
               onClick={() => updateProp('textAlign', 'center')}
             >
               Center
             </button>
             <button
-              className={`h-7 rounded-studio text-xs font-medium transition-colors ${
+              className="h-7 rounded-md text-label font-medium transition-colors border"
+              style={
                 textObj.textAlign === 'right'
-                  ? 'bg-studio-cyan-muted text-studio-cyan border border-studio-cyan-border'
-                  : 'bg-studio-surface-hover text-studio-text-muted border border-studio-border'
-              }`}
+                  ? { background: 'var(--accent-dim)', color: 'var(--accent)', borderColor: 'var(--border-accent)' }
+                  : { background: 'var(--surface-2)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
+              }
               onClick={() => updateProp('textAlign', 'right')}
             >
               Right
@@ -239,7 +248,7 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
               type="number"
               value={textObj.charSpacing ?? 0}
               onChange={(e) => updateProp('charSpacing', Number(e.target.value))}
-              className="text-xs h-7"
+              className="text-label h-7"
               step={10}
             />
             <Input
@@ -247,7 +256,7 @@ export function PropertiesPanel({ selectedObject, onUpdate }: PropertiesPanelPro
               type="number"
               value={textObj.lineHeight ?? 1.2}
               onChange={(e) => updateProp('lineHeight', Number(e.target.value))}
-              className="text-xs h-7"
+              className="text-label h-7"
               step={0.1}
               min={0.5}
               max={3}

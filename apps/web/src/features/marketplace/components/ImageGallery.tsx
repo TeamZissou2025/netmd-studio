@@ -12,8 +12,8 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
 
   if (images.length === 0) {
     return (
-      <div className="aspect-square bg-studio-surface border border-studio-border rounded-studio-lg flex items-center justify-center">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-studio-border">
+      <div className="aspect-square bg-[var(--surface-1)] border border-[var(--border)] rounded-lg flex items-center justify-center">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-[var(--border)]">
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <circle cx="8.5" cy="8.5" r="1.5" />
           <path d="M21 15l-5-5L5 21" />
@@ -27,7 +27,7 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
       <div className="flex flex-col gap-2">
         {/* Main image */}
         <div
-          className="aspect-square bg-studio-black border border-studio-border rounded-studio-lg overflow-hidden cursor-zoom-in relative"
+          className="aspect-square bg-[var(--surface-0)] border border-[var(--border)] rounded-lg overflow-hidden cursor-zoom-in relative"
           onClick={() => setLightboxOpen(true)}
         >
           <img
@@ -42,18 +42,18 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
                   e.stopPropagation();
                   setActiveIndex((i) => (i - 1 + images.length) % images.length);
                 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-studio-black/70 backdrop-blur-sm flex items-center justify-center hover:bg-studio-black/90 transition-colors"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[var(--surface-0)] backdrop-blur-sm flex items-center justify-center hover:bg-[var(--surface-0)] transition-colors"
               >
-                <ChevronLeft size={16} className="text-studio-text" />
+                <ChevronLeft size={16} className="text-[var(--text-primary)]" />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveIndex((i) => (i + 1) % images.length);
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-studio-black/70 backdrop-blur-sm flex items-center justify-center hover:bg-studio-black/90 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[var(--surface-0)] backdrop-blur-sm flex items-center justify-center hover:bg-[var(--surface-0)] transition-colors"
               >
-                <ChevronRight size={16} className="text-studio-text" />
+                <ChevronRight size={16} className="text-[var(--text-primary)]" />
               </button>
             </>
           )}
@@ -66,10 +66,10 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
               <button
                 key={i}
                 onClick={() => setActiveIndex(i)}
-                className={`w-14 h-14 flex-shrink-0 rounded-studio border overflow-hidden ${
+                className={`w-14 h-14 flex-shrink-0 rounded-md border overflow-hidden ${
                   i === activeIndex
-                    ? 'border-studio-cyan'
-                    : 'border-studio-border hover:border-studio-border-bright'
+                    ? 'border-[var(--border-accent)]'
+                    : 'border-[var(--border)] hover:border-[var(--border-hover)]'
                 } transition-colors`}
               >
                 <img src={img} alt="" className="w-full h-full object-cover" />
@@ -87,9 +87,9 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
         >
           <button
             onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-studio-surface/50 flex items-center justify-center hover:bg-studio-surface transition-colors"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[var(--surface-1)]/50 flex items-center justify-center hover:bg-[var(--surface-1)] transition-colors"
           >
-            <X size={20} className="text-studio-text" />
+            <X size={20} className="text-[var(--text-primary)]" />
           </button>
 
           <img
@@ -106,23 +106,23 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
                   e.stopPropagation();
                   setActiveIndex((i) => (i - 1 + images.length) % images.length);
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-studio-surface/50 flex items-center justify-center hover:bg-studio-surface transition-colors"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[var(--surface-1)]/50 flex items-center justify-center hover:bg-[var(--surface-1)] transition-colors"
               >
-                <ChevronLeft size={20} className="text-studio-text" />
+                <ChevronLeft size={20} className="text-[var(--text-primary)]" />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveIndex((i) => (i + 1) % images.length);
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-studio-surface/50 flex items-center justify-center hover:bg-studio-surface transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[var(--surface-1)]/50 flex items-center justify-center hover:bg-[var(--surface-1)] transition-colors"
               >
-                <ChevronRight size={20} className="text-studio-text" />
+                <ChevronRight size={20} className="text-[var(--text-primary)]" />
               </button>
             </>
           )}
 
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-studio-text-muted">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-nav text-[var(--text-secondary)]">
             {activeIndex + 1} / {images.length}
           </div>
         </div>

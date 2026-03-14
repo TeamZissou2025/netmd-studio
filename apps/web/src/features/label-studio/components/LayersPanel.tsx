@@ -61,9 +61,9 @@ export function LayersPanel({ canvas, selectedObject }: LayersPanelProps) {
 
   return (
     <div className="p-3">
-      <h3 className="text-sm font-medium text-studio-text-muted mb-2 px-1">Layers</h3>
+      <h3 className="text-nav font-medium mb-2 px-1" style={{ color: 'var(--text-secondary)' }}>Layers</h3>
       {objects.length === 0 && (
-        <p className="text-xs text-studio-text-dim text-center py-4">No objects on canvas</p>
+        <p className="text-label text-center py-4" style={{ color: 'var(--text-tertiary)' }}>No objects on canvas</p>
       )}
       <div className="space-y-0.5">
         {objects.map((obj, idx) => {
@@ -72,20 +72,22 @@ export function LayersPanel({ canvas, selectedObject }: LayersPanelProps) {
           return (
             <div
               key={idx}
-              className={`flex items-center gap-2 px-2 py-1.5 rounded-studio cursor-pointer transition-colors ${
+              className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors border"
+              style={
                 isSelected
-                  ? 'bg-studio-cyan-muted border border-studio-cyan-border'
-                  : 'hover:bg-studio-surface-hover border border-transparent'
-              }`}
+                  ? { background: 'var(--accent-dim)', borderColor: 'var(--border-accent)' }
+                  : { borderColor: 'transparent' }
+              }
               onClick={() => {
                 canvas.setActiveObject(obj);
                 canvas.renderAll();
               }}
             >
-              <Icon size={16} className={`flex-shrink-0 ${isSelected ? 'text-studio-cyan' : 'text-studio-text-dim'}`} />
-              <span className="text-xs text-studio-text truncate flex-1">{getObjectLabel(obj)}</span>
+              <Icon size={16} className="flex-shrink-0" style={{ color: isSelected ? 'var(--accent)' : 'var(--text-tertiary)' }} />
+              <span className="text-label truncate flex-1" style={{ color: 'var(--text-primary)' }}>{getObjectLabel(obj)}</span>
               <button
-                className="flex-shrink-0 p-0.5 text-studio-text-dim hover:text-studio-text transition-colors"
+                className="flex-shrink-0 p-0.5 transition-colors"
+                style={{ color: 'var(--text-tertiary)' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   obj.set('visible', !obj.visible);
@@ -97,7 +99,8 @@ export function LayersPanel({ canvas, selectedObject }: LayersPanelProps) {
                 {obj.visible !== false ? <Eye size={14} /> : <EyeOff size={14} />}
               </button>
               <button
-                className="flex-shrink-0 p-0.5 text-studio-text-dim hover:text-studio-text transition-colors"
+                className="flex-shrink-0 p-0.5 transition-colors"
+                style={{ color: 'var(--text-tertiary)' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   obj.set('selectable', !obj.selectable);

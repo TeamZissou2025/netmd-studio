@@ -25,18 +25,18 @@ const ATRAC_LABELS: Record<string, string> = {
 
 function SpecRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-studio-border last:border-0">
-      <span className="text-xs text-studio-text-muted">{label}</span>
-      <span className="text-xs font-mono text-studio-text">{value}</span>
+    <div className="flex items-center justify-between py-1.5 border-b border-[var(--border)] last:border-0">
+      <span className="text-label text-[var(--text-secondary)]">{label}</span>
+      <span className="text-label font-mono text-[var(--text-primary)]">{value}</span>
     </div>
   );
 }
 
 function BoolIcon({ value }: { value: boolean }) {
   return value ? (
-    <Check size={14} className="text-studio-success" />
+    <Check size={14} className="text-[var(--success)]" />
   ) : (
-    <X size={14} className="text-studio-text-dim" />
+    <X size={14} className="text-[var(--text-tertiary)]" />
   );
 }
 
@@ -44,9 +44,9 @@ function FeatureGrid({ features }: { features: { label: string; value: boolean }
   return (
     <div className="grid grid-cols-2 gap-x-4">
       {features.map((f) => (
-        <div key={f.label} className="flex items-center gap-2 py-1.5 border-b border-studio-border">
+        <div key={f.label} className="flex items-center gap-2 py-1.5 border-b border-[var(--border)]">
           <BoolIcon value={f.value} />
-          <span className="text-xs text-studio-text-muted">{f.label}</span>
+          <span className="text-label text-[var(--text-secondary)]">{f.label}</span>
         </div>
       ))}
     </div>
@@ -79,7 +79,7 @@ export function DeviceDetailPage() {
   if (error || !device) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-md text-studio-error mb-4">{error || 'Device not found'}</p>
+        <p className="text-body text-[var(--error)] mb-4">{error || 'Device not found'}</p>
         <Link to="/devices">
           <Button variant="secondary">
             <ArrowLeft size={14} /> Back to devices
@@ -96,7 +96,7 @@ export function DeviceDetailPage() {
         description={`${device.manufacturer} ${device.model_number} — ${DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}${device.year_released ? ` (${device.year_released})` : ''}`}
       />
       {/* Breadcrumb */}
-      <Link to="/devices" className="inline-flex items-center gap-1.5 text-sm text-studio-text-muted hover:text-studio-cyan transition-colors w-fit">
+      <Link to="/devices" className="inline-flex items-center gap-1.5 text-nav text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors w-fit">
         <ArrowLeft size={14} />
         Back to Device Library
       </Link>
@@ -104,11 +104,11 @@ export function DeviceDetailPage() {
       {/* Hero */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Image */}
-        <div className="bg-studio-surface border border-studio-border rounded-studio-lg flex items-center justify-center aspect-square overflow-hidden">
+        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg flex items-center justify-center aspect-square overflow-hidden">
           {device.image_url ? (
             <img src={device.image_url} alt={device.name} className="w-full h-full object-contain p-4" />
           ) : (
-            <Disc3 size={80} className="text-studio-border" />
+            <Disc3 size={80} className="text-[var(--border)]" />
           )}
         </div>
 
@@ -126,14 +126,14 @@ export function DeviceDetailPage() {
               {device.has_himd && <Badge variant="magenta">Hi-MD</Badge>}
               {device.verified && <Badge variant="green">Verified</Badge>}
             </div>
-            <h1 className="text-2xl font-semibold text-studio-text">{device.name}</h1>
-            <p className="text-md text-studio-text-muted mt-1">
+            <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{device.name}</h1>
+            <p className="text-body text-[var(--text-secondary)] mt-1">
               {device.manufacturer} {device.model_number}
             </p>
           </div>
 
           {device.description && (
-            <p className="text-sm text-studio-text-muted leading-relaxed">{device.description}</p>
+            <p className="text-nav text-[var(--text-secondary)] leading-relaxed">{device.description}</p>
           )}
 
           {/* Quick actions */}
@@ -162,7 +162,7 @@ export function DeviceDetailPage() {
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* General Specs */}
           <Card>
-            <h2 className="text-lg font-semibold text-studio-text mb-3">Specifications</h2>
+            <h2 className="text-studio-title font-semibold text-[var(--text-primary)] mb-3">Specifications</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
               <div>
                 <SpecRow label="Manufacturer" value={device.manufacturer} />
@@ -200,7 +200,7 @@ export function DeviceDetailPage() {
 
           {/* Features */}
           <Card>
-            <h2 className="text-lg font-semibold text-studio-text mb-3">Features</h2>
+            <h2 className="text-studio-title font-semibold text-[var(--text-primary)] mb-3">Features</h2>
             <FeatureGrid
               features={[
                 { label: 'MDLP (Long Play)', value: device.has_mdlp },
@@ -220,13 +220,13 @@ export function DeviceDetailPage() {
           {/* USB / WebUSB Info */}
           {device.has_usb && (
             <Card>
-              <h2 className="text-lg font-semibold text-studio-text mb-3">USB / WebUSB</h2>
+              <h2 className="text-studio-title font-semibold text-[var(--text-primary)] mb-3">USB / WebUSB</h2>
               <div className="flex flex-col gap-2">
                 {device.usb_vid && device.usb_pid && (
                   <SpecRow
                     label="USB ID"
                     value={
-                      <span className="font-mono text-studio-cyan">
+                      <span className="font-mono text-[var(--accent)]">
                         {device.usb_vid}:{device.usb_pid}
                       </span>
                     }
@@ -240,7 +240,7 @@ export function DeviceDetailPage() {
                   <SpecRow
                     label="WebUSB Filter"
                     value={
-                      <code className="text-2xs bg-studio-black px-1.5 py-0.5 rounded text-studio-cyan">
+                      <code className="text-tag bg-[var(--surface-0)] px-1.5 py-0.5 rounded text-[var(--accent)]">
                         {JSON.stringify(device.webusb_filter)}
                       </code>
                     }
@@ -253,8 +253,8 @@ export function DeviceDetailPage() {
           {/* Notes */}
           {device.notes && (
             <Card>
-              <h2 className="text-lg font-semibold text-studio-text mb-3">Community Notes</h2>
-              <p className="text-sm text-studio-text-muted whitespace-pre-wrap">{device.notes}</p>
+              <h2 className="text-studio-title font-semibold text-[var(--text-primary)] mb-3">Community Notes</h2>
+              <p className="text-nav text-[var(--text-secondary)] whitespace-pre-wrap">{device.notes}</p>
             </Card>
           )}
         </div>
@@ -264,11 +264,11 @@ export function DeviceDetailPage() {
           {/* Compatibility Reports */}
           <Card>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-studio-text">Compatibility</h2>
+              <h2 className="text-studio-title font-semibold text-[var(--text-primary)]">Compatibility</h2>
               {user && (
                 <button
                   onClick={() => setShowReportForm(true)}
-                  className="text-2xs text-studio-cyan hover:text-studio-cyan-hover transition-colors flex items-center gap-1"
+                  className="text-tag text-[var(--accent)] hover:text-[var(--accent)] transition-colors flex items-center gap-1"
                 >
                   <MessageSquarePlus size={12} />
                   Add Report
@@ -284,15 +284,15 @@ export function DeviceDetailPage() {
               <CompatibilityStats aggregated={aggregated} />
             )}
             {!user && (
-              <p className="text-2xs text-studio-text-dim mt-3 pt-3 border-t border-studio-border">
-                <Link to="/auth/login" className="text-studio-cyan hover:text-studio-cyan-hover">Sign in</Link> to submit a compatibility report
+              <p className="text-tag text-[var(--text-tertiary)] mt-3 pt-3 border-t border-[var(--border)]">
+                <Link to="/auth/login" className="text-[var(--accent)] hover:text-[var(--accent)]">Sign in</Link> to submit a compatibility report
               </p>
             )}
           </Card>
 
           {/* Related Marketplace Listings */}
           <Card>
-            <h2 className="text-lg font-semibold text-studio-text mb-3">Marketplace Listings</h2>
+            <h2 className="text-studio-title font-semibold text-[var(--text-primary)] mb-3">Marketplace Listings</h2>
             <DeviceListings deviceId={device.id} />
           </Card>
         </div>

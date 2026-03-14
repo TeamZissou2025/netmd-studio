@@ -1,73 +1,206 @@
 import { NavLink } from 'react-router';
-import { Disc3, Usb, Database, ShoppingBag, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const pillars = [
   {
-    to: '/labels',
+    num: '01',
     title: 'Label Studio',
-    desc: 'Design J-cards, spine labels, and disc labels with Discogs/MusicBrainz metadata.',
-    icon: Disc3,
-    color: 'text-pillar-label',
-    borderColor: 'border-pillar-label/30',
-    bgColor: 'bg-pillar-label/5',
+    desc: 'Design J-cards, spine labels, and disc labels. Search Discogs and MusicBrainz for album metadata and cover art, then customize on a pixel-perfect canvas.',
+    tags: ['FABRIC.JS', 'PDF EXPORT', 'DISCOGS API'],
+    to: '/labels',
+    color: 'var(--pillar-label)',
+    visual: 'label',
   },
   {
-    to: '/transfer',
+    num: '02',
     title: 'Transfer Studio',
-    desc: 'Transfer audio to MiniDisc via WebUSB with SP, LP2, and LP4 ATRAC encoding.',
-    icon: Usb,
-    color: 'text-pillar-transfer',
-    borderColor: 'border-pillar-transfer/30',
-    bgColor: 'bg-pillar-transfer/5',
+    desc: 'Transfer audio to MiniDisc via WebUSB. Drag and drop MP3, FLAC, or WAV files and write directly to your device in SP, LP2, or LP4 format.',
+    tags: ['WEBUSB', 'ATRAC', 'NETMD-JS'],
+    to: '/transfer',
+    color: 'var(--pillar-transfer)',
+    visual: 'waveform',
   },
   {
-    to: '/devices',
+    num: '03',
     title: 'Device Library',
-    desc: 'Community database of MiniDisc hardware with specs and compatibility reports.',
-    icon: Database,
-    color: 'text-pillar-device',
-    borderColor: 'border-pillar-device/30',
-    bgColor: 'bg-pillar-device/5',
+    desc: 'Community-maintained database of every MiniDisc device ever made. Specs, compatibility reports, and WebUSB support status.',
+    tags: ['39+ DEVICES', 'COMMUNITY', 'COMPATIBILITY'],
+    to: '/devices',
+    color: 'var(--pillar-device)',
+    visual: 'device',
   },
   {
-    to: '/marketplace',
+    num: '04',
     title: 'Marketplace',
-    desc: 'Buy and sell MiniDisc players, decks, discs, and accessories.',
-    icon: ShoppingBag,
-    color: 'text-pillar-market',
-    borderColor: 'border-pillar-market/30',
-    bgColor: 'bg-pillar-market/5',
+    desc: 'Buy and sell MiniDisc players, decks, blank discs, and accessories. Peer-to-peer transactions powered by Stripe Connect.',
+    tags: ['STRIPE CONNECT', 'P2P', 'SECURE'],
+    to: '/marketplace',
+    color: 'var(--pillar-market)',
+    visual: 'market',
   },
 ];
 
+const stats = [
+  { value: '39', label: 'Devices cataloged' },
+  { value: '5', label: 'Template types' },
+  { value: '3', label: 'Transfer formats' },
+  { value: '\u221E', label: 'Labels to design' },
+];
+
+function WaveformVisual({ color }: { color: string }) {
+  return (
+    <div className="flex items-center justify-center gap-0.5 h-full">
+      {Array.from({ length: 40 }, (_, i) => (
+        <div
+          key={i}
+          className="waveform-bar w-[3px] rounded-full"
+          style={{
+            background: color,
+            opacity: 0.6,
+            height: '60%',
+            animationDelay: `${i * 0.04}s`,
+            transformOrigin: 'center',
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PillarVisual({ type, color }: { type: string; color: string }) {
+  if (type === 'waveform') return <WaveformVisual color={color} />;
+
+  // Placeholder visual for other pillar types
+  return (
+    <div className="flex items-center justify-center h-full">
+      <div
+        className="w-24 h-24 rounded-xl opacity-20"
+        style={{ background: color }}
+      />
+    </div>
+  );
+}
+
 export function HomePage() {
   return (
-    <div className="py-8">
-      <div className="text-center mb-12">
-        <h1 className="text-3xl font-semibold text-studio-text mb-2">NetMD Studio</h1>
-        <p className="text-md text-studio-text-muted">The all-in-one MiniDisc platform</p>
-      </div>
+    <div>
+      {/* Hero Section */}
+      <section className="text-center" style={{ paddingTop: 'clamp(7rem, 5rem + 6vw, 12rem)', paddingBottom: 'clamp(4rem, 3rem + 3vw, 6rem)' }}>
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-8" style={{ background: 'var(--accent-dim)', border: '1px solid var(--border-accent)' }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+          <span className="font-mono text-tag uppercase tracking-widest" style={{ color: 'var(--accent)' }}>
+            The all-in-one MiniDisc platform
+          </span>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {pillars.map(({ to, title, desc, icon: Icon, color, borderColor, bgColor }) => (
+        {/* Title */}
+        <h1 className="text-hero font-extrabold tracking-tighter mb-6" style={{ color: 'var(--text-primary)' }}>
+          <span className="word-reveal"><span style={{ animationDelay: '0ms' }}>Everything</span></span>{' '}
+          <span className="word-reveal"><span style={{ animationDelay: '120ms' }}>for</span></span>{' '}
+          <span className="word-reveal"><span style={{ animationDelay: '240ms', color: 'var(--accent)' }}>MiniDisc.</span></span>
+        </h1>
+
+        {/* Subtitle */}
+        <div className="max-w-xl mx-auto space-y-1 text-body" style={{ color: 'var(--text-secondary)' }}>
+          <p>Design labels. Transfer audio. Explore hardware. Trade gear.</p>
+          <p>All in one studio built for the community.</p>
+        </div>
+
+        {/* CTA */}
+        <div className="mt-10">
           <NavLink
-            key={to}
-            to={to}
-            className={`group ${bgColor} border ${borderColor} rounded-studio-xl p-6 hover:bg-studio-surface-hover transition-colors`}
+            to="/labels"
+            className="inline-flex items-center gap-2 px-7 py-3 rounded-lg text-body font-medium transition-all duration-200 hover:opacity-90"
+            style={{
+              background: 'var(--text-primary)',
+              color: 'var(--surface-0)',
+            }}
           >
-            <div className="flex items-start gap-4">
-              <Icon size={24} className={color} />
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-studio-text flex items-center gap-2">
-                  {title}
-                  <ArrowRight size={16} className="text-studio-text-dim group-hover:text-studio-text-muted transition-colors" />
-                </h3>
-                <p className="text-sm text-studio-text-muted mt-1">{desc}</p>
-              </div>
-            </div>
+            Get Started
+            <ArrowRight size={16} />
           </NavLink>
+        </div>
+      </section>
+
+      {/* Stats Bar */}
+      <section
+        className="grid grid-cols-2 sm:grid-cols-4"
+        style={{
+          borderTop: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        {stats.map((s) => (
+          <div key={s.label} className="py-6 text-center">
+            <div className="text-section-title font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              {s.value}
+            </div>
+            <div className="text-nav mt-1" style={{ color: 'var(--text-secondary)' }}>
+              {s.label}
+            </div>
+          </div>
         ))}
-      </div>
+      </section>
+
+      {/* Pillar Cards */}
+      <section style={{ padding: 'clamp(4rem, 3rem + 4vw, 8rem) 0' }}>
+        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--border)' }}>
+          <div className="flex flex-col gap-px">
+            {pillars.map((p) => (
+              <NavLink
+                key={p.to}
+                to={p.to}
+                className="group grid grid-cols-1 md:grid-cols-2 min-h-[320px] transition-colors duration-[400ms]"
+                style={{ background: 'var(--surface-1)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-2)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-1)'; }}
+              >
+                {/* Left: Info */}
+                <div className="flex flex-col justify-center p-8 md:p-12">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
+                    <span className="font-mono text-tag uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                      {p.num}
+                    </span>
+                  </div>
+                  <h3 className="text-card-title font-bold tracking-tight mb-3" style={{ color: 'var(--text-primary)' }}>
+                    {p.title}
+                  </h3>
+                  <p className="text-body mb-6" style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    {p.desc}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {p.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 font-mono text-micro uppercase tracking-wider rounded"
+                        style={{
+                          background: 'var(--surface-2)',
+                          color: 'var(--text-secondary)',
+                          border: '1px solid var(--border)',
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1 text-nav font-medium transition-transform duration-300 group-hover:translate-x-1.5" style={{ color: 'var(--text-primary)' }}>
+                    Explore <ArrowRight size={14} />
+                  </div>
+                </div>
+
+                {/* Right: Visual */}
+                <div className="hidden md:block p-8" style={{ background: 'var(--surface-2)' }}>
+                  <div className="h-full rounded-lg overflow-hidden transition-transform duration-[600ms] group-hover:scale-[1.02]" style={{ background: 'var(--surface-2)' }}>
+                    <PillarVisual type={p.visual} color={p.color} />
+                  </div>
+                </div>
+              </NavLink>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

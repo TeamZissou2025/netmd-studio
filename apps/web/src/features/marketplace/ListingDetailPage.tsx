@@ -85,8 +85,8 @@ export function ListingDetailPage() {
   if (error || !listing) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <AlertCircle size={48} className="text-studio-border mb-4" />
-        <p className="text-md text-studio-error mb-4">{error || 'Listing not found'}</p>
+        <AlertCircle size={48} className="text-[var(--border)] mb-4" />
+        <p className="text-body text-[var(--error)] mb-4">{error || 'Listing not found'}</p>
         <Link to="/marketplace">
           <Button variant="secondary">
             <ArrowLeft size={14} /> Back to Marketplace
@@ -116,7 +116,7 @@ export function ListingDetailPage() {
       {/* Breadcrumb */}
       <Link
         to="/marketplace"
-        className="inline-flex items-center gap-1.5 text-sm text-studio-text-muted hover:text-studio-cyan transition-colors w-fit"
+        className="inline-flex items-center gap-1.5 text-nav text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors w-fit"
       >
         <ArrowLeft size={14} />
         Back to Marketplace
@@ -140,27 +140,27 @@ export function ListingDetailPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-semibold text-studio-text">{listing.title}</h1>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{listing.title}</h1>
 
           {/* Price */}
           <div className="flex items-center gap-3">
-            <span className="text-3xl font-semibold text-studio-success">
+            <span className="text-3xl font-semibold text-[var(--success)]">
               {formatPrice(listing.price_cents, listing.currency)}
             </span>
             {listing.shipping_price_cents === 0 ? (
-              <span className="text-sm text-studio-success flex items-center gap-1">
+              <span className="text-nav text-[var(--success)] flex items-center gap-1">
                 <MapPin size={12} />
                 Free shipping
               </span>
             ) : (
-              <span className="text-sm text-studio-text-muted">
+              <span className="text-nav text-[var(--text-secondary)]">
                 + {formatPrice(listing.shipping_price_cents, listing.currency)} shipping
               </span>
             )}
           </div>
 
           {listing.shipping_domestic_only && (
-            <p className="text-xs text-studio-warning flex items-center gap-1">
+            <p className="text-label text-[var(--warning)] flex items-center gap-1">
               <AlertCircle size={12} />
               Domestic shipping only
             </p>
@@ -188,58 +188,58 @@ export function ListingDetailPage() {
             {user && !isOwner && (
               <button
                 onClick={() => toggleFavorite(listing.id)}
-                className="h-10 w-10 flex items-center justify-center border border-studio-border rounded-studio hover:border-studio-border-bright transition-colors"
+                className="h-10 w-10 flex items-center justify-center border border-[var(--border)] rounded-md hover:border-[var(--border-hover)] transition-colors"
               >
                 <Heart
                   size={16}
-                  className={isFavorited ? 'fill-studio-magenta text-studio-magenta' : 'text-studio-text-muted'}
+                  className={isFavorited ? 'fill-[var(--pillar-transfer)] text-[var(--pillar-transfer)]' : 'text-[var(--text-secondary)]'}
                 />
               </button>
             )}
           </div>
 
           {listing.favorite_count > 0 && (
-            <p className="text-2xs text-studio-text-dim">
+            <p className="text-tag text-[var(--text-tertiary)]">
               {listing.favorite_count} {listing.favorite_count === 1 ? 'person has' : 'people have'} favorited this
             </p>
           )}
 
           {/* Description */}
           <Card>
-            <h2 className="text-sm font-semibold text-studio-text mb-2">Description</h2>
-            <p className="text-sm text-studio-text-muted whitespace-pre-wrap leading-relaxed">
+            <h2 className="text-nav font-semibold text-[var(--text-primary)] mb-2">Description</h2>
+            <p className="text-nav text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
               {listing.description}
             </p>
           </Card>
 
           {/* Seller info */}
           <Card>
-            <h2 className="text-sm font-semibold text-studio-text mb-3">Seller</h2>
+            <h2 className="text-nav font-semibold text-[var(--text-primary)] mb-3">Seller</h2>
             <div className="flex items-center gap-3">
               {listing.seller?.avatar_url ? (
                 <img src={listing.seller.avatar_url} alt="" className="w-10 h-10 rounded-full" />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-studio-surface-active flex items-center justify-center">
-                  <span className="text-sm font-medium text-studio-text-muted">
+                <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center">
+                  <span className="text-nav font-medium text-[var(--text-secondary)]">
                     {(listing.seller?.display_name || 'S')[0].toUpperCase()}
                   </span>
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-studio-text">
+                <p className="text-nav font-medium text-[var(--text-primary)]">
                   {listing.seller?.display_name || 'Seller'}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
                   {(listing.seller?.seller_rating ?? 0) > 0 && (
-                    <span className="flex items-center gap-1 text-xs text-studio-text-muted">
-                      <Star size={10} className="fill-studio-warning text-studio-warning" />
+                    <span className="flex items-center gap-1 text-label text-[var(--text-secondary)]">
+                      <Star size={10} className="fill-[var(--warning)] text-[var(--warning)]" />
                       {listing.seller?.seller_rating?.toFixed(1)}
-                      <span className="text-studio-text-dim">
+                      <span className="text-[var(--text-tertiary)]">
                         ({listing.seller?.seller_review_count})
                       </span>
                     </span>
                   )}
-                  <span className="flex items-center gap-1 text-xs text-studio-success">
+                  <span className="flex items-center gap-1 text-label text-[var(--success)]">
                     <Shield size={10} />
                     Verified seller
                   </span>
@@ -252,14 +252,14 @@ export function ListingDetailPage() {
           {listing.device_id && (
             <Link to={`/devices/${listing.device_id}`}>
               <Card hoverable className="flex items-center gap-2">
-                <ExternalLink size={14} className="text-studio-cyan" />
-                <span className="text-sm text-studio-cyan">View device specs in Device Library</span>
+                <ExternalLink size={14} className="text-[var(--accent)]" />
+                <span className="text-nav text-[var(--accent)]">View device specs in Device Library</span>
               </Card>
             </Link>
           )}
 
           {/* Meta */}
-          <p className="text-2xs text-studio-text-dim">
+          <p className="text-tag text-[var(--text-tertiary)]">
             Listed {formatRelativeTime(listing.created_at)} · {listing.view_count} views
           </p>
         </div>

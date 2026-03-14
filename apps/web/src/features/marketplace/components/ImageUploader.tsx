@@ -99,7 +99,7 @@ export function ImageUploader({ images, onChange, maxImages = 8 }: ImageUploader
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="text-sm font-medium text-studio-text-muted">
+      <span className="text-nav font-medium text-[var(--text-secondary)]">
         Images ({images.length}/{maxImages})
       </span>
 
@@ -109,11 +109,11 @@ export function ImageUploader({ images, onChange, maxImages = 8 }: ImageUploader
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
-          className="border-2 border-dashed border-studio-border rounded-studio-lg p-6 flex flex-col items-center gap-2 cursor-pointer hover:border-studio-border-bright transition-colors"
+          className="border-2 border-dashed border-[var(--border)] rounded-lg p-6 flex flex-col items-center gap-2 cursor-pointer hover:border-[var(--border-hover)] transition-colors"
         >
-          <Upload size={24} className="text-studio-text-dim" />
-          <p className="text-sm text-studio-text-muted">Drop images here or click to upload</p>
-          <p className="text-2xs text-studio-text-dim">JPG, PNG, WebP. Max 1200px wide. Auto-converted to WebP.</p>
+          <Upload size={24} className="text-[var(--text-tertiary)]" />
+          <p className="text-nav text-[var(--text-secondary)]">Drop images here or click to upload</p>
+          <p className="text-tag text-[var(--text-tertiary)]">JPG, PNG, WebP. Max 1200px wide. Auto-converted to WebP.</p>
           <input
             ref={inputRef}
             type="file"
@@ -139,7 +139,7 @@ export function ImageUploader({ images, onChange, maxImages = 8 }: ImageUploader
               onDragEnter={() => (dragOver.current = i)}
               onDragEnd={handleDragSort}
               onDragOver={(e) => e.preventDefault()}
-              className="relative aspect-square rounded-studio border border-studio-border overflow-hidden group cursor-grab active:cursor-grabbing"
+              className="relative aspect-square rounded-md border border-[var(--border)] overflow-hidden group cursor-grab active:cursor-grabbing"
             >
               <img src={img} alt="" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
@@ -147,12 +147,12 @@ export function ImageUploader({ images, onChange, maxImages = 8 }: ImageUploader
               </div>
               <button
                 onClick={() => removeImage(i)}
-                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-studio-error flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-[var(--error)] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X size={10} className="text-white" />
               </button>
               {i === 0 && (
-                <span className="absolute bottom-1 left-1 text-2xs bg-studio-black/80 text-studio-cyan px-1 rounded">
+                <span className="absolute bottom-1 left-1 text-tag bg-[var(--surface-0)] text-[var(--accent)] px-1 rounded">
                   Cover
                 </span>
               )}

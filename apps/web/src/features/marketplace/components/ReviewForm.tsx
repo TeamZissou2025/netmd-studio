@@ -32,7 +32,7 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="text-sm font-semibold text-studio-text">Leave a review</h3>
+      <h3 className="text-nav font-semibold text-[var(--text-primary)]">Leave a review</h3>
 
       {/* Stars */}
       <div className="flex items-center gap-1">
@@ -48,14 +48,14 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
               size={20}
               className={
                 star <= displayRating
-                  ? 'fill-studio-warning text-studio-warning'
-                  : 'text-studio-text-dim'
+                  ? 'fill-[var(--warning)] text-[var(--warning)]'
+                  : 'text-[var(--text-tertiary)]'
               }
             />
           </button>
         ))}
         {rating > 0 && (
-          <span className="text-xs text-studio-text-muted ml-2">
+          <span className="text-label text-[var(--text-secondary)] ml-2">
             {rating === 1 ? 'Poor' : rating === 2 ? 'Fair' : rating === 3 ? 'Good' : rating === 4 ? 'Great' : 'Excellent'}
           </span>
         )}
@@ -67,7 +67,7 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
         onChange={(e) => setComment(e.target.value)}
         placeholder="Optional comment about your experience..."
         rows={3}
-        className="bg-studio-black border border-studio-border rounded-studio px-3 py-2 text-sm text-studio-text placeholder:text-studio-text-dim focus:border-studio-cyan focus:ring-1 focus:ring-studio-cyan-border outline-none resize-none"
+        className="bg-[var(--surface-0)] border border-[var(--border)] rounded-md px-3 py-2 text-nav text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--border-accent)] outline-none resize-none"
       />
 
       <Button onClick={handleSubmit} disabled={rating === 0 || submitting}>
@@ -95,16 +95,16 @@ export function ReviewDisplay({ rating, comment, reviewerName, createdAt }: Revi
               size={12}
               className={
                 star <= rating
-                  ? 'fill-studio-warning text-studio-warning'
-                  : 'text-studio-text-dim'
+                  ? 'fill-[var(--warning)] text-[var(--warning)]'
+                  : 'text-[var(--text-tertiary)]'
               }
             />
           ))}
         </div>
-        <span className="text-xs text-studio-text-muted">{reviewerName || 'User'}</span>
-        <span className="text-2xs text-studio-text-dim">{new Date(createdAt).toLocaleDateString()}</span>
+        <span className="text-label text-[var(--text-secondary)]">{reviewerName || 'User'}</span>
+        <span className="text-tag text-[var(--text-tertiary)]">{new Date(createdAt).toLocaleDateString()}</span>
       </div>
-      {comment && <p className="text-sm text-studio-text-muted">{comment}</p>}
+      {comment && <p className="text-nav text-[var(--text-secondary)]">{comment}</p>}
     </div>
   );
 }

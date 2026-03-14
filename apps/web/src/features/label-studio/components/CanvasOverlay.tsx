@@ -53,11 +53,11 @@ export function CanvasOverlay({ templateType, showGrid, showBleed }: CanvasOverl
             { bottom: -bleedPx, left: bleedPx - 1, width: 1, height: bleedPx - 2 },
             { bottom: bleedPx - 1, right: -bleedPx, width: bleedPx - 2, height: 1 },
             { bottom: -bleedPx, right: bleedPx - 1, width: 1, height: bleedPx - 2 },
-          ].map((style, i) => (
+          ].map((s, i) => (
             <div
               key={i}
-              className="absolute bg-studio-magenta/50"
-              style={style as React.CSSProperties}
+              className="absolute"
+              style={{ ...s as React.CSSProperties, background: 'var(--pillar-transfer)', opacity: 0.5 }}
             />
           ))}
         </div>

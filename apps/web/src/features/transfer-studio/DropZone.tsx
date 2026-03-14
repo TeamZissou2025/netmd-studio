@@ -66,13 +66,14 @@ export function DropZone({ onFilesAdded, disabled }: DropZoneProps) {
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       onClick={handleClick}
-      className={`relative border-2 border-dashed rounded-studio-lg p-6 text-center cursor-pointer transition-colors ${
+      className="relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors"
+      style={
         disabled
-          ? 'border-studio-border bg-studio-surface opacity-50 cursor-not-allowed'
+          ? { borderColor: 'var(--border)', background: 'var(--surface-1)', opacity: 0.5, cursor: 'not-allowed' }
           : isDragging
-            ? 'border-studio-magenta bg-studio-magenta-muted'
-            : 'border-studio-border hover:border-studio-border-bright bg-studio-black'
-      }`}
+            ? { borderColor: 'var(--pillar-transfer)', background: 'rgba(196,64,106,0.1)' }
+            : { borderColor: 'var(--border)', background: 'var(--surface-0)' }
+      }
     >
       <input
         ref={inputRef}
@@ -87,16 +88,16 @@ export function DropZone({ onFilesAdded, disabled }: DropZoneProps) {
       <div className="flex flex-col items-center gap-2">
         {isDragging ? (
           <>
-            <Music size={24} className="text-studio-magenta" />
-            <p className="text-sm text-studio-magenta font-medium">Drop audio files here</p>
+            <Music size={24} style={{ color: 'var(--pillar-transfer)' }} />
+            <p className="text-nav font-medium" style={{ color: 'var(--pillar-transfer)' }}>Drop audio files here</p>
           </>
         ) : (
           <>
-            <Upload size={24} className="text-studio-text-dim" />
-            <p className="text-sm text-studio-text-muted">
-              Drop audio files here or <span className="text-studio-cyan">browse</span>
+            <Upload size={24} style={{ color: 'var(--text-tertiary)' }} />
+            <p className="text-nav" style={{ color: 'var(--text-secondary)' }}>
+              Drop audio files here or <span style={{ color: 'var(--accent)' }}>browse</span>
             </p>
-            <p className="text-2xs text-studio-text-dim">
+            <p className="text-tag" style={{ color: 'var(--text-tertiary)' }}>
               MP3, FLAC, WAV, OGG, AAC, M4A
             </p>
           </>

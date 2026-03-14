@@ -19,16 +19,20 @@ export function DeviceConnectionPanel() {
   const usedPercent = totalCapacity > 0 ? (usedSeconds / totalCapacity) * 100 : 0;
 
   return (
-    <div className="bg-studio-surface border border-studio-border rounded-studio-lg p-4 min-h-[160px]">
+    <div
+      className="rounded-lg p-4 min-h-[160px]"
+      style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
+    >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-studio-text flex items-center gap-2">
-          <Disc3 size={16} className="text-studio-magenta" />
+        <h3 className="text-nav font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <Disc3 size={16} style={{ color: 'var(--pillar-transfer)' }} />
           Device
         </h3>
         {isConnected && (
           <button
             onClick={refreshTOC}
-            className="text-studio-text-dim hover:text-studio-text transition-colors"
+            className="transition-colors"
+            style={{ color: 'var(--text-tertiary)' }}
             title="Refresh disc info"
           >
             <RefreshCw size={14} />
@@ -38,14 +42,14 @@ export function DeviceConnectionPanel() {
 
       {!isConnected ? (
         <div className="flex flex-col items-center py-4 gap-3">
-          <div className="w-10 h-10 rounded-full bg-studio-surface-hover flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--surface-2)' }}>
             {isConnecting ? (
-              <Loader2 size={20} className="text-studio-magenta animate-spin" />
+              <Loader2 size={20} className="animate-spin" style={{ color: 'var(--pillar-transfer)' }} />
             ) : (
-              <Unplug size={20} className="text-studio-text-dim" />
+              <Unplug size={20} style={{ color: 'var(--text-tertiary)' }} />
             )}
           </div>
-          <p className="text-xs text-studio-text-muted text-center">
+          <p className="text-label text-center" style={{ color: 'var(--text-secondary)' }}>
             {isConnecting ? 'Connecting...' : 'No device connected'}
           </p>
           <Button
@@ -62,21 +66,25 @@ export function DeviceConnectionPanel() {
         <div className="space-y-3">
           {/* Device info */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-studio bg-studio-magenta-muted flex items-center justify-center shrink-0">
-              <Usb size={16} className="text-studio-magenta" />
+            <div
+              className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(196,64,106,0.1)' }}
+            >
+              <Usb size={16} style={{ color: 'var(--pillar-transfer)' }} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-studio-text truncate">
+              <p className="text-nav font-medium truncate" style={{ color: 'var(--text-primary)' }}>
                 {deviceInfo?.name ?? 'Unknown Device'}
               </p>
-              <p className="text-2xs text-studio-text-dim font-mono">
+              <p className="text-tag font-mono" style={{ color: 'var(--text-tertiary)' }}>
                 {deviceInfo?.manufacturer}
                 {deviceInfo ? ` · ${deviceInfo.isHiMD ? 'Hi-MD' : 'Net MD'}` : ''}
               </p>
               {deviceInfo?.modelNumber && (
                 <Link
                   to={`/devices?search=${encodeURIComponent(deviceInfo.modelNumber)}`}
-                  className="text-2xs text-studio-cyan hover:text-studio-cyan-hover transition-colors flex items-center gap-0.5 mt-0.5"
+                  className="text-tag flex items-center gap-0.5 mt-0.5 transition-colors"
+                  style={{ color: 'var(--accent)' }}
                 >
                   <ExternalLink size={9} /> View specs
                 </Link>
@@ -85,34 +93,34 @@ export function DeviceConnectionPanel() {
           </div>
 
           {/* Disc info */}
-          <div className="bg-studio-black rounded-studio p-3 space-y-2">
+          <div className="rounded-md p-3 space-y-2" style={{ background: 'var(--surface-0)' }}>
             <div className="flex items-center justify-between">
-              <span className="text-2xs text-studio-text-dim">Disc</span>
-              <span className="text-2xs font-mono text-studio-text-muted">
+              <span className="text-tag" style={{ color: 'var(--text-tertiary)' }}>Disc</span>
+              <span className="text-tag font-mono" style={{ color: 'var(--text-secondary)' }}>
                 {toc?.trackCount ?? 0} track{(toc?.trackCount ?? 0) !== 1 ? 's' : ''}
               </span>
             </div>
 
             {/* Capacity bar */}
             <div className="space-y-1">
-              <div className="h-1.5 bg-studio-surface-hover rounded-full overflow-hidden">
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-2)' }}>
                 <div
-                  className="h-full bg-studio-magenta rounded-full transition-[width] duration-300"
-                  style={{ width: `${Math.min(usedPercent, 100)}%` }}
+                  className="h-full rounded-full transition-[width] duration-300"
+                  style={{ width: `${Math.min(usedPercent, 100)}%`, background: 'var(--pillar-transfer)' }}
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-2xs font-mono text-studio-text-dim">
+                <span className="text-tag font-mono" style={{ color: 'var(--text-tertiary)' }}>
                   {formatDuration(usedSeconds)} used
                 </span>
-                <span className="text-2xs font-mono text-studio-success">
+                <span className="text-tag font-mono" style={{ color: 'var(--success)' }}>
                   {formatDuration(Math.max(0, freeSeconds))} free
                 </span>
               </div>
             </div>
           </div>
 
-          <Button variant="ghost" onClick={disconnect} className="w-full text-studio-text-dim">
+          <Button variant="ghost" onClick={disconnect} className="w-full" style={{ color: 'var(--text-tertiary)' }}>
             <Unplug size={14} />
             Disconnect
           </Button>

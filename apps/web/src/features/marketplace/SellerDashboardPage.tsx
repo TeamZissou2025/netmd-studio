@@ -21,12 +21,12 @@ function StatCard({ label, value, icon: Icon, color }: {
 }) {
   return (
     <Card className="flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-studio-lg flex items-center justify-center ${color}`}>
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
         <Icon size={18} />
       </div>
       <div>
-        <p className="text-xs text-studio-text-muted">{label}</p>
-        <p className="text-lg font-semibold text-studio-text">{value}</p>
+        <p className="text-label text-[var(--text-secondary)]">{label}</p>
+        <p className="text-studio-title font-semibold text-[var(--text-primary)]">{value}</p>
       </div>
     </Card>
   );
@@ -76,7 +76,7 @@ export function SellerDashboardPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 size={24} className="animate-spin text-studio-cyan" />
+        <Loader2 size={24} className="animate-spin text-[var(--accent)]" />
       </div>
     );
   }
@@ -84,9 +84,9 @@ export function SellerDashboardPage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Package size={48} className="text-studio-border mb-4" />
-        <p className="text-md text-studio-text-muted">Sign in to access your seller dashboard</p>
-        <Link to="/auth/login" className="text-sm text-studio-cyan hover:text-studio-cyan-hover mt-2">
+        <Package size={48} className="text-[var(--border)] mb-4" />
+        <p className="text-body text-[var(--text-secondary)]">Sign in to access your seller dashboard</p>
+        <Link to="/auth/login" className="text-nav text-[var(--accent)] hover:text-[var(--accent)] mt-2">
           Sign in
         </Link>
       </div>
@@ -98,8 +98,8 @@ export function SellerDashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-studio-text">Seller Dashboard</h1>
-          <p className="text-sm text-studio-text-muted mt-1">
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Seller Dashboard</h1>
+          <p className="text-nav text-[var(--text-secondary)] mt-1">
             Manage your listings and track sales
           </p>
         </div>
@@ -132,25 +132,25 @@ export function SellerDashboardPage() {
             label="Active listings"
             value={stats.activeListings}
             icon={ShoppingBag}
-            color="bg-emerald-500/10 text-studio-success"
+            color="bg-emerald-500/10 text-[var(--success)]"
           />
           <StatCard
             label="Items sold"
             value={stats.totalSold}
             icon={Package}
-            color="bg-studio-cyan-muted text-studio-cyan"
+            color="bg-[var(--accent-dim)] text-[var(--accent)]"
           />
           <StatCard
             label="Pending orders"
             value={stats.pendingOrders}
             icon={DollarSign}
-            color="bg-amber-500/10 text-studio-warning"
+            color="bg-amber-500/10 text-[var(--warning)]"
           />
           <StatCard
             label="Revenue (90%)"
             value={formatPrice(Math.round(stats.totalRevenue * 0.9))}
             icon={DollarSign}
-            color="bg-emerald-500/10 text-studio-success"
+            color="bg-emerald-500/10 text-[var(--success)]"
           />
         </div>
       )}
@@ -158,11 +158,11 @@ export function SellerDashboardPage() {
       {/* Rating */}
       {stats.reviewCount > 0 && (
         <div className="flex items-center gap-2">
-          <Star size={14} className="fill-studio-warning text-studio-warning" />
-          <span className="text-sm text-studio-text">
+          <Star size={14} className="fill-[var(--warning)] text-[var(--warning)]" />
+          <span className="text-nav text-[var(--text-primary)]">
             {stats.avgRating.toFixed(1)} rating
           </span>
-          <span className="text-sm text-studio-text-dim">
+          <span className="text-nav text-[var(--text-tertiary)]">
             ({stats.reviewCount} {stats.reviewCount === 1 ? 'review' : 'reviews'})
           </span>
         </div>
@@ -170,16 +170,16 @@ export function SellerDashboardPage() {
 
       {/* Listings table */}
       <div>
-        <h2 className="text-lg font-semibold text-studio-text mb-3">Your listings</h2>
+        <h2 className="text-studio-title font-semibold text-[var(--text-primary)] mb-3">Your listings</h2>
         {listingsLoading ? (
           <div className="flex flex-col gap-2">
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
           </div>
         ) : listings.length === 0 ? (
           <Card className="text-center py-8">
-            <ShoppingBag size={32} className="text-studio-border mx-auto mb-3" />
-            <p className="text-sm text-studio-text-muted">No listings yet</p>
-            <Link to="/marketplace/sell" className="text-sm text-studio-cyan hover:text-studio-cyan-hover mt-1 inline-block">
+            <ShoppingBag size={32} className="text-[var(--border)] mx-auto mb-3" />
+            <p className="text-nav text-[var(--text-secondary)]">No listings yet</p>
+            <Link to="/marketplace/sell" className="text-nav text-[var(--accent)] hover:text-[var(--accent)] mt-1 inline-block">
               Create your first listing
             </Link>
           </Card>
@@ -190,11 +190,11 @@ export function SellerDashboardPage() {
               return (
                 <Card key={listing.id} className="flex items-center gap-4">
                   {/* Thumbnail */}
-                  <div className="w-12 h-12 rounded-studio border border-studio-border overflow-hidden flex-shrink-0 bg-studio-black">
+                  <div className="w-12 h-12 rounded-md border border-[var(--border)] overflow-hidden flex-shrink-0 bg-[var(--surface-0)]">
                     {listing.images?.[0] ? (
                       <img src={listing.images[0]} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-studio-surface" />
+                      <div className="w-full h-full bg-[var(--surface-1)]" />
                     )}
                   </div>
 
@@ -203,13 +203,13 @@ export function SellerDashboardPage() {
                     <div className="flex items-center gap-2">
                       <Link
                         to={`/marketplace/${listing.id}`}
-                        className="text-sm font-medium text-studio-text hover:text-studio-cyan transition-colors truncate"
+                        className="text-nav font-medium text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors truncate"
                       >
                         {listing.title}
                       </Link>
                       <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
                     </div>
-                    <div className="flex items-center gap-3 mt-0.5 text-2xs text-studio-text-dim">
+                    <div className="flex items-center gap-3 mt-0.5 text-tag text-[var(--text-tertiary)]">
                       <span>{CATEGORY_LABELS[listing.category]}</span>
                       <span>{formatRelativeTime(listing.created_at)}</span>
                       <span className="flex items-center gap-0.5">
@@ -220,21 +220,21 @@ export function SellerDashboardPage() {
                   </div>
 
                   {/* Price */}
-                  <span className="text-sm font-semibold text-studio-success flex-shrink-0">
+                  <span className="text-nav font-semibold text-[var(--success)] flex-shrink-0">
                     {formatPrice(listing.price_cents, listing.currency)}
                   </span>
 
                   {/* Actions */}
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <Link to={`/marketplace/sell/${listing.id}`}>
-                      <Button variant="ghost" className="h-7 px-2 text-2xs">
+                      <Button variant="ghost" className="h-7 px-2 text-tag">
                         Edit
                       </Button>
                     </Link>
                     {listing.status === 'draft' && (
                       <Button
                         variant="ghost"
-                        className="h-7 px-2 text-2xs"
+                        className="h-7 px-2 text-tag"
                         onClick={() => handleStatusChange(listing.id, 'active')}
                       >
                         Publish
@@ -243,7 +243,7 @@ export function SellerDashboardPage() {
                     {listing.status === 'active' && (
                       <Button
                         variant="ghost"
-                        className="h-7 px-2 text-2xs"
+                        className="h-7 px-2 text-tag"
                         onClick={() => handleStatusChange(listing.id, 'archived')}
                       >
                         <Archive size={10} />
@@ -260,9 +260,9 @@ export function SellerDashboardPage() {
       {/* Link to orders */}
       <Link to="/dashboard/orders">
         <Card hoverable className="flex items-center gap-3">
-          <Package size={18} className="text-studio-cyan" />
-          <span className="text-sm text-studio-text">View all orders</span>
-          <span className="text-sm text-studio-text-dim ml-auto">→</span>
+          <Package size={18} className="text-[var(--accent)]" />
+          <span className="text-nav text-[var(--text-primary)]">View all orders</span>
+          <span className="text-nav text-[var(--text-tertiary)] ml-auto">→</span>
         </Card>
       </Link>
     </div>

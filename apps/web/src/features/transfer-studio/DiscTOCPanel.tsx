@@ -56,19 +56,19 @@ export function DiscTOCPanel() {
   };
 
   return (
-    <div className="bg-studio-surface border border-studio-border rounded-studio-lg">
-      <div className="px-4 py-3 border-b border-studio-border flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-studio-text flex items-center gap-2">
-          <List size={16} className="text-studio-magenta" />
+    <div className="rounded-lg" style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}>
+      <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
+        <h3 className="text-nav font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <List size={16} style={{ color: 'var(--pillar-transfer)' }} />
           Disc Contents
         </h3>
-        <span className="text-2xs font-mono text-studio-text-dim">
+        <span className="text-tag font-mono" style={{ color: 'var(--text-tertiary)' }}>
           {toc.trackCount} track{toc.trackCount !== 1 ? 's' : ''}
         </span>
       </div>
 
       {/* Disc title */}
-      <div className="px-4 py-2 border-b border-studio-border bg-studio-black/50">
+      <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--border)', background: 'color-mix(in srgb, var(--surface-0) 50%, transparent)' }}>
         {editingTitle ? (
           <div className="flex items-center gap-2">
             <input
@@ -79,25 +79,27 @@ export function DiscTOCPanel() {
                 if (e.key === 'Enter') confirmEditTitle();
                 if (e.key === 'Escape') cancelEditTitle();
               }}
-              className="flex-1 h-6 bg-studio-black border border-studio-cyan-border rounded px-2 text-xs text-studio-text outline-none"
+              className="flex-1 h-6 rounded px-2 text-label outline-none"
+              style={{ background: 'var(--surface-0)', border: '1px solid var(--border-accent)', color: 'var(--text-primary)' }}
               autoFocus
               maxLength={120}
             />
-            <button onClick={confirmEditTitle} className="text-studio-success hover:opacity-80">
+            <button onClick={confirmEditTitle} style={{ color: 'var(--success)' }} className="hover:opacity-80">
               <Check size={14} />
             </button>
-            <button onClick={cancelEditTitle} className="text-studio-text-dim hover:text-studio-text">
+            <button onClick={cancelEditTitle} style={{ color: 'var(--text-tertiary)' }}>
               <X size={14} />
             </button>
           </div>
         ) : (
           <div className="flex items-center justify-between group">
-            <span className="text-xs text-studio-text-muted truncate">
+            <span className="text-label truncate" style={{ color: 'var(--text-secondary)' }}>
               {toc.title || 'Untitled Disc'}
             </span>
             <button
               onClick={startEditTitle}
-              className="opacity-0 group-hover:opacity-100 text-studio-text-dim hover:text-studio-text transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ color: 'var(--text-tertiary)' }}
             >
               <Pencil size={12} />
             </button>
@@ -109,17 +111,18 @@ export function DiscTOCPanel() {
       <div className="max-h-[300px] overflow-y-auto">
         {toc.tracks.length === 0 ? (
           <div className="flex flex-col items-center py-8 text-center">
-            <Disc3 size={24} className="text-studio-text-dim mb-2" />
-            <p className="text-xs text-studio-text-dim">Disc is empty</p>
+            <Disc3 size={24} className="mb-2" style={{ color: 'var(--text-tertiary)' }} />
+            <p className="text-label" style={{ color: 'var(--text-tertiary)' }}>Disc is empty</p>
           </div>
         ) : (
-          <ul className="divide-y divide-studio-border">
+          <ul>
             {toc.tracks.map((track) => (
               <li
                 key={track.index}
-                className="px-4 py-2 flex items-center gap-3 hover:bg-studio-surface-hover group"
+                className="px-4 py-2 flex items-center gap-3 group"
+                style={{ borderBottom: '1px solid var(--border)' }}
               >
-                <span className="text-2xs font-mono text-studio-text-dim w-5 text-right shrink-0">
+                <span className="text-tag font-mono w-5 text-right shrink-0" style={{ color: 'var(--text-tertiary)' }}>
                   {track.index + 1}
                 </span>
 
@@ -133,30 +136,31 @@ export function DiscTOCPanel() {
                         if (e.key === 'Enter') confirmEditTrack();
                         if (e.key === 'Escape') cancelEditTrack();
                       }}
-                      className="flex-1 h-6 bg-studio-black border border-studio-cyan-border rounded px-2 text-xs text-studio-text outline-none"
+                      className="flex-1 h-6 rounded px-2 text-label outline-none"
+                      style={{ background: 'var(--surface-0)', border: '1px solid var(--border-accent)', color: 'var(--text-primary)' }}
                       autoFocus
                       maxLength={120}
                     />
-                    <button onClick={confirmEditTrack} className="text-studio-success hover:opacity-80">
+                    <button onClick={confirmEditTrack} style={{ color: 'var(--success)' }} className="hover:opacity-80">
                       <Check size={14} />
                     </button>
-                    <button onClick={cancelEditTrack} className="text-studio-text-dim hover:text-studio-text">
+                    <button onClick={cancelEditTrack} style={{ color: 'var(--text-tertiary)' }}>
                       <X size={14} />
                     </button>
                   </div>
                 ) : (
                   <>
-                    <span className="flex-1 text-xs text-studio-text truncate">
+                    <span className="flex-1 text-label truncate" style={{ color: 'var(--text-primary)' }}>
                       {track.title || 'Untitled'}
                     </span>
                     {formatBadge(track.encoding)}
-                    <span className="text-2xs font-mono text-studio-text-dim w-10 text-right shrink-0">
+                    <span className="text-tag font-mono w-10 text-right shrink-0" style={{ color: 'var(--text-tertiary)' }}>
                       {formatDuration(track.durationSeconds)}
                     </span>
                     <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
                       <button
                         onClick={() => startEditTrack(track)}
-                        className="text-studio-text-dim hover:text-studio-text"
+                        style={{ color: 'var(--text-tertiary)' }}
                         title="Rename"
                       >
                         <Pencil size={12} />

@@ -23,10 +23,10 @@ export function DeviceListings({ deviceId }: DeviceListingsProps) {
   if (listings.length === 0) {
     return (
       <>
-        <p className="text-sm text-studio-text-dim">No active listings for this device</p>
+        <p className="text-nav text-[var(--text-tertiary)]">No active listings for this device</p>
         <Link
           to={`/marketplace?device=${deviceId}`}
-          className="text-2xs text-studio-cyan hover:text-studio-cyan-hover transition-colors mt-2 inline-block"
+          className="text-tag text-[var(--accent)] hover:text-[var(--accent)] transition-colors mt-2 inline-block"
         >
           Search marketplace
         </Link>
@@ -40,27 +40,27 @@ export function DeviceListings({ deviceId }: DeviceListingsProps) {
         <Link
           key={listing.id}
           to={`/marketplace/${listing.id}`}
-          className="flex items-center gap-3 p-2 rounded-studio hover:bg-studio-surface-hover transition-colors group"
+          className="flex items-center gap-3 p-2 rounded-md hover:bg-[var(--surface-2)] transition-colors group"
         >
           {/* Thumbnail */}
-          <div className="w-10 h-10 rounded bg-studio-black border border-studio-border overflow-hidden flex-shrink-0">
+          <div className="w-10 h-10 rounded bg-[var(--surface-0)] border border-[var(--border)] overflow-hidden flex-shrink-0">
             {listing.images?.[0] ? (
               <img src={listing.images[0]} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-studio-surface" />
+              <div className="w-full h-full bg-[var(--surface-1)]" />
             )}
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-studio-text truncate group-hover:text-studio-cyan transition-colors">
+            <p className="text-label text-[var(--text-primary)] truncate group-hover:text-[var(--accent)] transition-colors">
               {listing.title}
             </p>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs font-semibold text-studio-success">
+              <span className="text-label font-semibold text-[var(--success)]">
                 {formatPrice(listing.price_cents, listing.currency)}
               </span>
-              <Badge variant={CONDITION_VARIANTS[listing.condition]} className="text-2xs">
+              <Badge variant={CONDITION_VARIANTS[listing.condition]} className="text-tag">
                 {CONDITION_LABELS[listing.condition]}
               </Badge>
             </div>
@@ -70,7 +70,7 @@ export function DeviceListings({ deviceId }: DeviceListingsProps) {
 
       <Link
         to={`/marketplace?device=${deviceId}`}
-        className="text-2xs text-studio-cyan hover:text-studio-cyan-hover transition-colors text-center pt-1"
+        className="text-tag text-[var(--accent)] hover:text-[var(--accent)] transition-colors text-center pt-1"
       >
         View all listings
       </Link>

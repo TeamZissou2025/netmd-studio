@@ -1,17 +1,9 @@
 import { type ReactNode, createContext, useContext, useState } from 'react';
 
-interface TabsContextValue {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}
-
+interface TabsContextValue { activeTab: string; setActiveTab: (tab: string) => void; }
 const TabsContext = createContext<TabsContextValue | null>(null);
 
-interface TabsProps {
-  defaultValue: string;
-  children: ReactNode;
-  className?: string;
-}
+interface TabsProps { defaultValue: string; children: ReactNode; className?: string; }
 
 export function Tabs({ defaultValue, children, className = '' }: TabsProps) {
   const [activeTab, setActiveTab] = useState(defaultValue);
@@ -24,7 +16,7 @@ export function Tabs({ defaultValue, children, className = '' }: TabsProps) {
 
 export function TabsList({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`flex gap-1 border-b border-studio-border pb-px ${className}`}>
+    <div className={`flex gap-1 pb-px ${className}`} style={{ borderBottom: '1px solid var(--border)' }}>
       {children}
     </div>
   );
@@ -36,11 +28,11 @@ export function TabsTrigger({ value, children }: { value: string; children: Reac
   return (
     <button
       onClick={() => ctx.setActiveTab(value)}
-      className={`px-3 py-1.5 text-sm font-medium transition-colors rounded-t-studio ${
-        active
-          ? 'text-studio-cyan border-b-2 border-studio-cyan'
-          : 'text-studio-text-muted hover:text-studio-text'
-      }`}
+      className="px-3 py-1.5 text-nav font-medium transition-colors rounded-t-md cursor-pointer"
+      style={{
+        color: active ? 'var(--accent)' : 'var(--text-secondary)',
+        borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent',
+      }}
     >
       {children}
     </button>

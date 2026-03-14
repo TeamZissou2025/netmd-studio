@@ -64,10 +64,11 @@ export function MetadataSearch({ onSelect }: MetadataSearchProps) {
             onChange={(e) => setQuery(e.target.value)}
             className="pl-8"
           />
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-studio-text-dim" />
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-tertiary)' }} />
           {query && (
             <button
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-studio-text-dim hover:text-studio-text"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
+              style={{ color: 'var(--text-tertiary)' }}
               onClick={() => {
                 setQuery('');
                 setResults([]);
@@ -79,18 +80,21 @@ export function MetadataSearch({ onSelect }: MetadataSearchProps) {
           )}
         </div>
         {(loading || fetchingDetails) && (
-          <Loader2 size={16} className="text-studio-cyan animate-spin" />
+          <Loader2 size={16} className="animate-spin" style={{ color: 'var(--accent)' }} />
         )}
       </div>
 
-      {error && <p className="text-2xs text-studio-error mt-1">{error}</p>}
+      {error && <p className="text-tag mt-1" style={{ color: 'var(--error)' }}>{error}</p>}
 
       {isOpen && results.length > 0 && (
-        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-studio-surface border border-studio-border rounded-studio-lg shadow-studio-lg max-h-80 overflow-y-auto">
+        <div className="absolute z-50 top-full mt-1 left-0 right-0 rounded-lg max-h-80 overflow-y-auto" style={{ background: 'var(--surface-1)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}>
           {results.map((result) => (
             <button
               key={result.id}
-              className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-studio-surface-hover transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors"
+              style={{ background: 'transparent' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-2)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
               onClick={() => handleSelect(result)}
             >
               {result.thumbnailUrl ? (
@@ -100,16 +104,16 @@ export function MetadataSearch({ onSelect }: MetadataSearchProps) {
                   className="w-8 h-8 object-cover rounded-sm flex-shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 bg-studio-surface-active rounded-sm flex items-center justify-center flex-shrink-0">
-                  <Music size={14} className="text-studio-text-dim" />
+                <div className="w-8 h-8 rounded-sm flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface-3)' }}>
+                  <Music size={14} style={{ color: 'var(--text-tertiary)' }} />
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-studio-text truncate">{result.title}</p>
-                <p className="text-2xs text-studio-text-muted truncate">
+                <p className="text-nav truncate" style={{ color: 'var(--text-primary)' }}>{result.title}</p>
+                <p className="text-tag truncate" style={{ color: 'var(--text-secondary)' }}>
                   {result.artist}
                   {result.year && ` (${result.year})`}
-                  <span className="ml-1 text-studio-text-dim">
+                  <span className="ml-1" style={{ color: 'var(--text-tertiary)' }}>
                     via {result.source === 'musicbrainz' ? 'MusicBrainz' : 'Discogs'}
                   </span>
                 </p>
@@ -120,8 +124,8 @@ export function MetadataSearch({ onSelect }: MetadataSearchProps) {
       )}
 
       {isOpen && !loading && results.length === 0 && query.trim() && (
-        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-studio-surface border border-studio-border rounded-studio-lg shadow-studio-lg p-3">
-          <p className="text-xs text-studio-text-muted text-center">No results found</p>
+        <div className="absolute z-50 top-full mt-1 left-0 right-0 rounded-lg p-3" style={{ background: 'var(--surface-1)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}>
+          <p className="text-label text-center" style={{ color: 'var(--text-secondary)' }}>No results found</p>
         </div>
       )}
     </div>

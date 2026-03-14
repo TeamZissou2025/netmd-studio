@@ -22,23 +22,24 @@ export function GalleryPreviewModal({ design, onClose, onFork }: GalleryPreviewM
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-studio-surface border border-studio-border rounded-studio-xl shadow-studio-lg max-w-2xl w-full mx-4"
+        className="rounded-xl max-w-2xl w-full mx-4"
+        style={{ background: 'var(--surface-1)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-studio-border">
+        <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2 min-w-0">
-            <h2 className="text-lg font-semibold text-studio-text truncate">{design.title}</h2>
+            <h2 className="text-studio-title font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{design.title}</h2>
             <Badge variant="cyan">{templateLabels[design.template_type]}</Badge>
           </div>
-          <button onClick={onClose} className="text-studio-text-muted hover:text-studio-text transition-colors">
+          <button onClick={onClose} className="transition-colors" style={{ color: 'var(--text-secondary)' }}>
             <X size={16} />
           </button>
         </div>
 
         {/* Preview */}
         <div className="p-5">
-          <div className="bg-studio-black rounded-studio-lg flex items-center justify-center p-4 mb-4 min-h-[200px]">
+          <div className="rounded-lg flex items-center justify-center p-4 mb-4 min-h-[200px]" style={{ background: 'var(--surface-0)' }}>
             {design.thumbnail_url ? (
               <img
                 src={design.thumbnail_url}
@@ -46,23 +47,23 @@ export function GalleryPreviewModal({ design, onClose, onFork }: GalleryPreviewM
                 className="max-w-full max-h-[400px] object-contain"
               />
             ) : (
-              <span className="text-studio-text-dim text-sm">No preview available</span>
+              <span className="text-nav" style={{ color: 'var(--text-tertiary)' }}>No preview available</span>
             )}
           </div>
 
           {/* Metadata */}
           <div className="space-y-2 mb-4">
             {design.artist_name && (
-              <p className="text-sm text-studio-text">
-                <span className="text-studio-text-muted">Artist:</span> {design.artist_name}
+              <p className="text-nav" style={{ color: 'var(--text-primary)' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Artist:</span> {design.artist_name}
               </p>
             )}
             {design.album_title && (
-              <p className="text-sm text-studio-text">
-                <span className="text-studio-text-muted">Album:</span> {design.album_title}
+              <p className="text-nav" style={{ color: 'var(--text-primary)' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Album:</span> {design.album_title}
               </p>
             )}
-            <div className="flex items-center gap-4 text-xs text-studio-text-dim">
+            <div className="flex items-center gap-4 text-label" style={{ color: 'var(--text-tertiary)' }}>
               <span className="flex items-center gap-1">
                 <Calendar size={12} />
                 {new Date(design.created_at).toLocaleDateString()}
@@ -81,14 +82,14 @@ export function GalleryPreviewModal({ design, onClose, onFork }: GalleryPreviewM
           {/* Tracklist */}
           {design.tracklist && Array.isArray(design.tracklist) && (design.tracklist as Array<{ position: string; title: string; duration: string }>).length > 0 && (
             <div className="mb-4">
-              <h4 className="text-xs font-medium text-studio-text-muted mb-1">Tracklist</h4>
-              <div className="bg-studio-black rounded-studio p-2 max-h-32 overflow-y-auto">
+              <h4 className="text-label font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Tracklist</h4>
+              <div className="rounded-md p-2 max-h-32 overflow-y-auto" style={{ background: 'var(--surface-0)' }}>
                 {(design.tracklist as Array<{ position: string; title: string; duration: string }>).map((track, i) => (
                   <div key={i} className="flex items-center justify-between py-0.5">
-                    <span className="text-2xs text-studio-text font-mono">
+                    <span className="text-tag font-mono" style={{ color: 'var(--text-primary)' }}>
                       {track.position}. {track.title}
                     </span>
-                    <span className="text-2xs text-studio-text-dim font-mono">{track.duration}</span>
+                    <span className="text-tag font-mono" style={{ color: 'var(--text-tertiary)' }}>{track.duration}</span>
                   </div>
                 ))}
               </div>

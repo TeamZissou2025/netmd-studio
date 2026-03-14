@@ -42,8 +42,8 @@ export function ListingFiltersPanel({ filters, onChange, onClose, isMobile }: Li
       {/* Mobile header */}
       {isMobile && (
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-studio-text">Filters</h2>
-          <button onClick={onClose} className="text-studio-text-muted hover:text-studio-text">
+          <h2 className="text-studio-title font-semibold text-[var(--text-primary)]">Filters</h2>
+          <button onClick={onClose} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
             <X size={20} />
           </button>
         </div>
@@ -64,7 +64,7 @@ export function ListingFiltersPanel({ filters, onChange, onClose, isMobile }: Li
 
         {/* Category */}
         <div>
-          <span className="text-sm font-medium text-studio-text-muted block mb-2">Category</span>
+          <span className="text-nav font-medium text-[var(--text-secondary)] block mb-2">Category</span>
           <div className="flex flex-col gap-1">
             {ALL_CATEGORIES.map((cat) => (
               <label key={cat} className="flex items-center gap-2 py-1 cursor-pointer">
@@ -72,9 +72,9 @@ export function ListingFiltersPanel({ filters, onChange, onClose, isMobile }: Li
                   type="checkbox"
                   checked={filters.categories.includes(cat)}
                   onChange={() => toggleCategory(cat)}
-                  className="rounded border-studio-border bg-studio-black text-studio-cyan focus:ring-studio-cyan-border accent-studio-cyan w-3.5 h-3.5"
+                  className="rounded border-[var(--border)] bg-[var(--surface-0)] text-[var(--accent)] accent-[var(--accent)] w-3.5 h-3.5"
                 />
-                <span className="text-xs text-studio-text-muted">{CATEGORY_LABELS[cat]}</span>
+                <span className="text-label text-[var(--text-secondary)]">{CATEGORY_LABELS[cat]}</span>
               </label>
             ))}
           </div>
@@ -82,7 +82,7 @@ export function ListingFiltersPanel({ filters, onChange, onClose, isMobile }: Li
 
         {/* Condition */}
         <div>
-          <span className="text-sm font-medium text-studio-text-muted block mb-2">Condition</span>
+          <span className="text-nav font-medium text-[var(--text-secondary)] block mb-2">Condition</span>
           <div className="flex flex-col gap-1">
             {ALL_CONDITIONS.map((cond) => (
               <label key={cond} className="flex items-center gap-2 py-1 cursor-pointer">
@@ -90,9 +90,9 @@ export function ListingFiltersPanel({ filters, onChange, onClose, isMobile }: Li
                   type="checkbox"
                   checked={filters.conditions.includes(cond)}
                   onChange={() => toggleCondition(cond)}
-                  className="rounded border-studio-border bg-studio-black text-studio-cyan focus:ring-studio-cyan-border accent-studio-cyan w-3.5 h-3.5"
+                  className="rounded border-[var(--border)] bg-[var(--surface-0)] text-[var(--accent)] accent-[var(--accent)] w-3.5 h-3.5"
                 />
-                <span className="text-xs text-studio-text-muted">{CONDITION_LABELS[cond]}</span>
+                <span className="text-label text-[var(--text-secondary)]">{CONDITION_LABELS[cond]}</span>
               </label>
             ))}
           </div>
@@ -100,7 +100,7 @@ export function ListingFiltersPanel({ filters, onChange, onClose, isMobile }: Li
 
         {/* Price range */}
         <div>
-          <span className="text-sm font-medium text-studio-text-muted block mb-2">Price range</span>
+          <span className="text-nav font-medium text-[var(--text-secondary)] block mb-2">Price range</span>
           <div className="flex flex-col gap-3">
             <Slider
               label="Min"
@@ -131,9 +131,9 @@ export function ListingFiltersPanel({ filters, onChange, onClose, isMobile }: Li
             type="checkbox"
             checked={filters.domesticOnly}
             onChange={(e) => onChange({ ...filters, domesticOnly: e.target.checked })}
-            className="rounded border-studio-border bg-studio-black text-studio-cyan focus:ring-studio-cyan-border accent-studio-cyan w-3.5 h-3.5"
+            className="rounded border-[var(--border)] bg-[var(--surface-0)] text-[var(--accent)] accent-[var(--accent)] w-3.5 h-3.5"
           />
-          <span className="text-sm text-studio-text-muted">Domestic shipping only</span>
+          <span className="text-nav text-[var(--text-secondary)]">Domestic shipping only</span>
         </label>
 
         {/* Reset */}

@@ -112,9 +112,9 @@ function Checkbox({ label, checked, onChange }: { label: string; checked: boolea
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-3.5 h-3.5 rounded border-studio-border bg-studio-black accent-studio-cyan"
+        className="w-3.5 h-3.5 rounded border-[var(--border)] bg-[var(--surface-0)] accent-[var(--accent)]"
       />
-      <span className="text-xs text-studio-text-muted">{label}</span>
+      <span className="text-label text-[var(--text-secondary)]">{label}</span>
     </label>
   );
 }
@@ -131,7 +131,7 @@ export function DeviceSubmitPage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-md text-studio-text-muted mb-4">
+        <p className="text-body text-[var(--text-secondary)] mb-4">
           You must be signed in to submit a device
         </p>
         <Link to="/auth/login">
@@ -207,14 +207,14 @@ export function DeviceSubmitPage() {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
-      <Link to="/devices" className="inline-flex items-center gap-1.5 text-sm text-studio-text-muted hover:text-studio-cyan transition-colors w-fit">
+      <Link to="/devices" className="inline-flex items-center gap-1.5 text-nav text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors w-fit">
         <ArrowLeft size={14} />
         Back to Device Library
       </Link>
 
       <div>
-        <h1 className="text-2xl font-semibold text-studio-text">Submit a Device</h1>
-        <p className="text-sm text-studio-text-muted mt-1">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Submit a Device</h1>
+        <p className="text-nav text-[var(--text-secondary)] mt-1">
           Contribute to the community device database. Submissions are reviewed before publishing.
         </p>
       </div>
@@ -222,7 +222,7 @@ export function DeviceSubmitPage() {
       <Card>
         <div className="flex flex-col gap-4">
           {/* Basic Info */}
-          <h3 className="text-sm font-semibold text-studio-text uppercase tracking-wider">Basic Information</h3>
+          <h3 className="text-nav font-semibold text-[var(--text-primary)] uppercase tracking-wider">Basic Information</h3>
           <Input
             label="Device Name"
             placeholder="e.g. Sony MZ-N707"
@@ -247,11 +247,11 @@ export function DeviceSubmitPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-studio-text-muted">Device Type</label>
+              <label className="text-nav font-medium text-[var(--text-secondary)]">Device Type</label>
               <select
                 value={form.device_type}
                 onChange={(e) => set('device_type', e.target.value)}
-                className="h-8 bg-studio-black border border-studio-border rounded-studio px-2 text-sm text-studio-text focus:border-studio-cyan outline-none"
+                className="h-8 bg-[var(--surface-0)] border border-[var(--border)] rounded-md px-2 text-nav text-[var(--text-primary)] focus:border-[var(--border-accent)] outline-none"
               >
                 {DEVICE_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
@@ -269,11 +269,11 @@ export function DeviceSubmitPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-studio-text-muted">ATRAC Version</label>
+            <label className="text-nav font-medium text-[var(--text-secondary)]">ATRAC Version</label>
             <select
               value={form.atrac_version}
               onChange={(e) => set('atrac_version', e.target.value)}
-              className="h-8 bg-studio-black border border-studio-border rounded-studio px-2 text-sm text-studio-text focus:border-studio-cyan outline-none"
+              className="h-8 bg-[var(--surface-0)] border border-[var(--border)] rounded-md px-2 text-nav text-[var(--text-primary)] focus:border-[var(--border-accent)] outline-none"
             >
               {ATRAC_VERSIONS.map((v) => (
                 <option key={v.value} value={v.value}>{v.label}</option>
@@ -282,7 +282,7 @@ export function DeviceSubmitPage() {
           </div>
 
           {/* Features */}
-          <h3 className="text-sm font-semibold text-studio-text uppercase tracking-wider mt-2">Features</h3>
+          <h3 className="text-nav font-semibold text-[var(--text-primary)] uppercase tracking-wider mt-2">Features</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4">
             <Checkbox label="MDLP (Long Play)" checked={form.has_mdlp} onChange={(v) => set('has_mdlp', v)} />
             <Checkbox label="Hi-MD" checked={form.has_himd} onChange={(v) => set('has_himd', v)} />
@@ -297,7 +297,7 @@ export function DeviceSubmitPage() {
           </div>
 
           {/* Hardware Details */}
-          <h3 className="text-sm font-semibold text-studio-text uppercase tracking-wider mt-2">Hardware Details</h3>
+          <h3 className="text-nav font-semibold text-[var(--text-primary)] uppercase tracking-wider mt-2">Hardware Details</h3>
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="USB VID (hex)"
@@ -335,24 +335,24 @@ export function DeviceSubmitPage() {
           </div>
 
           {/* Description */}
-          <h3 className="text-sm font-semibold text-studio-text uppercase tracking-wider mt-2">Description</h3>
+          <h3 className="text-nav font-semibold text-[var(--text-primary)] uppercase tracking-wider mt-2">Description</h3>
           <textarea
             placeholder="Describe the device, its unique features, and any relevant history..."
             value={form.description}
             onChange={(e) => set('description', e.target.value)}
             rows={3}
-            className="bg-studio-black border border-studio-border rounded-studio px-3 py-2 text-sm text-studio-text placeholder:text-studio-text-dim focus:border-studio-cyan focus:ring-1 focus:ring-studio-cyan-border outline-none transition-colors resize-none"
+            className="bg-[var(--surface-0)] border border-[var(--border)] rounded-md px-3 py-2 text-nav text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--border-accent)] outline-none transition-colors resize-none"
           />
           <textarea
             placeholder="Additional notes (compatibility quirks, tips, etc.)"
             value={form.notes}
             onChange={(e) => set('notes', e.target.value)}
             rows={2}
-            className="bg-studio-black border border-studio-border rounded-studio px-3 py-2 text-sm text-studio-text placeholder:text-studio-text-dim focus:border-studio-cyan focus:ring-1 focus:ring-studio-cyan-border outline-none transition-colors resize-none"
+            className="bg-[var(--surface-0)] border border-[var(--border)] rounded-md px-3 py-2 text-nav text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--border-accent)] outline-none transition-colors resize-none"
           />
 
           {/* Submit */}
-          <div className="flex justify-end gap-2 pt-4 border-t border-studio-border">
+          <div className="flex justify-end gap-2 pt-4 border-t border-[var(--border)]">
             <Link to="/devices">
               <Button variant="ghost">Cancel</Button>
             </Link>
