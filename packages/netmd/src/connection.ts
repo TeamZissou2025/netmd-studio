@@ -412,15 +412,18 @@ export class NetMDConnection {
 
     const result = await exportService.export(exportParams, onProgress ?? (() => {}));
 
-    // Ensure we have a clean, owned ArrayBuffer — not a view into WASM memory.
-    // FFmpeg's read() returns a Uint8Array whose .buffer might be larger than
-    // the actual data if the Uint8Array is a view of WASM linear memory.
-    // The MDTrack constructor uses data.byteLength to compute frame count,
-    // so an oversized buffer would cause the device to reject the transfer.
-    const clean = new Uint8Array(result);
-    console.log('[NetMD] Encoded %s: %d bytes (%s mode, original buffer %d bytes)',
-      file.name, clean.byteLength, format.toUpperCase(), result.byteLength);
-    return clean.buffer as ArrayBuffer;
+    // The export returns an ArrayBuffer. Verify it's correctly sized.
+    // MDTrack uses data.byteLength to compute frameCount and totalSize,
+    // so an incorrect byteLength would cause the device to reject.
+    console.log('[NetMD] Encoded %s: %d bytes (%s mode)',
+      file.name, result.byteLength, format.toUpperCase());
+
+    // Sanity check: SP PCM should be a multiple of sample frame (4 bytes = 2ch × 16bit)
+    if (format === 'sp' && result.byteLength % 4 !== 0) {
+      console.warn('[NetMD] SP PCM data length %d is not a multiple of 4 bytes', result.byteLength);
+    }
+
+    return result;
   }
 
   /**
@@ -440,11 +443,36 @@ export class NetMDConnection {
   ): Promise<boolean> {
     const codec = formatToCodec(format);
 
-    // Log upload parameters for diagnostics (matches WMD's upload() internals)
+    // Frame sizes from netmd-js FrameSize mapping:
+    // Wireformat.pcm (0) → 2048, Wireformat.lp2 (0x94) → 192, Wireformat.lp4 (0xa8) → 96
     const frameSize = format === 'sp' ? 2048 : format === 'lp2' ? 192 : 96;
-    const frameCount = Math.ceil(data.byteLength / frameSize);
-    console.log('[NetMD] sendTrack: title=%s, format=%s, codec=%o, data=%d bytes, frameSize=%d, frames=%d',
-      title, format, codec, data.byteLength, frameSize, frameCount);
+    const paddedSize = data.byteLength + (data.byteLength % frameSize === 0 ? 0 : frameSize - (data.byteLength % frameSize));
+    const frameCount = paddedSize / frameSize;
+    const totalBytes = paddedSize + 24; // netmd-js adds 24 bytes for packet header
+
+    // Estimate track duration in seconds (SP-equivalent)
+    const spBytesPerSec = 176400; // 44100 Hz × 2 ch × 2 bytes
+    const trackDurationSec = format === 'sp'
+      ? data.byteLength / spBytesPerSec
+      : data.byteLength / ((format === 'lp2' ? 132000 : 66000) / 8);
+
+    console.log('[NetMD] sendTrack: title=%s, format=%s, codec=%o', title, format, codec);
+    console.log('[NetMD]   data=%d bytes, paddedSize=%d, frameSize=%d, frames=%d, totalBytes=%d',
+      data.byteLength, paddedSize, frameSize, frameCount, totalBytes);
+    console.log('[NetMD]   estimated duration=%.1fs (%.1f min)', trackDurationSec, trackDurationSec / 60);
+
+    // Check disc capacity before attempting transfer
+    if (this._toc) {
+      const freeSeconds = this._toc.freeSeconds;
+      console.log('[NetMD]   disc free=%.1fs (%.1f min), track needs=%.1fs',
+        freeSeconds, freeSeconds / 60, trackDurationSec);
+      if (trackDurationSec > freeSeconds + 5) { // 5s tolerance for rounding
+        const msg = `Not enough disc space: track is ${formatTime(trackDurationSec)} but only ${formatTime(freeSeconds)} free`;
+        console.error('[NetMD]', msg);
+        this.events.onError?.(msg);
+        return false;
+      }
+    }
 
     // Verify the MDSession is initialized (prepareUpload must be called first)
     if (!this.service.currentSession) {
