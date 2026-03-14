@@ -33,12 +33,15 @@ export function TransferStudioPage() {
         >
           <Usb size={20} style={{ color: 'var(--pillar-transfer)' }} />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>Transfer Studio</h1>
           <p className="text-label" style={{ color: 'var(--text-secondary)' }}>
             Transfer audio to your MiniDisc player via WebUSB
           </p>
         </div>
+        <span className="font-mono text-[10px] self-end" style={{ color: 'var(--text-tertiary)', opacity: 0.5 }}>
+          Build: 2026-03-14-0215
+        </span>
       </div>
 
       {/* Main layout: sidebar + content */}
