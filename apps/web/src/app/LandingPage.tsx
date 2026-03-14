@@ -254,110 +254,113 @@ function WaitlistForm() {
 export function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: C.bg, fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
-      {/* ── Section 1: Top bar ── */}
-      <div className="text-center pt-6 pb-4">
-        <span
-          className="inline-block font-mono uppercase tracking-widest px-4 py-2 rounded-full"
-          style={{ background: C.pillBg, color: C.accent, fontSize: '11px', letterSpacing: '0.12em' }}
-        >
-          Spring 2026
-        </span>
+      {/* ── Main content ── */}
+      <div className="flex-1">
+        {/* ── SPRING 2026 date stamp ── */}
+        <div className="text-center pt-8">
+          <span
+            className="font-bold uppercase"
+            style={{ color: C.accent, fontSize: '22px', letterSpacing: '0.08em' }}
+          >
+            Spring 2026
+          </span>
+        </div>
+
+        {/* ── Hero + Signup ── */}
+        <FadeInSection className="text-center px-6" delay={0}>
+          <div style={{ paddingTop: 'clamp(2rem, 1.5rem + 3vw, 4rem)', paddingBottom: 'clamp(2.5rem, 2rem + 2vw, 4rem)' }}>
+            {/* Tagline pill */}
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2 mb-6"
+              style={{ background: C.pillBg }}
+            >
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ background: C.pillDot, animation: 'pulse-dot 2s ease-in-out infinite' }}
+              />
+              <span
+                className="font-mono uppercase tracking-widest"
+                style={{ color: C.textMuted, fontSize: '11px', letterSpacing: '0.12em' }}
+              >
+                The all-in-one MiniDisc platform
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1
+              className="font-black tracking-tighter"
+              style={{
+                fontSize: 'clamp(36px, 6vw, 72px)',
+                lineHeight: 1.1,
+                letterSpacing: '-0.03em',
+                color: C.text,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Everything for <HeroCycler />
+            </h1>
+
+            {/* Subtitle */}
+            <p className="mt-5 mx-auto max-w-md" style={{ color: C.textMuted, fontSize: '15px', lineHeight: 1.6 }}>
+              Design labels. Transfer audio. Explore hardware. Trade gear.
+              <br />
+              All in one studio built for the community.
+            </p>
+
+            {/* Email signup */}
+            <div className="mt-8 max-w-md mx-auto">
+              <p className="mb-3 font-medium" style={{ color: C.text, fontSize: '14px' }}>
+                Get notified when we launch
+              </p>
+              <WaitlistForm />
+            </div>
+          </div>
+        </FadeInSection>
+
+        {/* ── Four Pillars ── */}
+        <FadeInSection className="px-6 pb-12" delay={100}>
+          <div className="max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {pillars.map((p, i) => {
+                const Icon = p.icon;
+                return (
+                  <FadeInSection key={p.title} delay={i * 80}>
+                    <div
+                      className="relative rounded-xl p-6 transition-all duration-200 h-full overflow-hidden"
+                      style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLElement).style.borderColor = p.colorHex;
+                        (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px ${p.colorHex}18`;
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLElement).style.borderColor = C.cardBorder;
+                        (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                      }}
+                    >
+                      {p.premium && <PremiumRibbon />}
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                        style={{ background: `${p.colorHex}14` }}
+                      >
+                        <Icon size={20} style={{ color: p.colorHex }} />
+                      </div>
+                      <h3 className="font-semibold mb-1" style={{ color: C.text, fontSize: '14px' }}>
+                        {p.title}
+                      </h3>
+                      <p style={{ color: C.textMuted, fontSize: '13px', lineHeight: 1.5 }}>
+                        {p.desc}
+                      </p>
+                    </div>
+                  </FadeInSection>
+                );
+              })}
+            </div>
+          </div>
+        </FadeInSection>
       </div>
 
-      {/* ── Section 2: Hero + Signup ── */}
-      <FadeInSection className="flex-1 flex flex-col items-center justify-center text-center px-6" delay={0}>
-        <div style={{ paddingTop: 'clamp(4rem, 3rem + 6vw, 10rem)', paddingBottom: 'clamp(4rem, 3rem + 4vw, 8rem)' }}>
-          {/* Pill */}
-          <div
-            className="inline-flex items-center gap-2 rounded-full px-5 py-2 mb-8"
-            style={{ background: C.pillBg }}
-          >
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{ background: C.pillDot, animation: 'pulse-dot 2s ease-in-out infinite' }}
-            />
-            <span
-              className="font-mono uppercase tracking-widest"
-              style={{ color: C.textMuted, fontSize: '11px', letterSpacing: '0.12em' }}
-            >
-              The all-in-one MiniDisc platform
-            </span>
-          </div>
-
-          {/* Headline */}
-          <h1
-            className="font-black tracking-tighter"
-            style={{
-              fontSize: 'clamp(36px, 6vw, 72px)',
-              lineHeight: 1.1,
-              letterSpacing: '-0.03em',
-              color: C.text,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Everything for <HeroCycler />
-          </h1>
-
-          {/* Subtitle */}
-          <p className="mt-6 mx-auto max-w-md" style={{ color: C.textMuted, fontSize: '15px', lineHeight: 1.6 }}>
-            Design labels. Transfer audio. Explore hardware. Trade gear.
-            <br />
-            All in one studio built for the community.
-          </p>
-
-          {/* Email signup — replaces the old "Get Early Access" button */}
-          <div className="mt-10 max-w-md mx-auto">
-            <p className="mb-4 font-medium" style={{ color: C.text, fontSize: '14px' }}>
-              Get notified when we launch
-            </p>
-            <WaitlistForm />
-          </div>
-        </div>
-      </FadeInSection>
-
-      {/* ── Section 3: Four Pillars ── */}
-      <FadeInSection className="px-6 pb-20" delay={100}>
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {pillars.map((p, i) => {
-              const Icon = p.icon;
-              return (
-                <FadeInSection key={p.title} delay={i * 80}>
-                  <div
-                    className="relative rounded-xl p-6 transition-all duration-200 h-full overflow-hidden"
-                    style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.borderColor = p.colorHex;
-                      (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px ${p.colorHex}18`;
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.borderColor = C.cardBorder;
-                      (e.currentTarget as HTMLElement).style.boxShadow = 'none';
-                    }}
-                  >
-                    {p.premium && <PremiumRibbon />}
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                      style={{ background: `${p.colorHex}14` }}
-                    >
-                      <Icon size={20} style={{ color: p.colorHex }} />
-                    </div>
-                    <h3 className="font-semibold mb-1" style={{ color: C.text, fontSize: '14px' }}>
-                      {p.title}
-                    </h3>
-                    <p style={{ color: C.textMuted, fontSize: '13px', lineHeight: 1.5 }}>
-                      {p.desc}
-                    </p>
-                  </div>
-                </FadeInSection>
-              );
-            })}
-          </div>
-        </div>
-      </FadeInSection>
-
-      {/* ── Footer ── */}
-      <footer className="px-6 py-8 text-center space-y-3" style={{ borderTop: `1px solid ${C.footerBorder}` }}>
+      {/* ── Footer (mt-auto pins to bottom) ── */}
+      <footer className="mt-auto px-6 py-6 text-center space-y-2" style={{ borderTop: `1px solid ${C.footerBorder}` }}>
         <p style={{ color: C.textDim, fontSize: '12px' }}>&copy; 2026 Squircle Labs</p>
         <div className="flex items-center justify-center gap-4" style={{ fontSize: '12px' }}>
           <a href="/privacy" className="transition-colors hover:underline" style={{ color: C.textDim }}>Privacy</a>
