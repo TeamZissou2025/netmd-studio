@@ -4,6 +4,8 @@ import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Layout } from './Layout';
 import { AuthGatedHome } from './AuthGatedHome';
+import { PrivacyPage } from './PrivacyPage';
+import { TermsPage } from './TermsPage';
 import { NotFoundPage } from './NotFoundPage';
 import { PageLoader } from './PageLoader';
 
@@ -32,8 +34,10 @@ export function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
-          {/* Landing page — full-bleed, no Layout chrome for unauthenticated visitors */}
+          {/* Public pages — full-bleed, no Layout chrome */}
           <Route index element={<AuthGatedHome />} />
+          <Route path="privacy" element={<PrivacyPage />} />
+          <Route path="terms" element={<TermsPage />} />
 
           {/* App routes — with Layout chrome (nav, footer) */}
           <Route element={<Layout />}>

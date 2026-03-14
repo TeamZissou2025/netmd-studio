@@ -133,6 +133,7 @@ const pillars = [
 // ── Email signup form ────────────────────────────────────────
 function WaitlistForm() {
   const [email, setEmail] = useState('');
+  const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -141,6 +142,9 @@ function WaitlistForm() {
     const trimmed = email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setStatus('error'); setErrorMsg('Please enter a valid email address'); return;
+    }
+    if (!consent) {
+      setStatus('error'); setErrorMsg('Please agree to the Privacy Policy'); return;
     }
     setStatus('submitting');
     try {
@@ -168,7 +172,7 @@ function WaitlistForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 w-full max-w-md mx-auto">
+    <form onSubmit={handleSubmit} className="flex flex-wrap gap-2 w-full max-w-md mx-auto">
       <input
         type="email"
         placeholder="your@email.com"
@@ -197,8 +201,21 @@ function WaitlistForm() {
       >
         {status === 'submitting' ? 'Joining...' : 'Notify Me'}
       </button>
+      <label className="flex items-start gap-2 w-full sm:col-span-2 cursor-pointer select-none" style={{ fontSize: '12px', color: C.textDim }}>
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => { setConsent(e.target.checked); if (status === 'error') setStatus('idle'); }}
+          className="mt-0.5 shrink-0"
+          style={{ accentColor: C.accent }}
+        />
+        <span>
+          I agree to the{' '}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }} className="underline">Privacy Policy</a>
+        </span>
+      </label>
       {status === 'error' && (
-        <p className="text-xs sm:absolute sm:mt-12" style={{ color: C.error }}>{errorMsg}</p>
+        <p className="text-xs w-full" style={{ color: C.error }}>{errorMsg}</p>
       )}
     </form>
   );
@@ -330,9 +347,9 @@ export function LandingPage() {
       <footer className="px-6 py-8 text-center space-y-3" style={{ borderTop: `1px solid ${C.footerBorder}` }}>
         <p style={{ color: C.textDim, fontSize: '12px' }}>&copy; 2026 Squircle Labs</p>
         <div className="flex items-center justify-center gap-4" style={{ fontSize: '12px' }}>
-          <a href="#" className="transition-colors hover:underline" style={{ color: C.textDim }}>Privacy</a>
+          <a href="/privacy" className="transition-colors hover:underline" style={{ color: C.textDim }}>Privacy</a>
           <span style={{ color: '#C0BDB6' }}>&middot;</span>
-          <a href="#" className="transition-colors hover:underline" style={{ color: C.textDim }}>Terms</a>
+          <a href="/terms" className="transition-colors hover:underline" style={{ color: C.textDim }}>Terms</a>
         </div>
         <p style={{ color: '#9A9790', fontSize: '11px' }}>
           NetMD Studio is open source &middot;{' '}
