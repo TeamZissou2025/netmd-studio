@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Layout } from './Layout';
-import { HomePage } from './HomePage';
+import { AuthGatedHome } from './AuthGatedHome';
 import { NotFoundPage } from './NotFoundPage';
 import { PageLoader } from './PageLoader';
 
@@ -32,8 +32,11 @@ export function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
+          {/* Landing page — full-bleed, no Layout chrome for unauthenticated visitors */}
+          <Route index element={<AuthGatedHome />} />
+
+          {/* App routes — with Layout chrome (nav, footer) */}
           <Route element={<Layout />}>
-            <Route index element={<HomePage />} />
             <Route path="labels" element={<Suspense fallback={<PageLoader />}><LabelStudioPage /></Suspense>} />
             <Route path="labels/gallery" element={<Suspense fallback={<PageLoader />}><GalleryPage /></Suspense>} />
             <Route path="transfer" element={<Suspense fallback={<PageLoader />}><TransferStudioPage /></Suspense>} />
