@@ -48,6 +48,8 @@ export function FormatSelector() {
     .reduce((sum, t) => sum + t.duration, 0);
 
   const usedSeconds = toc?.usedSeconds ?? 0;
+  // Use actual disc total from TOC if connected, fall back to MD_80_CAPACITY constant
+  const spTotal = toc?.totalSeconds ?? 0;
 
   return (
     <div className="rounded-lg p-4" style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}>
@@ -55,7 +57,9 @@ export function FormatSelector() {
       <div className="space-y-2">
         {FORMAT_OPTIONS.map((opt) => {
           const isSelected = selectedFormat === opt.value;
-          const capacity = MD_80_CAPACITY[opt.value].totalSeconds;
+          // Scale actual disc capacity for the format (SP=1x, LP2=2x, LP4=4x)
+          const formatMultiplier = opt.value === 'lp2' ? 2 : opt.value === 'lp4' ? 4 : 1;
+          const capacity = spTotal > 0 ? spTotal * formatMultiplier : MD_80_CAPACITY[opt.value].totalSeconds;
           const remaining = capacity - usedSeconds - totalQueuedDuration;
 
           return (

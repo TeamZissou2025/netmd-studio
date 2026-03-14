@@ -12,10 +12,14 @@ export function DeviceConnectionPanel() {
   const isConnected = connectionStatus === 'connected';
   const isConnecting = connectionStatus === 'connecting';
 
-  // Calculate capacity based on format
-  const totalCapacity = toc ? getCapacitySeconds(selectedFormat) : 0;
-  const usedSeconds = toc?.usedSeconds ?? 0;
-  const freeSeconds = totalCapacity - usedSeconds;
+  // Use actual disc capacity from TOC (in SP-equivalent seconds),
+  // then scale for the selected format using WMD's conversion formula.
+  const spTotal = toc?.totalSeconds ?? 0;
+  const spUsed = toc?.usedSeconds ?? 0;
+  const formatMultiplier = selectedFormat === 'lp2' ? 2 : selectedFormat === 'lp4' ? 4 : 1;
+  const totalCapacity = spTotal * formatMultiplier;
+  const usedSeconds = spUsed; // used time is the same regardless of format
+  const freeSeconds = Math.max(0, totalCapacity - usedSeconds);
   const usedPercent = totalCapacity > 0 ? (usedSeconds / totalCapacity) * 100 : 0;
 
   return (
@@ -130,10 +134,3 @@ export function DeviceConnectionPanel() {
   );
 }
 
-function getCapacitySeconds(format: 'sp' | 'lp2' | 'lp4'): number {
-  switch (format) {
-    case 'sp': return 4800;
-    case 'lp2': return 9600;
-    case 'lp4': return 19200;
-  }
-}

@@ -1,29 +1,21 @@
 /**
- * NetMD Connection Layer
+ * NetMD Connection — Thin adapter over Web MiniDisc Pro's NetMDUSBService.
  *
- * Adapted from Web MiniDisc Pro (asivery/webminidisc) patterns.
- * Uses netmd-js openNewDevice() / openPairedDevice() which handle
- * the full USB lifecycle (requestDevice + open + selectConfiguration +
- * claimInterface) internally. No raw WebUSB calls.
- *
- * Manual connect only — no auto-reconnect.
+ * This creates the SAME service class Web MiniDisc Pro creates, and calls
+ * the SAME upload method with the SAME parameters. The code path from
+ * prepareUpload → upload → finalizeUpload is IDENTICAL to what runs when
+ * a user clicks upload in Web MiniDisc Pro.
  */
 import {
-  openNewDevice,
-  openPairedDevice,
-  listContent,
-  renameDisc as njsRenameDisc,
-  prepareDownload,
-  MDSession,
-  MDTrack,
-  Wireformat,
-  Encoding,
-  TrackFlag,
-  type NetMDInterface,
-  type Disc as NJSDisc,
-  type Track as NJSTrack,
-} from 'netmd-js';
-import { makeGetAsyncPacketIteratorOnWorkerThread } from 'netmd-js/dist/web-encrypt-worker';
+  NetMDUSBService,
+  AtracdencAudioExportService,
+  DefaultMinidiscSpec,
+  type Codec,
+  type Disc as WMDDisc,
+  type Track as WMDTrack,
+  type AudioExportService,
+  type ExportParams,
+} from './vendor';
 import { identifyDevice, type NetMDDeviceEntry } from './devices';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
@@ -47,7 +39,6 @@ export interface DiscTrack {
   durationSeconds: number;
   encoding: 'sp' | 'lp2' | 'lp4';
   channel: number;
-  isProtected: boolean;
 }
 
 export interface NetMDConnectionEvents {
@@ -59,42 +50,19 @@ export interface NetMDConnectionEvents {
   onError: (error: string) => void;
 }
 
-// Capacity in seconds for an 80-minute standard MD disc
-const MD_80_TOTAL_SECONDS = 4800;
-const SP_CAPACITY_SECONDS = MD_80_TOTAL_SECONDS;
-const LP2_CAPACITY_SECONDS = MD_80_TOTAL_SECONDS * 2;
-const LP4_CAPACITY_SECONDS = MD_80_TOTAL_SECONDS * 4;
+const mdSpec = new DefaultMinidiscSpec();
 
-// netmd-js uses 512-byte frames for duration. 1 second = 512 frames in SP.
-const FRAMES_PER_SECOND = 512;
-
-export function getCapacityForFormat(format: 'sp' | 'lp2' | 'lp4'): number {
-  switch (format) {
-    case 'sp': return SP_CAPACITY_SECONDS;
-    case 'lp2': return LP2_CAPACITY_SECONDS;
-    case 'lp4': return LP4_CAPACITY_SECONDS;
-  }
-}
-
-/** Map netmd-js Wireformat enum to our format string */
-const WIREFORMAT_MAP: Record<'sp' | 'lp2' | 'lp4', Wireformat> = {
-  sp: Wireformat.pcm,
-  lp2: Wireformat.lp2,
-  lp4: Wireformat.lp4,
-};
-
-/** Map netmd-js Encoding enum to our format string */
-function encodingToFormat(encoding: Encoding): 'sp' | 'lp2' | 'lp4' {
-  switch (encoding) {
-    case Encoding.sp: return 'sp';
-    case Encoding.lp2: return 'lp2';
-    case Encoding.lp4: return 'lp4';
-    default: return 'sp';
-  }
-}
-
-/** Convert netmd-js Disc to our DiscTOC */
-function convertDisc(disc: NJSDisc): DiscTOC {
+/**
+ * Convert WMD Disc type to our DiscTOC.
+ *
+ * WMD's convertDiscToWMD divides netmd-js raw byte counts by 512 to get
+ * "WMD frames." Because netmd-js stores time as (seconds * 512 + subframes),
+ * dividing by 512 gives seconds (with minor rounding from subframes).
+ *
+ * disc.used, disc.left, disc.total are ALL in seconds (after WMD conversion).
+ * Track durations are also in seconds (after WMD conversion).
+ */
+function convertDisc(disc: WMDDisc): DiscTOC {
   const tracks: DiscTrack[] = [];
   for (const group of disc.groups) {
     for (const track of group.tracks) {
@@ -103,9 +71,22 @@ function convertDisc(disc: NJSDisc): DiscTOC {
   }
   tracks.sort((a, b) => a.index - b.index);
 
-  const usedSeconds = Math.ceil(disc.used / FRAMES_PER_SECOND);
-  const totalSeconds = Math.ceil(disc.total / FRAMES_PER_SECOND);
-  const freeSeconds = Math.ceil(disc.left / FRAMES_PER_SECOND);
+  // Sum track durations for a reliable "used" value — the device-reported
+  // disc.used / disc.left values can disagree when the disc was recorded
+  // in a different mode than what the device currently reports.
+  const usedFromTracks = tracks.reduce((sum, t) => sum + t.durationSeconds, 0);
+
+  // disc.total and disc.left are in seconds (WMD divides raw frames by 512).
+  // Use track-summed duration as the primary "used" value since it's always
+  // accurate regardless of the device's recording mode reporting.
+  const totalSeconds = disc.total;
+  const usedSeconds = usedFromTracks > 0 ? usedFromTracks : disc.used;
+  const freeSeconds = Math.max(0, totalSeconds - usedSeconds);
+
+  console.log('[NetMD] Disc capacity: total=%ds (%s), used=%ds (tracks=%ds, disc.used=%d), left=%ds (disc.left=%d)',
+    totalSeconds, formatTime(totalSeconds),
+    usedSeconds, usedFromTracks, disc.used,
+    freeSeconds, disc.left);
 
   return {
     title: disc.title,
@@ -120,40 +101,64 @@ function convertDisc(disc: NJSDisc): DiscTOC {
   };
 }
 
-/** Convert a netmd-js Track to our DiscTrack */
-function convertTrack(track: NJSTrack): DiscTrack {
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function convertTrack(track: WMDTrack): DiscTrack {
+  let encoding: 'sp' | 'lp2' | 'lp4';
+  if (track.encoding.codec.startsWith('SP')) {
+    encoding = 'sp';
+  } else if (track.encoding.bitrate === 132) {
+    encoding = 'lp2';
+  } else {
+    encoding = 'lp4';
+  }
+
   return {
     index: track.index,
     title: track.title ?? '',
     fullWidthTitle: track.fullWidthTitle ?? '',
-    durationSeconds: Math.ceil(track.duration / FRAMES_PER_SECOND),
-    encoding: encodingToFormat(track.encoding),
+    durationSeconds: track.duration,
+    encoding,
     channel: track.channel,
-    isProtected: track.protected === TrackFlag.protected,
   };
 }
 
+/** Map our format strings to WMD Codec objects — the SAME values Web MiniDisc Pro uses */
+function formatToCodec(format: 'sp' | 'lp2' | 'lp4'): Codec {
+  switch (format) {
+    case 'sp':
+      return { codec: 'SPS', bitrate: 292 };
+    case 'lp2':
+      return { codec: 'AT3', bitrate: 132 };
+    case 'lp4':
+      return { codec: 'AT3', bitrate: 66 };
+  }
+}
+
 export class NetMDConnection {
-  private netmdInterface: NetMDInterface | null = null;
-  private currentSession: MDSession | null = null;
-  private cachedDisc: NJSDisc | null = null;
+  /** The EXACT same service class Web MiniDisc Pro uses */
+  private service: NetMDUSBService;
+  /** Audio export service — same as Web MiniDisc Pro's atracdenc pipeline */
+  private audioExport: AtracdencAudioExportService;
+
   private events: Partial<NetMDConnectionEvents> = {};
   private _status: ConnectionStatus = 'disconnected';
   private _deviceInfo: NetMDDeviceEntry | null = null;
   private _toc: DiscTOC | null = null;
   private _connecting = false;
 
-  get status(): ConnectionStatus {
-    return this._status;
+  constructor() {
+    this.service = new NetMDUSBService({ debug: true });
+    this.audioExport = new AtracdencAudioExportService();
   }
 
-  get deviceInfo(): NetMDDeviceEntry | null {
-    return this._deviceInfo;
-  }
-
-  get toc(): DiscTOC | null {
-    return this._toc;
-  }
+  get status(): ConnectionStatus { return this._status; }
+  get deviceInfo(): NetMDDeviceEntry | null { return this._deviceInfo; }
+  get toc(): DiscTOC | null { return this._toc; }
 
   on<K extends keyof NetMDConnectionEvents>(event: K, handler: NetMDConnectionEvents[K]): void {
     this.events[event] = handler;
@@ -169,41 +174,29 @@ export class NetMDConnection {
   }
 
   /**
-   * Open the browser's device picker and connect to a new device.
-   * Uses netmd-js openNewDevice() which handles requestDevice + open +
-   * selectConfiguration + claimInterface internally.
+   * Open browser device picker. Uses NetMDUSBService.pair() — the SAME
+   * method Web MiniDisc Pro calls when a user clicks "Connect".
    */
   async requestDevice(): Promise<boolean> {
     if (!NetMDConnection.isSupported()) {
       this.events.onError?.('WebUSB is not supported in this browser');
       return false;
     }
-
-    if (this._connecting) {
-      console.warn('[NetMD] requestDevice blocked — connection already in progress');
-      return false;
-    }
-
-    if (this._status === 'connected') {
-      return true;
-    }
+    if (this._connecting) return false;
+    if (this._status === 'connected') return true;
 
     this._connecting = true;
     try {
-      console.log('[NetMD] requestDevice — opening device picker');
       this.setStatus('connecting');
 
-      // netmd-js handles the entire USB lifecycle:
-      // requestDevice({filters}) → device.open() → selectConfiguration(1) → claimInterface(0)
-      const iface = await openNewDevice(navigator.usb);
-      if (iface === null) {
-        // User cancelled the device picker
-        console.log('[NetMD] Device picker cancelled by user');
+      // This is what WMD calls — openNewDevice internally
+      const paired = await this.service.pair();
+      if (!paired) {
         this.setStatus('disconnected');
         return false;
       }
 
-      return await this.initializeDevice(iface);
+      return await this.initializeDevice();
     } catch (err) {
       console.error('[NetMD] requestDevice failed:', err);
       this.setStatus('disconnected');
@@ -215,60 +208,39 @@ export class NetMDConnection {
   }
 
   /**
-   * Reconnect to a previously paired device without showing the picker.
-   * Uses netmd-js openPairedDevice() which calls getDevices() + open +
-   * selectConfiguration + claimInterface internally.
-   *
-   * This is NOT called automatically. It's available for explicit
-   * "reconnect" button use only.
+   * Reconnect to previously paired device. Uses NetMDUSBService.connect() —
+   * the SAME method Web MiniDisc Pro calls for auto-reconnect.
    */
   async reconnectPaired(): Promise<boolean> {
     if (!NetMDConnection.isSupported()) return false;
-
-    if (this._connecting) {
-      console.warn('[NetMD] reconnectPaired blocked — connection already in progress');
-      return false;
-    }
-
-    if (this._status === 'connected') {
-      return true;
-    }
+    if (this._connecting) return false;
+    if (this._status === 'connected') return true;
 
     this._connecting = true;
     try {
-      console.log('[NetMD] reconnectPaired — checking for previously paired devices');
       this.setStatus('connecting');
 
-      const iface = await openPairedDevice(navigator.usb);
-      if (iface === null) {
-        console.log('[NetMD] No previously paired device found');
+      const connected = await this.service.connect();
+      if (!connected) {
         this.setStatus('disconnected');
         return false;
       }
 
-      return await this.initializeDevice(iface);
+      return await this.initializeDevice();
     } catch (err) {
       console.error('[NetMD] reconnectPaired failed:', err);
       this.setStatus('disconnected');
-      this.events.onError?.(err instanceof Error ? err.message : 'Failed to reconnect to device');
       return false;
     } finally {
       this._connecting = false;
     }
   }
 
-  /**
-   * Initialize a connected device: identify it, read the TOC, and
-   * fire the batched onConnected event.
-   */
-  private async initializeDevice(iface: NetMDInterface): Promise<boolean> {
+  private async initializeDevice(): Promise<boolean> {
     try {
-      this.netmdInterface = iface;
-
-      // Identify the device from its USB IDs
-      const vendorId = iface.netMd.getVendor();
-      const productId = iface.netMd.getProduct();
-      const deviceName = iface.netMd.getDeviceName();
+      const vendorId = this.service.getVendorId();
+      const productId = this.service.getProductId();
+      const deviceName = await this.service.getDeviceName();
 
       this._deviceInfo = identifyDevice(vendorId, productId) ?? {
         vendorId,
@@ -279,28 +251,22 @@ export class NetMDConnection {
         isHiMD: false,
       };
 
-      console.log('[NetMD] Device identified: %s (VID=%s PID=%s)',
+      console.log('[NetMD] Device: %s (VID=%s PID=%s)',
         this._deviceInfo.name,
         vendorId.toString(16).padStart(4, '0'),
         productId.toString(16).padStart(4, '0'));
 
-      // Listen for USB disconnect events
       navigator.usb.addEventListener('disconnect', this.handleDisconnect);
 
-      // Read the disc TOC
-      console.log('[NetMD] Reading disc TOC...');
-      await this.readTOCInternal(true);
-      console.log('[NetMD] TOC read complete: %d tracks', this._toc?.trackCount ?? 0);
+      // Read TOC using the SAME listContent call WMD uses
+      const disc = await this.service.listContent(true);
+      this._toc = convertDisc(disc);
 
-      // Fire a single batched event with all connection data
       this._status = 'connected';
       this.events.onConnected?.(this._deviceInfo, this._toc);
-      console.log('[NetMD] Connection complete: %s', this._deviceInfo.name);
-
       return true;
     } catch (err) {
       console.error('[NetMD] initializeDevice failed:', err);
-      await this.cleanupDevice();
       this.setStatus('disconnected');
       this.events.onError?.(err instanceof Error ? err.message : 'Failed to initialize device');
       return false;
@@ -308,13 +274,8 @@ export class NetMDConnection {
   }
 
   private handleDisconnect = (event: USBConnectionEvent): void => {
-    // Check if the disconnected device is ours
-    if (this.netmdInterface && this.netmdInterface.netMd.isDeviceConnected(event.device)) {
-      console.log('[NetMD] USB disconnect event for %s', this._deviceInfo?.name ?? 'unknown');
+    if (this.service.isDeviceConnected(event.device)) {
       navigator.usb.removeEventListener('disconnect', this.handleDisconnect);
-      this.netmdInterface = null;
-      this.currentSession = null;
-      this.cachedDisc = null;
       this._deviceInfo = null;
       this._toc = null;
       this._connecting = false;
@@ -323,59 +284,26 @@ export class NetMDConnection {
     }
   };
 
-  /**
-   * Read the disc TOC using netmd-js listContent().
-   * Caches the raw netmd-js Disc for subsequent operations.
-   */
-  private async readTOCInternal(dropCache = false): Promise<DiscTOC | null> {
-    if (!this.netmdInterface) return null;
-
-    if (dropCache || !this.cachedDisc) {
-      this.cachedDisc = await listContent(this.netmdInterface);
-    }
-
-    this._toc = convertDisc(this.cachedDisc);
-    return this._toc;
-  }
-
-  /**
-   * Public TOC refresh — reads from device and fires onTOCRead event.
-   */
   async readTOC(): Promise<DiscTOC | null> {
-    if (!this.netmdInterface) return null;
-
-    const isRefresh = this._status === 'connected';
-    const toc = await this.readTOCInternal(true);
-
-    if (isRefresh && toc) {
-      this.events.onTOCRead?.(toc);
-    }
-
-    return toc;
-  }
-
-  /**
-   * Rename a track on the disc using netmd-js.
-   */
-  async setTrackTitle(trackIndex: number, title: string): Promise<boolean> {
-    if (!this.netmdInterface) return false;
-
     try {
-      await this.netmdInterface.setTrackTitle(trackIndex, title);
-
-      // Update cache
-      if (this.cachedDisc) {
-        for (const group of this.cachedDisc.groups) {
-          for (const track of group.tracks) {
-            if (track.index === trackIndex) {
-              track.title = title;
-            }
-          }
-        }
-        this._toc = convertDisc(this.cachedDisc);
+      const disc = await this.service.listContent(true);
+      this._toc = convertDisc(disc);
+      if (this._status === 'connected') {
         this.events.onTOCRead?.(this._toc);
       }
+      return this._toc;
+    } catch (err) {
+      console.error('[NetMD] readTOC failed:', err);
+      return null;
+    }
+  }
 
+  async setTrackTitle(trackIndex: number, title: string): Promise<boolean> {
+    try {
+      await this.service.renameTrack(trackIndex, title);
+      const disc = await this.service.listContent(false);
+      this._toc = convertDisc(disc);
+      this.events.onTOCRead?.(this._toc);
       return true;
     } catch (err) {
       console.error('[NetMD] setTrackTitle failed:', err);
@@ -384,22 +312,12 @@ export class NetMDConnection {
     }
   }
 
-  /**
-   * Rename the disc using netmd-js.
-   */
   async setDiscTitle(title: string): Promise<boolean> {
-    if (!this.netmdInterface) return false;
-
     try {
-      await njsRenameDisc(this.netmdInterface, title);
-
-      // Update cache
-      if (this.cachedDisc) {
-        this.cachedDisc.title = title;
-        this._toc = convertDisc(this.cachedDisc);
-        this.events.onTOCRead?.(this._toc);
-      }
-
+      await this.service.renameDisc(title);
+      const disc = await this.service.listContent(false);
+      this._toc = convertDisc(disc);
+      this.events.onTOCRead?.(this._toc);
       return true;
     } catch (err) {
       console.error('[NetMD] setDiscTitle failed:', err);
@@ -408,22 +326,12 @@ export class NetMDConnection {
     }
   }
 
-  /**
-   * Delete a track from the disc using netmd-js.
-   */
   async deleteTrack(trackIndex: number): Promise<boolean> {
-    if (!this.netmdInterface) return false;
-
     try {
-      await this.netmdInterface.eraseTrack(trackIndex);
-
-      // Drop the cache and re-read since track indices shift
-      this.cachedDisc = null;
-      await this.readTOCInternal(true);
-      if (this._toc) {
-        this.events.onTOCRead?.(this._toc);
-      }
-
+      await this.service.deleteTracks([trackIndex]);
+      const disc = await this.service.listContent(true);
+      this._toc = convertDisc(disc);
+      this.events.onTOCRead?.(this._toc);
       return true;
     } catch (err) {
       console.error('[NetMD] deleteTrack failed:', err);
@@ -433,77 +341,96 @@ export class NetMDConnection {
   }
 
   /**
-   * Prepare the device for a batch of track uploads.
-   *
-   * Following Web MiniDisc Pro's pattern exactly:
-   *   prepareUpload() once → upload() per track → finalizeUpload() once
-   *
-   * This opens a single MDSession that persists across all tracks in the batch.
-   * Call sendTrack() for each track, then call finalizeUpload() when done.
+   * Prepare device for upload batch. Calls NetMDUSBService.prepareUpload() —
+   * the IDENTICAL call Web MiniDisc Pro makes.
    */
   async prepareUpload(): Promise<boolean> {
-    if (!this.netmdInterface) return false;
-
     try {
-      await prepareDownload(this.netmdInterface);
-      const session = new MDSession(this.netmdInterface);
-      this.currentSession = session;
-      await session.init();
+      await this.service.prepareUpload();
       console.log('[NetMD] Upload session initialized');
       return true;
     } catch (err) {
       console.error('[NetMD] prepareUpload failed:', err);
-      this.currentSession = null;
-      this.events.onError?.(err instanceof Error ? err.message : 'Failed to prepare upload session');
+      this.events.onError?.(err instanceof Error ? err.message : 'Failed to prepare upload');
       return false;
     }
   }
 
   /**
-   * Finalize the upload session. MUST be called after all tracks are sent,
-   * even if a transfer failed. This closes the MDSession and releases the
-   * device so it's ready for the next batch without a power cycle.
+   * Finalize upload session. Calls NetMDUSBService.finalizeUpload() —
+   * the IDENTICAL call Web MiniDisc Pro makes.
    */
   async finalizeUpload(): Promise<void> {
     try {
-      if (this.currentSession) {
-        await this.currentSession.close();
-        console.log('[NetMD] Session closed');
-      }
+      await this.service.finalizeUpload();
+      console.log('[NetMD] Upload session finalized');
     } catch (err) {
-      console.warn('[NetMD] session.close() failed (non-fatal):', err);
+      console.warn('[NetMD] finalizeUpload failed (non-fatal):', err);
     }
 
+    // Refresh TOC
     try {
-      if (this.netmdInterface) {
-        await this.netmdInterface.release();
-        console.log('[NetMD] Interface released');
-      }
+      const disc = await this.service.listContent(true);
+      this._toc = convertDisc(disc);
+      this.events.onTOCRead?.(this._toc);
     } catch (err) {
-      console.warn('[NetMD] release() failed (non-fatal):', err);
-    }
-
-    this.currentSession = null;
-
-    // Re-read TOC to reflect any new tracks
-    this.cachedDisc = null;
-    try {
-      await this.readTOCInternal(true);
-      if (this._toc) {
-        this.events.onTOCRead?.(this._toc);
-      }
-    } catch (err) {
-      console.warn('[NetMD] TOC re-read after finalize failed (non-fatal):', err);
+      console.warn('[NetMD] TOC re-read after finalize failed:', err);
     }
   }
 
   /**
-   * Upload a single track within an active upload session.
+   * Encode an audio file using the SAME pipeline Web MiniDisc Pro uses:
+   * - SP: FFmpeg WASM decode → s16be PCM (Wireformat.pcm)
+   * - LP2: FFmpeg WASM decode → WAV → atracdenc WASM → ATRAC3 132kbps
+   * - LP4: FFmpeg WASM decode → WAV → atracdenc WASM → ATRAC3 66kbps
    *
-   * MUST be called between prepareUpload() and finalizeUpload().
-   * For convenience, if no session is active, this method will open and
-   * close one automatically (single-track mode), but callers transferring
-   * multiple tracks should use the batch API for reliability.
+   * Returns raw encoded bytes ready for upload().
+   */
+  async encodeAudio(
+    file: File,
+    format: 'sp' | 'lp2' | 'lp4',
+    onProgress?: (progress: { state: number; total: number }) => void
+  ): Promise<ArrayBuffer> {
+    const exportService = new AtracdencAudioExportService();
+    await exportService.init();
+    await exportService.prepare(file);
+
+    const codec = formatToCodec(format);
+    let exportFormat: ExportParams['format'];
+
+    if (codec.codec === 'SPS' || codec.codec === 'SPM') {
+      exportFormat = { codec: 'PCM', bitrate: 1411 };
+    } else {
+      exportFormat = { codec: codec.codec as 'AT3', bitrate: codec.bitrate };
+    }
+
+    const exportParams: ExportParams = {
+      format: exportFormat,
+      enableReplayGain: false,
+      lastInBatch: true,
+    };
+
+    const result = await exportService.export(exportParams, onProgress ?? (() => {}));
+
+    // Ensure we have a clean, owned ArrayBuffer — not a view into WASM memory.
+    // FFmpeg's read() returns a Uint8Array whose .buffer might be larger than
+    // the actual data if the Uint8Array is a view of WASM linear memory.
+    // The MDTrack constructor uses data.byteLength to compute frame count,
+    // so an oversized buffer would cause the device to reject the transfer.
+    const clean = new Uint8Array(result);
+    console.log('[NetMD] Encoded %s: %d bytes (%s mode, original buffer %d bytes)',
+      file.name, clean.byteLength, format.toUpperCase(), result.byteLength);
+    return clean.buffer as ArrayBuffer;
+  }
+
+  /**
+   * Upload a single track. Calls NetMDUSBService.upload() with the EXACT
+   * same parameters Web MiniDisc Pro passes.
+   *
+   * The data MUST already be encoded via encodeAudio():
+   * - SP: raw s16be PCM (Wireformat.pcm, DiscFormat.spStereo)
+   * - LP2: raw ATRAC3 132kbps (Wireformat.lp2, DiscFormat.lp2)
+   * - LP4: raw ATRAC3 66kbps (Wireformat.lp4, DiscFormat.lp4)
    */
   async sendTrack(
     data: ArrayBuffer,
@@ -511,151 +438,67 @@ export class NetMDConnection {
     title: string,
     onProgress?: (percent: number) => void
   ): Promise<boolean> {
-    if (!this.netmdInterface) return false;
+    const codec = formatToCodec(format);
 
-    // If no session is active, run in single-track mode with full lifecycle
-    const isSingleTrackMode = this.currentSession === null;
-    if (isSingleTrackMode) {
-      const prepared = await this.prepareUpload();
-      if (!prepared) return false;
+    // Log upload parameters for diagnostics (matches WMD's upload() internals)
+    const frameSize = format === 'sp' ? 2048 : format === 'lp2' ? 192 : 96;
+    const frameCount = Math.ceil(data.byteLength / frameSize);
+    console.log('[NetMD] sendTrack: title=%s, format=%s, codec=%o, data=%d bytes, frameSize=%d, frames=%d',
+      title, format, codec, data.byteLength, frameSize, frameCount);
+
+    // Verify the MDSession is initialized (prepareUpload must be called first)
+    if (!this.service.currentSession) {
+      const msg = 'Cannot upload: no active MDSession. Call prepareUpload() first.';
+      console.error('[NetMD]', msg);
+      this.events.onError?.(msg);
+      return false;
     }
 
-    let encryptWorker: Worker | null = null;
-
     try {
-      const wireformat = WIREFORMAT_MAP[format];
-      const total = data.byteLength;
-      let written = 0;
-      let encrypted = 0;
-
-      // Create a fresh encryption worker per track (matches Web MiniDisc Pro)
-      encryptWorker = new Worker(
-        new URL('./encrypt-worker.ts', import.meta.url),
-        { type: 'module' }
-      );
-
-      const encryptIterator = makeGetAsyncPacketIteratorOnWorkerThread(
-        encryptWorker,
-        ({ encryptedBytes }) => {
-          encrypted = encryptedBytes;
+      await this.service.upload(
+        title,
+        '', // fullWidthTitle — empty is fine, sanitized by netmd-js
+        data,
+        codec,
+        ({ written, encrypted, total }) => {
           if (total > 0) {
             const percent = ((written + encrypted) / (total * 2)) * 100;
             onProgress?.(Math.min(percent, 100));
           }
         }
       );
-
-      // Create the MDTrack with title, wireformat, and encryption iterator
-      const mdTrack = new MDTrack(title, wireformat, data, 0x400, '', encryptIterator);
-
-      // Send to device with progress callback
-      await this.currentSession!.downloadTrack(mdTrack, (progress) => {
-        written = progress.writtenBytes;
-        if (total > 0) {
-          const percent = ((written + encrypted) / (total * 2)) * 100;
-          onProgress?.(Math.min(percent, 100));
-        }
-      });
-
-      // Terminate worker after this track (fresh worker per track)
-      encryptWorker.terminate();
-      encryptWorker = null;
-
-      // Drop cached content so next TOC read is fresh
-      this.cachedDisc = null;
-
+      console.log('[NetMD] sendTrack complete: %s', title);
       return true;
     } catch (err) {
       console.error('[NetMD] sendTrack failed:', err);
-      encryptWorker?.terminate();
-
-      // Attempt session recovery on "Rejected" errors
-      const message = err instanceof Error ? err.message : String(err);
-      if (message.toLowerCase().includes('rejected')) {
-        console.warn('[NetMD] Device rejected transfer — attempting session recovery');
-        await this.recoverSession();
-      }
-
       this.events.onError?.(err instanceof Error ? err.message : 'Transfer failed');
       return false;
-    } finally {
-      // In single-track mode, always finalize even on failure
-      if (isSingleTrackMode) {
-        await this.finalizeUpload();
-      }
     }
   }
 
-  /**
-   * Attempt to recover from a "Rejected" device state by tearing down
-   * and re-initializing the session. This avoids requiring a power cycle.
-   */
-  private async recoverSession(): Promise<boolean> {
-    console.log('[NetMD] Recovering session...');
-
-    // Tear down the current session
-    try {
-      if (this.currentSession) {
-        await this.currentSession.close();
-      }
-    } catch { /* ignore — session may already be dead */ }
-
-    try {
-      if (this.netmdInterface) {
-        await this.netmdInterface.release();
-      }
-    } catch { /* ignore */ }
-
-    this.currentSession = null;
-
-    // Wait for the device firmware to settle
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Try to re-read TOC to confirm the device is responsive
-    try {
-      if (this.netmdInterface) {
-        this.cachedDisc = null;
-        await this.readTOCInternal(true);
-        console.log('[NetMD] Session recovery successful — device responsive');
-        return true;
-      }
-    } catch (err) {
-      console.error('[NetMD] Session recovery failed — device may need power cycle:', err);
-    }
-
-    return false;
-  }
-
-  /**
-   * Cleanly disconnect from the device.
-   */
   async disconnect(): Promise<void> {
-    console.log('[NetMD] disconnect() called');
-    await this.cleanupDevice();
-    this._status = 'disconnected';
-    this.events.onDisconnect?.();
-  }
-
-  private async cleanupDevice(): Promise<void> {
     navigator.usb.removeEventListener('disconnect', this.handleDisconnect);
-
-    if (this.currentSession) {
-      try {
-        await this.currentSession.close();
-      } catch { /* ignore */ }
-      this.currentSession = null;
-    }
-
-    if (this.netmdInterface) {
-      try {
-        await this.netmdInterface.netMd.finalize();
-      } catch { /* ignore */ }
-      this.netmdInterface = null;
-    }
-
-    this.cachedDisc = null;
+    try {
+      await this.service.finalize();
+    } catch { /* ignore */ }
     this._deviceInfo = null;
     this._toc = null;
     this._connecting = false;
+    this._status = 'disconnected';
+    this.events.onDisconnect?.();
   }
+}
+
+/**
+ * Convert disc free time from SP-equivalent seconds to the given format.
+ * Uses the SAME formula as WMD's DefaultMinidiscSpec.translateDefaultMeasuringModeTo:
+ *   floor(292 / bitrate) * spDuration
+ *
+ * SP (292kbps): factor = 1 → 80 min
+ * LP2 (132kbps): factor = floor(292/132) = 2 → 160 min
+ * LP4 (66kbps): factor = floor(292/66) = 4 → 320 min
+ */
+export function convertCapacityForFormat(spSeconds: number, format: 'sp' | 'lp2' | 'lp4'): number {
+  const codec = formatToCodec(format);
+  return mdSpec.translateDefaultMeasuringModeTo(codec, spSeconds);
 }
