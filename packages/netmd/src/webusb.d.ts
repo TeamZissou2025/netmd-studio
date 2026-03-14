@@ -1,3 +1,20 @@
+// @ffmpeg/ffmpeg@0.6.1 module declaration (no @types available)
+declare module '@ffmpeg/ffmpeg' {
+    export function setLogging(enabled: boolean): void;
+    export function createWorker(options?: {
+        logger?: (payload: { message: string; action: string }) => void;
+        corePath?: string;
+        workerPath?: string;
+    }): {
+        load(): Promise<void>;
+        write(filename: string, data: File | Uint8Array): Promise<void>;
+        read(filename: string): Promise<{ data: Uint8Array }>;
+        transcode(input: string, output: string, args: string): Promise<void>;
+        run(args: string): Promise<void>;
+        worker: Worker;
+    };
+}
+
 // WebUSB API type declarations
 // These types are not included in standard TypeScript DOM lib
 // Ref: https://developer.chrome.com/docs/capabilities/usb
