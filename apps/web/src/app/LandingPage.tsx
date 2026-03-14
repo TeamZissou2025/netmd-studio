@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react';
-import { Disc3, Radio, Database, ShoppingBag, Check, ArrowRight } from 'lucide-react';
+import { Disc3, Radio, Database, ShoppingBag, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 // ── Light-mode landing page colors ───────────────────────────
@@ -18,6 +18,7 @@ const C = {
   footerBorder: '#E0DDD6',
   success: '#2E8B6E',
   error: '#C53030',
+  magenta: '#ff0066',
 } as const;
 
 // ── Hero word cycler ─────────────────────────────────────────
@@ -124,11 +125,39 @@ function FadeInSection({ children, className = '', delay = 0 }: { children: Reac
 
 // ── Pillar cards ─────────────────────────────────────────────
 const pillars = [
-  { icon: Disc3, title: 'Label Studio', desc: 'Design J-cards and spine labels', colorHex: '#4AACA0' },
-  { icon: Radio, title: 'Transfer Studio', desc: 'Transfer audio via WebUSB', colorHex: '#D4577A' },
-  { icon: Database, title: 'Device Library', desc: 'Community hardware database', colorHex: '#C8923C' },
-  { icon: ShoppingBag, title: 'Marketplace', desc: 'Buy and sell MiniDisc gear', colorHex: '#3BA37A' },
+  { icon: Disc3, title: 'Label Studio', desc: 'Design J-cards and spine labels', colorHex: '#4AACA0', premium: true },
+  { icon: Radio, title: 'Transfer Studio', desc: 'Transfer audio via WebUSB', colorHex: '#D4577A', premium: false },
+  { icon: Database, title: 'Device Library', desc: 'Community hardware database', colorHex: '#C8923C', premium: false },
+  { icon: ShoppingBag, title: 'Marketplace', desc: 'Buy and sell MiniDisc gear', colorHex: '#3BA37A', premium: false },
 ];
+
+// ── PREMIUM ribbon ───────────────────────────────────────────
+function PremiumRibbon() {
+  return (
+    <div
+      className="absolute overflow-hidden pointer-events-none"
+      style={{ top: 0, right: 0, width: '80px', height: '80px' }}
+    >
+      <div
+        className="absolute font-mono uppercase text-center font-semibold"
+        style={{
+          top: '14px',
+          right: '-22px',
+          width: '110px',
+          fontSize: '9px',
+          letterSpacing: '0.12em',
+          padding: '4px 0',
+          background: C.magenta,
+          color: '#FFFFFF',
+          transform: 'rotate(45deg)',
+          boxShadow: '0 2px 6px rgba(255,0,102,0.3)',
+        }}
+      >
+        PREMIUM
+      </div>
+    </div>
+  );
+}
 
 // ── Email signup form ────────────────────────────────────────
 function WaitlistForm() {
@@ -158,7 +187,7 @@ function WaitlistForm() {
     } catch {
       setStatus('error'); setErrorMsg('Something went wrong. Please try again.');
     }
-  }, [email]);
+  }, [email, consent]);
 
   if (status === 'success') {
     return (
@@ -178,7 +207,7 @@ function WaitlistForm() {
         placeholder="your@email.com"
         value={email}
         onChange={(e) => { setEmail(e.target.value); if (status === 'error') setStatus('idle'); }}
-        className="flex-1 h-10 px-4 rounded-lg font-mono outline-none transition-colors"
+        className="flex-1 min-w-0 h-10 px-4 rounded-lg font-mono outline-none transition-colors"
         style={{
           background: C.inputBg,
           border: `1px solid ${status === 'error' ? C.error : C.inputBorder}`,
@@ -201,7 +230,7 @@ function WaitlistForm() {
       >
         {status === 'submitting' ? 'Joining...' : 'Notify Me'}
       </button>
-      <label className="flex items-start gap-2 w-full sm:col-span-2 cursor-pointer select-none" style={{ fontSize: '12px', color: C.textDim }}>
+      <label className="flex items-start gap-2 w-full cursor-pointer select-none" style={{ fontSize: '12px', color: C.textDim }}>
         <input
           type="checkbox"
           checked={consent}
@@ -235,7 +264,7 @@ export function LandingPage() {
         </span>
       </div>
 
-      {/* ── Section 2: Hero ── */}
+      {/* ── Section 2: Hero + Signup ── */}
       <FadeInSection className="flex-1 flex flex-col items-center justify-center text-center px-6" delay={0}>
         <div style={{ paddingTop: 'clamp(4rem, 3rem + 6vw, 10rem)', paddingBottom: 'clamp(4rem, 3rem + 4vw, 8rem)' }}>
           {/* Pill */}
@@ -276,16 +305,12 @@ export function LandingPage() {
             All in one studio built for the community.
           </p>
 
-          {/* CTA */}
-          <div className="mt-8">
-            <a
-              href="/auth/signup"
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-lg font-medium transition-opacity hover:opacity-90"
-              style={{ background: C.accent, color: '#FFFFFF', fontSize: '14px' }}
-            >
-              Get Early Access
-              <ArrowRight size={16} />
-            </a>
+          {/* Email signup — replaces the old "Get Early Access" button */}
+          <div className="mt-10 max-w-md mx-auto">
+            <p className="mb-4 font-medium" style={{ color: C.text, fontSize: '14px' }}>
+              Get notified when we launch
+            </p>
+            <WaitlistForm />
           </div>
         </div>
       </FadeInSection>
@@ -299,7 +324,7 @@ export function LandingPage() {
               return (
                 <FadeInSection key={p.title} delay={i * 80}>
                   <div
-                    className="rounded-xl p-6 transition-all duration-200 h-full"
+                    className="relative rounded-xl p-6 transition-all duration-200 h-full overflow-hidden"
                     style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLElement).style.borderColor = p.colorHex;
@@ -310,6 +335,7 @@ export function LandingPage() {
                       (e.currentTarget as HTMLElement).style.boxShadow = 'none';
                     }}
                   >
+                    {p.premium && <PremiumRibbon />}
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
                       style={{ background: `${p.colorHex}14` }}
@@ -330,20 +356,7 @@ export function LandingPage() {
         </div>
       </FadeInSection>
 
-      {/* ── Section 4: Email Signup ── */}
-      <FadeInSection className="px-6 pb-24">
-        <div className="max-w-lg mx-auto text-center">
-          <h2 className="font-bold tracking-tight mb-2" style={{ color: C.text, fontSize: '20px' }}>
-            Get notified when we launch
-          </h2>
-          <p className="mb-6" style={{ color: C.textMuted, fontSize: '14px' }}>
-            Join the waitlist. No spam, just one email when NetMD Studio goes live.
-          </p>
-          <WaitlistForm />
-        </div>
-      </FadeInSection>
-
-      {/* ── Section 5: Footer ── */}
+      {/* ── Footer ── */}
       <footer className="px-6 py-8 text-center space-y-3" style={{ borderTop: `1px solid ${C.footerBorder}` }}>
         <p style={{ color: C.textDim, fontSize: '12px' }}>&copy; 2026 Squircle Labs</p>
         <div className="flex items-center justify-center gap-4" style={{ fontSize: '12px' }}>
@@ -351,20 +364,6 @@ export function LandingPage() {
           <span style={{ color: '#C0BDB6' }}>&middot;</span>
           <a href="/terms" className="transition-colors hover:underline" style={{ color: C.textDim }}>Terms</a>
         </div>
-        <p style={{ color: '#9A9790', fontSize: '11px' }}>
-          NetMD Studio is open source &middot;{' '}
-          <a
-            href="https://github.com/TeamZissou2025/netmd-studio"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline transition-colors"
-            style={{ color: C.textDim }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = C.accent; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = C.textDim; }}
-          >
-            GitHub
-          </a>
-        </p>
       </footer>
 
       <style>{`
