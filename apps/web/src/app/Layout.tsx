@@ -14,7 +14,7 @@ export function Layout() {
       </main>
       <Footer />
       <MobileNav />
-      <span className="font-mono text-2xs text-studio-text-dim fixed bottom-2 right-2 z-50 opacity-60">v0.1.5-alpha · 2026-03-14 · 15:30</span>
+      <span className="font-mono text-2xs text-studio-text-dim fixed bottom-2 right-2 z-50 opacity-60">v0.1.6-alpha · 2026-03-14 · 16:00</span>
     </div>
   );
 }
