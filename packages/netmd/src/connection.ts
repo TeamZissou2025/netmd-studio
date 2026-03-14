@@ -138,6 +138,9 @@ function formatToCodec(format: 'sp' | 'lp2' | 'lp4'): Codec {
   }
 }
 
+/** Connection timeout in milliseconds */
+const CONNECTION_TIMEOUT_MS = 10_000;
+
 export class NetMDConnection {
   /** The EXACT same service class Web MiniDisc Pro uses */
   private service: NetMDUSBService;
@@ -149,6 +152,8 @@ export class NetMDConnection {
   private _deviceInfo: NetMDDeviceEntry | null = null;
   private _toc: DiscTOC | null = null;
   private _connecting = false;
+  /** Set to true by abortConnection() to cancel an in-flight connection */
+  private _aborted = false;
 
   constructor() {
     this.service = new NetMDUSBService({ debug: true });
@@ -173,8 +178,34 @@ export class NetMDConnection {
   }
 
   /**
+   * Abort an in-flight connection attempt.
+   * Returns the UI to "disconnected" immediately.
+   */
+  abortConnection(): void {
+    if (!this._connecting) return;
+    console.log('[NetMD] Connection aborted by user');
+    this._aborted = true;
+    this._connecting = false;
+    this._resetToDisconnected();
+  }
+
+  /** Reset all connection state to disconnected. UI updates immediately. */
+  private _resetToDisconnected(): void {
+    navigator.usb.removeEventListener('disconnect', this.handleDisconnect);
+    this._deviceInfo = null;
+    this._toc = null;
+    this._status = 'disconnected';
+    this.events.onDisconnect?.();
+  }
+
+  /**
    * Open browser device picker. Uses NetMDUSBService.pair() — the SAME
    * method Web MiniDisc Pro calls when a user clicks "Connect".
+   *
+   * Handles all edge cases:
+   * - User cancels picker → NotFoundError → silent return to disconnected
+   * - Device unresponsive → 10s timeout → error message
+   * - User clicks Cancel button → abortConnection() sets _aborted flag
    */
   async requestDevice(): Promise<boolean> {
     if (!NetMDConnection.isSupported()) {
@@ -185,20 +216,28 @@ export class NetMDConnection {
     if (this._status === 'connected') return true;
 
     this._connecting = true;
+    this._aborted = false;
     try {
       this.setStatus('connecting');
 
-      // This is what WMD calls — openNewDevice internally
+      // This is what WMD calls — openNewDevice internally.
+      // If user cancels the browser picker, pair() throws NotFoundError.
       const paired = await this.service.pair();
-      if (!paired) {
+      if (!paired || this._aborted) {
         this.setStatus('disconnected');
         return false;
       }
 
       return await this.initializeDevice();
     } catch (err) {
+      // User cancelled the browser device picker — silent return, no error toast
+      if (err instanceof DOMException && err.name === 'NotFoundError') {
+        console.log('[NetMD] Device picker cancelled by user');
+        this.setStatus('disconnected');
+        return false;
+      }
       console.error('[NetMD] requestDevice failed:', err);
-      this.setStatus('disconnected');
+      this.setStatus('error');
       this.events.onError?.(err instanceof Error ? err.message : 'Failed to request device');
       return false;
     } finally {
@@ -216,11 +255,12 @@ export class NetMDConnection {
     if (this._status === 'connected') return true;
 
     this._connecting = true;
+    this._aborted = false;
     try {
       this.setStatus('connecting');
 
       const connected = await this.service.connect();
-      if (!connected) {
+      if (!connected || this._aborted) {
         this.setStatus('disconnected');
         return false;
       }
@@ -237,49 +277,78 @@ export class NetMDConnection {
 
   private async initializeDevice(): Promise<boolean> {
     try {
-      const vendorId = this.service.getVendorId();
-      const productId = this.service.getProductId();
-      const deviceName = await this.service.getDeviceName();
-
-      this._deviceInfo = identifyDevice(vendorId, productId) ?? {
-        vendorId,
-        productId,
-        name: deviceName || 'Unknown NetMD Device',
-        manufacturer: 'Unknown',
-        modelNumber: 'Unknown',
-        isHiMD: false,
-      };
-
-      console.log('[NetMD] Device: %s (VID=%s PID=%s)',
-        this._deviceInfo.name,
-        vendorId.toString(16).padStart(4, '0'),
-        productId.toString(16).padStart(4, '0'));
-
-      navigator.usb.addEventListener('disconnect', this.handleDisconnect);
-
-      // Read TOC using the SAME listContent call WMD uses
-      const disc = await this.service.listContent(true);
-      this._toc = convertDisc(disc);
-
-      this._status = 'connected';
-      this.events.onConnected?.(this._deviceInfo, this._toc);
-      return true;
+      // Race device init against a timeout
+      const result = await Promise.race([
+        this._doInitializeDevice(),
+        this._connectionTimeout(),
+      ]);
+      return result;
     } catch (err) {
+      if (this._aborted) {
+        // User cancelled during init — already reset by abortConnection()
+        return false;
+      }
       console.error('[NetMD] initializeDevice failed:', err);
-      this.setStatus('disconnected');
+      this.setStatus('error');
       this.events.onError?.(err instanceof Error ? err.message : 'Failed to initialize device');
       return false;
     }
   }
 
+  /** Timeout promise that rejects after CONNECTION_TIMEOUT_MS */
+  private _connectionTimeout(): Promise<never> {
+    return new Promise((_, reject) => {
+      setTimeout(() => {
+        if (this._connecting && !this._aborted) {
+          reject(new Error('Connection timed out. Make sure your device is powered on and connected via USB.'));
+        }
+      }, CONNECTION_TIMEOUT_MS);
+    });
+  }
+
+  private async _doInitializeDevice(): Promise<boolean> {
+    const vendorId = this.service.getVendorId();
+    const productId = this.service.getProductId();
+    const deviceName = await this.service.getDeviceName();
+
+    if (this._aborted) return false;
+
+    this._deviceInfo = identifyDevice(vendorId, productId) ?? {
+      vendorId,
+      productId,
+      name: deviceName || 'Unknown NetMD Device',
+      manufacturer: 'Unknown',
+      modelNumber: 'Unknown',
+      isHiMD: false,
+    };
+
+    console.log('[NetMD] Device: %s (VID=%s PID=%s)',
+      this._deviceInfo.name,
+      vendorId.toString(16).padStart(4, '0'),
+      productId.toString(16).padStart(4, '0'));
+
+    navigator.usb.addEventListener('disconnect', this.handleDisconnect);
+
+    if (this._aborted) return false;
+
+    // Read TOC using the SAME listContent call WMD uses
+    const disc = await this.service.listContent(true);
+
+    if (this._aborted) return false;
+
+    this._toc = convertDisc(disc);
+
+    this._status = 'connected';
+    this.events.onConnected?.(this._deviceInfo, this._toc);
+    return true;
+  }
+
   private handleDisconnect = (event: USBConnectionEvent): void => {
     if (this.service.isDeviceConnected(event.device)) {
-      navigator.usb.removeEventListener('disconnect', this.handleDisconnect);
-      this._deviceInfo = null;
-      this._toc = null;
+      console.log('[NetMD] Device physically disconnected');
       this._connecting = false;
-      this._status = 'disconnected';
-      this.events.onDisconnect?.();
+      this._aborted = true;
+      this._resetToDisconnected();
     }
   };
 
@@ -522,15 +591,15 @@ export class NetMDConnection {
   }
 
   async disconnect(): Promise<void> {
-    navigator.usb.removeEventListener('disconnect', this.handleDisconnect);
+    // Update state FIRST so UI responds immediately
+    this._connecting = false;
+    this._aborted = true;
+    this._resetToDisconnected();
+
+    // Then clean up USB resources in the background
     try {
       await this.service.finalize();
     } catch { /* ignore */ }
-    this._deviceInfo = null;
-    this._toc = null;
-    this._connecting = false;
-    this._status = 'disconnected';
-    this.events.onDisconnect?.();
   }
 }
 

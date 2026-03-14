@@ -3,6 +3,7 @@ import { NetMDConnection } from '@netmd-studio/netmd';
 import { useTransferStore } from './store';
 import {
   connectDevice,
+  cancelConnection,
   disconnectDevice,
   refreshTOC as refreshTOCAction,
   renameTrack as renameTrackAction,
@@ -22,10 +23,12 @@ import {
  */
 export function useDeviceConnection() {
   const connectionStatus = useTransferStore((s) => s.connectionStatus);
+  const connectionError = useTransferStore((s) => s.connectionError);
   const deviceInfo = useTransferStore((s) => s.deviceInfo);
   const toc = useTransferStore((s) => s.toc);
 
   const connect = useCallback(() => connectDevice(), []);
+  const cancel = useCallback(() => cancelConnection(), []);
   const disconnect = useCallback(() => disconnectDevice(), []);
   const refreshTOC = useCallback(() => refreshTOCAction(), []);
   const renameTrack = useCallback(
@@ -49,10 +52,12 @@ export function useDeviceConnection() {
 
   return {
     connectionStatus,
+    connectionError,
     deviceInfo,
     toc,
     isSupported: NetMDConnection.isSupported(),
     connect,
+    cancel,
     disconnect,
     refreshTOC,
     renameTrack,

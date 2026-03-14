@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Usb, Unplug, RefreshCw, Disc3, Loader2, ExternalLink } from 'lucide-react';
+import { Usb, Unplug, RefreshCw, Disc3, Loader2, ExternalLink, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@netmd-studio/ui';
 import { formatDuration } from '@netmd-studio/utils';
 import { spSecondsToFormat } from '@netmd-studio/types';
@@ -7,12 +7,9 @@ import { useDeviceConnection } from './useDeviceConnection';
 import { useTransferStore } from './store';
 
 export function DeviceConnectionPanel() {
-  const { connectionStatus, deviceInfo, toc, connect, disconnect, refreshTOC } = useDeviceConnection();
+  const { connectionStatus, connectionError, deviceInfo, toc, connect, cancel, disconnect, refreshTOC } = useDeviceConnection();
   const selectedFormat = useTransferStore((s) => s.selectedFormat);
   const tracks = useTransferStore((s) => s.tracks);
-
-  const isConnected = connectionStatus === 'connected';
-  const isConnecting = connectionStatus === 'connecting';
 
   // Device reports capacity in SP-equivalent seconds.
   // Used time is format-independent (already recorded on disc).
@@ -63,7 +60,7 @@ export function DeviceConnectionPanel() {
           <Disc3 size={16} style={{ color: 'var(--pillar-transfer)' }} />
           Device
         </h3>
-        {isConnected && (
+        {connectionStatus === 'connected' && (
           <button
             onClick={refreshTOC}
             className="transition-all duration-300"
@@ -83,29 +80,69 @@ export function DeviceConnectionPanel() {
         )}
       </div>
 
-      {!isConnected ? (
+      {/* ── STATE: disconnected ── */}
+      {connectionStatus === 'disconnected' && (
         <div className="flex flex-col items-center py-4 gap-3">
           <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--surface-2)' }}>
-            {isConnecting ? (
-              <Loader2 size={20} className="animate-spin" style={{ color: 'var(--pillar-transfer)' }} />
-            ) : (
-              <Unplug size={20} style={{ color: 'var(--text-tertiary)' }} />
-            )}
+            <Unplug size={20} style={{ color: 'var(--text-tertiary)' }} />
           </div>
           <p className="text-label text-center" style={{ color: 'var(--text-secondary)' }}>
-            {isConnecting ? 'Connecting...' : 'No device connected'}
+            No device connected
           </p>
           <Button
             variant="secondary"
             onClick={connect}
-            disabled={isConnecting}
             className="w-full"
           >
             <Usb size={16} />
-            {isConnecting ? 'Connecting...' : 'Connect Device'}
+            Connect Device
           </Button>
         </div>
-      ) : (
+      )}
+
+      {/* ── STATE: connecting ── */}
+      {connectionStatus === 'connecting' && (
+        <div className="flex flex-col items-center py-4 gap-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--surface-2)' }}>
+            <Loader2 size={20} className="animate-spin" style={{ color: 'var(--pillar-transfer)' }} />
+          </div>
+          <p className="text-label text-center" style={{ color: 'var(--text-secondary)' }}>
+            Connecting...
+          </p>
+          <Button
+            variant="ghost"
+            onClick={cancel}
+            className="w-full"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
+            <X size={14} />
+            Cancel
+          </Button>
+        </div>
+      )}
+
+      {/* ── STATE: error ── */}
+      {connectionStatus === 'error' && (
+        <div className="flex flex-col items-center py-4 gap-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,51,68,0.1)' }}>
+            <AlertTriangle size={20} style={{ color: 'var(--error)' }} />
+          </div>
+          <p className="text-label text-center" style={{ color: 'var(--error)' }}>
+            {connectionError || 'Connection failed'}
+          </p>
+          <Button
+            variant="secondary"
+            onClick={connect}
+            className="w-full"
+          >
+            <Usb size={16} />
+            Try Again
+          </Button>
+        </div>
+      )}
+
+      {/* ── STATE: connected ── */}
+      {connectionStatus === 'connected' && (
         <div className="space-y-3">
           {/* Device info */}
           <div className="flex items-center gap-3">

@@ -35,13 +35,11 @@ export function initConnection(): void {
 
   const c = getConnection();
 
+  // Relay ALL status changes to the store so UI always reflects reality.
+  // Previously only 'connecting' was relayed, causing dead states when
+  // requestDevice() failed (cancel, timeout) and set status to 'disconnected'.
   c.on('onStatusChange', (status) => {
-    // Only relay 'connecting' to the store.
-    // 'connected' is handled by the batched onConnected event.
-    // 'disconnected' is handled by the batched onDisconnect event.
-    if (status === 'connecting') {
-      useTransferStore.getState().setConnectionStatus(status);
-    }
+    useTransferStore.getState().setConnectionStatus(status);
   });
 
   c.on('onDeviceIdentified', () => {
@@ -66,6 +64,7 @@ export function initConnection(): void {
 
   c.on('onError', (error) => {
     console.error('[NetMD]', error);
+    useTransferStore.getState().setConnectionError(error);
     toast.error(error);
   });
 }
@@ -75,7 +74,14 @@ export function initConnection(): void {
 
 export async function connectDevice(): Promise<boolean> {
   initConnection();
+  // Clear any previous error before attempting connection
+  useTransferStore.getState().setConnectionError(null);
   return getConnection().requestDevice();
+}
+
+export function cancelConnection(): void {
+  if (!conn) return;
+  conn.abortConnection();
 }
 
 export async function disconnectDevice(): Promise<void> {

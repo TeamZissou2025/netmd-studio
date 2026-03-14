@@ -5,6 +5,7 @@ import type { ConnectionStatus, DiscTOC, NetMDDeviceEntry } from '@netmd-studio/
 
 interface DeviceState {
   connectionStatus: ConnectionStatus;
+  connectionError: string | null;
   deviceInfo: NetMDDeviceEntry | null;
   toc: DiscTOC | null;
 }
@@ -14,6 +15,7 @@ interface TransferStore extends TransferQueueState, DeviceState {
 
   // Device actions
   setConnectionStatus: (status: ConnectionStatus) => void;
+  setConnectionError: (error: string | null) => void;
   setDeviceInfo: (info: NetMDDeviceEntry | null) => void;
   setTOC: (toc: DiscTOC | null) => void;
   setDeviceConnected: (info: NetMDDeviceEntry, toc: DiscTOC | null) => void;
@@ -40,6 +42,7 @@ interface TransferStore extends TransferQueueState, DeviceState {
 export const useTransferStore = create<TransferStore>((set, get) => ({
   // Device state
   connectionStatus: 'disconnected',
+  connectionError: null,
   deviceInfo: null,
   toc: null,
 
@@ -53,12 +56,13 @@ export const useTransferStore = create<TransferStore>((set, get) => ({
 
   // Device actions
   setConnectionStatus: (connectionStatus) => set({ connectionStatus }),
+  setConnectionError: (connectionError) => set({ connectionError }),
   setDeviceInfo: (deviceInfo) => set({ deviceInfo }),
   setTOC: (toc) => set({ toc }),
   setDeviceConnected: (deviceInfo, toc) =>
-    set({ connectionStatus: 'connected', deviceInfo, toc }),
+    set({ connectionStatus: 'connected', connectionError: null, deviceInfo, toc }),
   setDeviceDisconnected: () =>
-    set({ connectionStatus: 'disconnected', deviceInfo: null, toc: null }),
+    set({ connectionStatus: 'disconnected', connectionError: null, deviceInfo: null, toc: null }),
 
   // Queue actions
   setSelectedFormat: (selectedFormat) =>
