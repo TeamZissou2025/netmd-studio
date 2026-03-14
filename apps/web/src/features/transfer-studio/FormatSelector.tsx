@@ -1,6 +1,6 @@
 import { Badge } from '@netmd-studio/ui';
 import { formatDuration } from '@netmd-studio/utils';
-import { MD_80_CAPACITY, FORMAT_BITRATES } from '@netmd-studio/types';
+import { MD_80_CAPACITY, FORMAT_BITRATES, spSecondsToFormat } from '@netmd-studio/types';
 import type { TransferFormat } from '@netmd-studio/types';
 import { useTransferStore } from './store';
 
@@ -56,9 +56,8 @@ export function FormatSelector() {
         {FORMAT_OPTIONS.map((opt) => {
           const isSelected = selectedFormat === opt.value;
           // Device reports free space in SP-equivalent seconds.
-          // For LP modes, the same free bytes hold more audio time.
-          const formatMultiplier = opt.value === 'lp2' ? 2 : opt.value === 'lp4' ? 4 : 1;
-          const freeForFormat = discFree > 0 ? discFree * formatMultiplier : MD_80_CAPACITY[opt.value].totalSeconds;
+          // Convert using actual bitrate ratio (292/132 ≈ 2.21x for LP2, 292/66 ≈ 4.42x for LP4).
+          const freeForFormat = discFree > 0 ? spSecondsToFormat(discFree, opt.value) : MD_80_CAPACITY[opt.value].totalSeconds;
           const remaining = freeForFormat - totalQueuedDuration;
 
           return (

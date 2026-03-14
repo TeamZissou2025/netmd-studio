@@ -9,7 +9,6 @@
 import {
   NetMDUSBService,
   AtracdencAudioExportService,
-  DefaultMinidiscSpec,
   type Codec,
   type Disc as WMDDisc,
   type Track as WMDTrack,
@@ -49,8 +48,6 @@ export interface NetMDConnectionEvents {
   onDisconnect: () => void;
   onError: (error: string) => void;
 }
-
-const mdSpec = new DefaultMinidiscSpec();
 
 /**
  * Convert WMD Disc type to our DiscTOC.
@@ -476,15 +473,18 @@ export class NetMDConnection {
       data.byteLength, paddedSize, frameSize, frameCount);
     console.log('[NetMD]   estimated duration=%s', formatTime(trackDurationSec));
 
-    // Check disc capacity using device-reported free space (disc.left from getDiscCapacity)
+    // Check disc capacity. Device reports free space in SP-equivalent seconds.
+    // Convert to the selected format's duration using bitrate ratio.
     if (this._toc) {
-      const freeSeconds = this._toc.freeSeconds;
-      console.log('[NetMD]   disc free=%s, track needs=%s',
-        formatTime(freeSeconds), formatTime(trackDurationSec));
+      const spFreeSeconds = this._toc.freeSeconds;
+      const bitrate = format === 'sp' ? 292 : format === 'lp2' ? 132 : 66;
+      const freeForFormat = spFreeSeconds * (292 / bitrate);
+      console.log('[NetMD]   disc free=%s (%s SP), track needs=%s',
+        formatTime(freeForFormat), formatTime(spFreeSeconds), formatTime(trackDurationSec));
       // Only block if the track clearly exceeds free space (30s tolerance for
       // rounding between our duration estimate and device-reported capacity)
-      if (trackDurationSec > freeSeconds + 30) {
-        const msg = `Not enough disc space: track is ${formatTime(trackDurationSec)} but only ${formatTime(freeSeconds)} free`;
+      if (trackDurationSec > freeForFormat + 30) {
+        const msg = `Not enough disc space: track is ${formatTime(trackDurationSec)} but only ${formatTime(freeForFormat)} free (${format.toUpperCase()})`;
         console.error('[NetMD]', msg);
         this.events.onError?.(msg);
         return false;
@@ -536,14 +536,12 @@ export class NetMDConnection {
 
 /**
  * Convert disc free time from SP-equivalent seconds to the given format.
- * Uses the SAME formula as WMD's DefaultMinidiscSpec.translateDefaultMeasuringModeTo:
- *   floor(292 / bitrate) * spDuration
- *
- * SP (292kbps): factor = 1 → 80 min
- * LP2 (132kbps): factor = floor(292/132) = 2 → 160 min
- * LP4 (66kbps): factor = floor(292/66) = 4 → 320 min
+ * Uses actual bitrate ratio (not integer floor) for accurate capacity display:
+ *   SP  (292kbps): factor = 1     → 80 min
+ *   LP2 (132kbps): factor = 2.21  → ~177 min
+ *   LP4 (66kbps):  factor = 4.42  → ~354 min
  */
 export function convertCapacityForFormat(spSeconds: number, format: 'sp' | 'lp2' | 'lp4'): number {
-  const codec = formatToCodec(format);
-  return mdSpec.translateDefaultMeasuringModeTo(codec, spSeconds);
+  const bitrate = format === 'sp' ? 292 : format === 'lp2' ? 132 : 66;
+  return spSeconds * (292 / bitrate);
 }

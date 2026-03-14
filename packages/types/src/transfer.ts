@@ -62,3 +62,14 @@ export function estimateEncodedSize(durationSeconds: number, format: TransferFor
   const bitrateKbps = FORMAT_BITRATES[format];
   return Math.ceil((bitrateKbps * 1000 * durationSeconds) / 8);
 }
+
+/**
+ * Convert SP-equivalent seconds to the actual duration for a given format.
+ * The device always reports capacity in SP-equivalent time. The same physical
+ * bytes store more audio at lower bitrates:
+ *   LP2: 292/132 ≈ 2.21x  (not 2x)
+ *   LP4: 292/66  ≈ 4.42x  (not 4x)
+ */
+export function spSecondsToFormat(spSeconds: number, format: TransferFormat): number {
+  return spSeconds * (FORMAT_BITRATES.sp / FORMAT_BITRATES[format]);
+}

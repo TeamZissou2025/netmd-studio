@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { Usb, Unplug, RefreshCw, Disc3, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@netmd-studio/ui';
 import { formatDuration } from '@netmd-studio/utils';
+import { spSecondsToFormat } from '@netmd-studio/types';
 import { useDeviceConnection } from './useDeviceConnection';
 import { useTransferStore } from './store';
 
@@ -12,12 +13,16 @@ export function DeviceConnectionPanel() {
   const isConnected = connectionStatus === 'connected';
   const isConnecting = connectionStatus === 'connecting';
 
-  // Use device-reported capacity values directly from getDiscCapacity().
-  // These are in SP-equivalent seconds. For LP modes, free space scales.
-  const totalCapacity = toc?.totalSeconds ?? 0;
-  const usedSeconds = toc?.usedSeconds ?? 0;
-  const freeSeconds = toc?.freeSeconds ?? 0;
-  const usedPercent = totalCapacity > 0 ? (usedSeconds / totalCapacity) * 100 : 0;
+  // Device reports capacity in SP-equivalent seconds. Convert to selected format
+  // using actual bitrate ratio (292/132 ≈ 2.21x for LP2, 292/66 ≈ 4.42x for LP4).
+  const spTotal = toc?.totalSeconds ?? 0;
+  const spUsed = toc?.usedSeconds ?? 0;
+  const spFree = toc?.freeSeconds ?? 0;
+  const totalCapacity = spSecondsToFormat(spTotal, selectedFormat);
+  const usedSeconds = spSecondsToFormat(spUsed, selectedFormat);
+  const freeSeconds = spSecondsToFormat(spFree, selectedFormat);
+  // usedPercent is ratio-independent (same percentage regardless of format)
+  const usedPercent = spTotal > 0 ? (spUsed / spTotal) * 100 : 0;
 
   return (
     <div
