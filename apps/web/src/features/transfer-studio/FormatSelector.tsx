@@ -24,16 +24,14 @@ const FORMAT_OPTIONS: Array<{
     label: 'LP2',
     description: `ATRAC3 · ${FORMAT_BITRATES.lp2} kbps · ${MD_80_CAPACITY.lp2.label}`,
     badge: 'magenta',
-    disabled: true,
-    disabledReason: 'Coming soon — requires ATRAC WASM encoder',
+    disabled: false,
   },
   {
     value: 'lp4',
     label: 'LP4',
     description: `ATRAC3 · ${FORMAT_BITRATES.lp4} kbps · ${MD_80_CAPACITY.lp4.label}`,
     badge: 'amber',
-    disabled: true,
-    disabledReason: 'Coming soon — requires ATRAC WASM encoder',
+    disabled: false,
   },
 ];
 
