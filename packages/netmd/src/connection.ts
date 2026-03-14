@@ -71,22 +71,19 @@ function convertDisc(disc: WMDDisc): DiscTOC {
   }
   tracks.sort((a, b) => a.index - b.index);
 
-  // Sum track durations for a reliable "used" value — the device-reported
-  // disc.used / disc.left values can disagree when the disc was recorded
-  // in a different mode than what the device currently reports.
-  const usedFromTracks = tracks.reduce((sum, t) => sum + t.durationSeconds, 0);
-
-  // disc.total and disc.left are in seconds (WMD divides raw frames by 512).
-  // Use track-summed duration as the primary "used" value since it's always
-  // accurate regardless of the device's recording mode reporting.
+  // disc.total, disc.used, disc.left are all in seconds after WMD's
+  // convertDiscToWMD divides netmd-js raw frames by 512.
+  // Use the device-reported values directly — they come from getDiscCapacity()
+  // which returns the actual hardware-reported used/total/left times.
   const totalSeconds = disc.total;
-  const usedSeconds = usedFromTracks > 0 ? usedFromTracks : disc.used;
-  const freeSeconds = Math.max(0, totalSeconds - usedSeconds);
+  const usedSeconds = disc.used;
+  const freeSeconds = disc.left;
 
-  console.log('[NetMD] Disc capacity: total=%ds (%s), used=%ds (tracks=%ds, disc.used=%d), left=%ds (disc.left=%d)',
+  console.log('[NetMD] Disc capacity: total=%ds (%s), used=%ds (%s), free=%ds (%s), tracks=%d',
     totalSeconds, formatTime(totalSeconds),
-    usedSeconds, usedFromTracks, disc.used,
-    freeSeconds, disc.left);
+    usedSeconds, formatTime(usedSeconds),
+    freeSeconds, formatTime(freeSeconds),
+    tracks.length);
 
   return {
     title: disc.title,
@@ -340,6 +337,20 @@ export class NetMDConnection {
     }
   }
 
+  async eraseDisc(): Promise<boolean> {
+    try {
+      await this.service.wipeDisc();
+      const disc = await this.service.listContent(true);
+      this._toc = convertDisc(disc);
+      this.events.onTOCRead?.(this._toc);
+      return true;
+    } catch (err) {
+      console.error('[NetMD] eraseDisc failed:', err);
+      this.events.onError?.(err instanceof Error ? err.message : 'Failed to erase disc');
+      return false;
+    }
+  }
+
   /**
    * Prepare device for upload batch. Calls NetMDUSBService.prepareUpload() —
    * the IDENTICAL call Web MiniDisc Pro makes.
@@ -450,23 +461,24 @@ export class NetMDConnection {
     const frameCount = paddedSize / frameSize;
     const totalBytes = paddedSize + 24; // netmd-js adds 24 bytes for packet header
 
-    // Estimate track duration in seconds (SP-equivalent)
-    const spBytesPerSec = 176400; // 44100 Hz × 2 ch × 2 bytes
+    // Estimate track duration from data size
     const trackDurationSec = format === 'sp'
-      ? data.byteLength / spBytesPerSec
+      ? data.byteLength / 176400 // 44100 Hz × 2 ch × 2 bytes
       : data.byteLength / ((format === 'lp2' ? 132000 : 66000) / 8);
 
     console.log('[NetMD] sendTrack: title=%s, format=%s, codec=%o', title, format, codec);
-    console.log('[NetMD]   data=%d bytes, paddedSize=%d, frameSize=%d, frames=%d, totalBytes=%d',
-      data.byteLength, paddedSize, frameSize, frameCount, totalBytes);
-    console.log('[NetMD]   estimated duration=%.1fs (%.1f min)', trackDurationSec, trackDurationSec / 60);
+    console.log('[NetMD]   data=%d bytes, paddedSize=%d, frameSize=%d, frames=%d',
+      data.byteLength, paddedSize, frameSize, frameCount);
+    console.log('[NetMD]   estimated duration=%s', formatTime(trackDurationSec));
 
-    // Check disc capacity before attempting transfer
+    // Check disc capacity using device-reported free space (disc.left from getDiscCapacity)
     if (this._toc) {
       const freeSeconds = this._toc.freeSeconds;
-      console.log('[NetMD]   disc free=%.1fs (%.1f min), track needs=%.1fs',
-        freeSeconds, freeSeconds / 60, trackDurationSec);
-      if (trackDurationSec > freeSeconds + 5) { // 5s tolerance for rounding
+      console.log('[NetMD]   disc free=%s, track needs=%s',
+        formatTime(freeSeconds), formatTime(trackDurationSec));
+      // Only block if the track clearly exceeds free space (30s tolerance for
+      // rounding between our duration estimate and device-reported capacity)
+      if (trackDurationSec > freeSeconds + 30) {
         const msg = `Not enough disc space: track is ${formatTime(trackDurationSec)} but only ${formatTime(freeSeconds)} free`;
         console.error('[NetMD]', msg);
         this.events.onError?.(msg);

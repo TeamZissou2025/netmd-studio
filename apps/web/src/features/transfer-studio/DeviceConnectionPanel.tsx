@@ -12,14 +12,11 @@ export function DeviceConnectionPanel() {
   const isConnected = connectionStatus === 'connected';
   const isConnecting = connectionStatus === 'connecting';
 
-  // Use actual disc capacity from TOC (in SP-equivalent seconds),
-  // then scale for the selected format using WMD's conversion formula.
-  const spTotal = toc?.totalSeconds ?? 0;
-  const spUsed = toc?.usedSeconds ?? 0;
-  const formatMultiplier = selectedFormat === 'lp2' ? 2 : selectedFormat === 'lp4' ? 4 : 1;
-  const totalCapacity = spTotal * formatMultiplier;
-  const usedSeconds = spUsed; // used time is the same regardless of format
-  const freeSeconds = Math.max(0, totalCapacity - usedSeconds);
+  // Use device-reported capacity values directly from getDiscCapacity().
+  // These are in SP-equivalent seconds. For LP modes, free space scales.
+  const totalCapacity = toc?.totalSeconds ?? 0;
+  const usedSeconds = toc?.usedSeconds ?? 0;
+  const freeSeconds = toc?.freeSeconds ?? 0;
   const usedPercent = totalCapacity > 0 ? (usedSeconds / totalCapacity) * 100 : 0;
 
   return (

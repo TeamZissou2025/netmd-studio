@@ -47,9 +47,9 @@ export function FormatSelector() {
     .filter((t) => t.status !== 'done' && t.status !== 'error')
     .reduce((sum, t) => sum + t.duration, 0);
 
-  const usedSeconds = toc?.usedSeconds ?? 0;
-  // Use actual disc total from TOC if connected, fall back to MD_80_CAPACITY constant
-  const spTotal = toc?.totalSeconds ?? 0;
+  // Use device-reported free space directly for SP.
+  // For LP modes, free space scales (LP2=2x, LP4=4x).
+  const discFree = toc?.freeSeconds ?? 0;
 
   return (
     <div className="rounded-lg p-4" style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}>
@@ -57,10 +57,11 @@ export function FormatSelector() {
       <div className="space-y-2">
         {FORMAT_OPTIONS.map((opt) => {
           const isSelected = selectedFormat === opt.value;
-          // Scale actual disc capacity for the format (SP=1x, LP2=2x, LP4=4x)
+          // Device reports free space in SP-equivalent seconds.
+          // For LP modes, the same free bytes hold more audio time.
           const formatMultiplier = opt.value === 'lp2' ? 2 : opt.value === 'lp4' ? 4 : 1;
-          const capacity = spTotal > 0 ? spTotal * formatMultiplier : MD_80_CAPACITY[opt.value].totalSeconds;
-          const remaining = capacity - usedSeconds - totalQueuedDuration;
+          const freeForFormat = discFree > 0 ? discFree * formatMultiplier : MD_80_CAPACITY[opt.value].totalSeconds;
+          const remaining = freeForFormat - totalQueuedDuration;
 
           return (
             <div key={opt.value} className="relative group">

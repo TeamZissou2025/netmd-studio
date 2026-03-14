@@ -20,6 +20,11 @@ function getConnection(): NetMDConnection {
   return conn;
 }
 
+/** Expose the singleton for use by the audio pipeline */
+export function getConnectionInstance(): NetMDConnection {
+  return getConnection();
+}
+
 /**
  * One-time wiring of NetMDConnection events → Zustand store.
  * Safe to call multiple times; only the first call takes effect.
@@ -101,6 +106,16 @@ export async function prepareUpload(): Promise<boolean> {
 export async function finalizeUpload(): Promise<void> {
   if (!conn) return;
   await conn.finalizeUpload();
+}
+
+export async function deleteTrack(index: number): Promise<boolean> {
+  if (!conn) return false;
+  return conn.deleteTrack(index);
+}
+
+export async function eraseDisc(): Promise<boolean> {
+  if (!conn) return false;
+  return conn.eraseDisc();
 }
 
 export async function sendTrack(

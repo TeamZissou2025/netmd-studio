@@ -7,6 +7,8 @@ import {
   refreshTOC as refreshTOCAction,
   renameTrack as renameTrackAction,
   renameDisc as renameDiscAction,
+  deleteTrack as deleteTrackAction,
+  eraseDisc as eraseDiscAction,
   sendTrack as sendTrackAction,
 } from './connection';
 
@@ -34,6 +36,11 @@ export function useDeviceConnection() {
     (title: string) => renameDiscAction(title),
     [],
   );
+  const deleteTrack = useCallback(
+    (index: number) => deleteTrackAction(index),
+    [],
+  );
+  const eraseDisc = useCallback(() => eraseDiscAction(), []);
   const sendTrack = useCallback(
     (data: ArrayBuffer, format: 'sp' | 'lp2' | 'lp4', title: string, onProgress?: (p: number) => void) =>
       sendTrackAction(data, format, title, onProgress),
@@ -50,6 +57,8 @@ export function useDeviceConnection() {
     refreshTOC,
     renameTrack,
     renameDisc,
+    deleteTrack,
+    eraseDisc,
     sendTrack,
   };
 }
