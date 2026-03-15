@@ -121,9 +121,19 @@ export function PrivacyPage() {
             <p>NetMD Studio is not directed at children under 16. We do not knowingly collect personal information from anyone under 16. If you believe a child has provided us with personal data, contact us and we will delete it.</p>
           </Section>
 
-          <Section title="9. Cookies and Tracking">
-            <p>We use only essential, first-party cookies required for authentication (Supabase session tokens). We do not use third-party tracking cookies, advertising pixels, or fingerprinting. No cookie consent banner is required because we do not use non-essential cookies.</p>
-          </Section>
+          <section id="cookies">
+            <h2 className="text-lg font-bold mb-3" style={{ color: '#1A1A1A' }}>9. Cookies and Tracking</h2>
+            <div className="space-y-3">
+              <p>We use a minimal set of first-party cookies. We do not use third-party tracking cookies, advertising pixels, or fingerprinting.</p>
+              <p><strong style={{ color: C.text }}>Cookies we use:</strong></p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong style={{ color: C.text }}>Supabase session tokens</strong> (essential): required for authentication. Set automatically when you sign in. Removed when you sign out.</li>
+                <li><strong style={{ color: C.text }}>netmd_consent</strong> (functional): records whether you accepted or declined our cookie notice. Value is "accepted" or "declined." Expires after 1 year. This cookie is set regardless of your choice so we know not to show the banner again.</li>
+                <li><strong style={{ color: C.text }}>netmd_waitlist</strong> (functional): set only if you accept cookies and sign up for launch notifications. Value is "subscribed." Expires after 1 year. This lets us show a confirmation message instead of the signup form on return visits. If you decline cookies, the signup still works but this convenience cookie is not set.</li>
+              </ul>
+              <p>That is the complete list. We set no other cookies and load no third-party scripts that set cookies.</p>
+            </div>
+          </section>
 
           <Section title="10. Security">
             <p>We implement industry-standard security measures including TLS 1.3 encryption in transit, AES-256 encryption at rest, Supabase Row Level Security policies restricting data access, Stripe PCI-DSS compliance for payment data, and regular dependency security audits. No system is perfectly secure. If we discover a breach affecting your personal data, we will notify you and relevant authorities within 72 hours as required by GDPR, and as soon as practicable under other applicable laws.</p>

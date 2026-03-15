@@ -15,6 +15,9 @@ export function Footer() {
         <span>The all-in-one MiniDisc platform</span>
       </div>
       <div className="flex items-center gap-4 text-tag font-mono">
+        <a href="/privacy" className="transition-colors" style={{ color: 'var(--text-tertiary)' }}>Privacy</a>
+        <a href="/terms" className="transition-colors" style={{ color: 'var(--text-tertiary)' }}>Terms</a>
+        <a href="/privacy#cookies" className="transition-colors" style={{ color: 'var(--text-tertiary)' }}>Cookies</a>
         <a
           href="https://github.com/TeamZissou2025/netmd-studio"
           target="_blank"

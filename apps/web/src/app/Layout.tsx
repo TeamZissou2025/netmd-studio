@@ -2,6 +2,7 @@ import { Outlet } from 'react-router';
 import { TopNav } from './TopNav';
 import { MobileNav } from './MobileNav';
 import { Footer } from './Footer';
+import { CookieConsent } from './CookieConsent';
 
 export function Layout() {
   return (
@@ -14,7 +15,8 @@ export function Layout() {
       </main>
       <Footer />
       <MobileNav />
-      <span className="font-mono text-2xs text-studio-text-dim fixed bottom-2 right-2 z-50 opacity-60">v0.2.5-alpha · 2026-03-14 · 22:00</span>
+      <CookieConsent variant="dark" />
+      <span className="font-mono text-2xs text-studio-text-dim fixed bottom-2 right-2 z-50 opacity-60">v0.2.6-alpha · 2026-03-14 · 23:00</span>
     </div>
   );
 }

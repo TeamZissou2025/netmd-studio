@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react';
 import { Disc3, Radio, Database, ShoppingBag, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { getWaitlistCookie, setWaitlistCookie } from '../lib/cookies';
+import { CookieConsent } from './CookieConsent';
 
 // ── Light-mode landing page colors ───────────────────────────
 const C = {
@@ -166,6 +168,13 @@ function WaitlistForm() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Check cookie on mount — if already subscribed, show success state
+  useEffect(() => {
+    if (getWaitlistCookie() === 'subscribed') {
+      setStatus('success');
+    }
+  }, []);
+
   const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     const trimmed = email.trim();
@@ -179,9 +188,13 @@ function WaitlistForm() {
     try {
       const { error } = await (supabase as any).from('waitlist').insert({ email: trimmed });
       if (error) {
-        if (error.code === '23505') setStatus('success');
+        if (error.code === '23505') {
+          setWaitlistCookie();
+          setStatus('success');
+        }
         else { setStatus('error'); setErrorMsg('Something went wrong. Please try again.'); }
       } else {
+        setWaitlistCookie();
         setStatus('success');
       }
     } catch {
@@ -195,7 +208,11 @@ function WaitlistForm() {
         <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#E6F4EE' }}>
           <Check size={14} style={{ color: C.success }} />
         </div>
-        <span className="font-medium" style={{ color: C.success, fontSize: '14px' }}>You're on the list!</span>
+        <span className="font-medium" style={{ color: C.success, fontSize: '14px' }}>
+          {getWaitlistCookie() === 'subscribed'
+            ? "You're on the list! We'll email you when NetMD Studio launches."
+            : "You're on the list!"}
+        </span>
       </div>
     );
   }
@@ -390,8 +407,12 @@ export function LandingPage() {
           <a href="/privacy" className="transition-colors hover:underline" style={{ color: C.textDim }}>Privacy</a>
           <span style={{ color: '#C0BDB6' }}>&middot;</span>
           <a href="/terms" className="transition-colors hover:underline" style={{ color: C.textDim }}>Terms</a>
+          <span style={{ color: '#C0BDB6' }}>&middot;</span>
+          <a href="/privacy#cookies" className="transition-colors hover:underline" style={{ color: C.textDim }}>Cookies</a>
         </div>
       </footer>
+
+      <CookieConsent variant="light" />
 
       <style>{`
         @keyframes pulse-dot {
