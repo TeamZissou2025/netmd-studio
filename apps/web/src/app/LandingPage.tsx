@@ -125,7 +125,7 @@ function FadeInSection({ children, className = '', delay = 0 }: { children: Reac
 
 // ── Pillar cards ─────────────────────────────────────────────
 const pillars = [
-  { icon: Disc3, title: 'Label Studio', desc: 'Design MiniDisc sticker, J-cards and spine labels', colorHex: '#4AACA0', premium: true },
+  { icon: Disc3, title: 'Label Studio', desc: 'Design MiniDisc stickers, J-cards and spine labels', colorHex: '#4AACA0', premium: true },
   { icon: Radio, title: 'Transfer Studio', desc: 'Transfer audio via WebUSB', colorHex: '#D4577A', premium: false },
   { icon: Database, title: 'Device Library', desc: 'Community hardware database', colorHex: '#C8923C', premium: false },
   { icon: ShoppingBag, title: 'Marketplace', desc: 'Buy and sell MiniDisc gear', colorHex: '#3BA37A', premium: false },
