@@ -8,7 +8,9 @@ export function AuthCallbackPage() {
   useEffect(() => {
     supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
-        navigate('/dashboard', { replace: true });
+        const returnTo = sessionStorage.getItem('auth_returnTo') || '/dashboard';
+        sessionStorage.removeItem('auth_returnTo');
+        navigate(returnTo, { replace: true });
       }
     });
   }, [navigate]);

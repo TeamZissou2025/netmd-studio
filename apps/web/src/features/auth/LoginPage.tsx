@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Navigate } from 'react-router';
+import { NavLink, Navigate, useSearchParams } from 'react-router';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '@netmd-studio/ui';
 import { Input } from '@netmd-studio/ui';
@@ -7,6 +7,8 @@ import { Disc3, Mail } from 'lucide-react';
 
 export function LoginPage() {
   const { user, loading, signInWithEmail, signInWithGoogle, signInWithMagicLink } = useAuth();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo') || '/dashboard';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,7 +17,7 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   if (loading) return null;
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user) return <Navigate to={returnTo} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +103,7 @@ export function LoginPage() {
 
         <p className="text-label text-[var(--text-secondary)] text-center mt-6">
           Don't have an account?{' '}
-          <NavLink to="/auth/signup" className="text-[var(--accent)] hover:text-[var(--accent)]">
+          <NavLink to={`/auth/signup${returnTo !== '/dashboard' ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`} className="text-[var(--accent)] hover:text-[var(--accent)]">
             Sign up
           </NavLink>
         </p>

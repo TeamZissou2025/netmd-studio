@@ -254,6 +254,30 @@ function WaitlistForm() {
 export function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: C.bg, fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+      {/* ── Header with auth buttons ── */}
+      <header className="flex items-center justify-between px-6 pt-4 pb-0 max-w-5xl mx-auto w-full">
+        <div className="flex items-center gap-2">
+          <Disc3 size={20} style={{ color: C.accent }} />
+          <span className="font-semibold" style={{ color: C.text, fontSize: '15px' }}>NetMD Studio</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <a
+            href="/auth/login"
+            className="px-4 py-1.5 rounded-lg font-medium transition-opacity hover:opacity-80"
+            style={{ color: C.text, fontSize: '13px' }}
+          >
+            Sign In
+          </a>
+          <a
+            href="/auth/signup"
+            className="px-4 py-1.5 rounded-lg font-medium transition-opacity hover:opacity-90"
+            style={{ background: C.accent, color: '#FFFFFF', fontSize: '13px' }}
+          >
+            Sign Up
+          </a>
+        </div>
+      </header>
+
       {/* ── Main content ── */}
       <div className="flex-1">
         {/* ── SPRING 2026 date stamp ── */}

@@ -8,6 +8,7 @@ import { PrivacyPage } from './PrivacyPage';
 import { TermsPage } from './TermsPage';
 import { NotFoundPage } from './NotFoundPage';
 import { PageLoader } from './PageLoader';
+import { ProtectedRoute } from './ProtectedRoute';
 
 // Code-split each pillar and dashboard routes via React.lazy
 const LabelStudioPage = lazy(() => import('../features/label-studio/LabelStudioPage').then(m => ({ default: m.LabelStudioPage })));
@@ -41,25 +42,31 @@ export function App() {
 
           {/* App routes — with Layout chrome (nav, footer) */}
           <Route element={<Layout />}>
-            <Route path="labels" element={<Suspense fallback={<PageLoader />}><LabelStudioPage /></Suspense>} />
-            <Route path="labels/gallery" element={<Suspense fallback={<PageLoader />}><GalleryPage /></Suspense>} />
-            <Route path="transfer" element={<Suspense fallback={<PageLoader />}><TransferStudioPage /></Suspense>} />
-            <Route path="devices" element={<Suspense fallback={<PageLoader />}><DeviceLibraryPage /></Suspense>} />
-            <Route path="devices/submit" element={<Suspense fallback={<PageLoader />}><DeviceSubmitPage /></Suspense>} />
-            <Route path="devices/:id" element={<Suspense fallback={<PageLoader />}><DeviceDetailPage /></Suspense>} />
-            <Route path="admin/devices" element={<Suspense fallback={<PageLoader />}><AdminDevicesPage /></Suspense>} />
-            <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><MarketplacePage /></Suspense>} />
-            <Route path="marketplace/sell" element={<Suspense fallback={<PageLoader />}><SellPage /></Suspense>} />
-            <Route path="marketplace/sell/:id" element={<Suspense fallback={<PageLoader />}><SellPage /></Suspense>} />
-            <Route path="marketplace/checkout/:id" element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />
-            <Route path="marketplace/:id" element={<Suspense fallback={<PageLoader />}><ListingDetailPage /></Suspense>} />
-            <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
-            <Route path="dashboard/orders" element={<Suspense fallback={<PageLoader />}><OrdersPage /></Suspense>} />
-            <Route path="dashboard/orders/:id" element={<Suspense fallback={<PageLoader />}><OrderDetailPage /></Suspense>} />
-            <Route path="dashboard/selling" element={<Suspense fallback={<PageLoader />}><SellerDashboardPage /></Suspense>} />
+            {/* Public auth routes */}
             <Route path="auth/login" element={<Suspense fallback={<PageLoader />}><LoginPage /></Suspense>} />
             <Route path="auth/signup" element={<Suspense fallback={<PageLoader />}><SignupPage /></Suspense>} />
             <Route path="auth/callback" element={<Suspense fallback={<PageLoader />}><AuthCallbackPage /></Suspense>} />
+
+            {/* Protected routes — require authentication */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="labels" element={<Suspense fallback={<PageLoader />}><LabelStudioPage /></Suspense>} />
+              <Route path="labels/gallery" element={<Suspense fallback={<PageLoader />}><GalleryPage /></Suspense>} />
+              <Route path="transfer" element={<Suspense fallback={<PageLoader />}><TransferStudioPage /></Suspense>} />
+              <Route path="devices" element={<Suspense fallback={<PageLoader />}><DeviceLibraryPage /></Suspense>} />
+              <Route path="devices/submit" element={<Suspense fallback={<PageLoader />}><DeviceSubmitPage /></Suspense>} />
+              <Route path="devices/:id" element={<Suspense fallback={<PageLoader />}><DeviceDetailPage /></Suspense>} />
+              <Route path="admin/devices" element={<Suspense fallback={<PageLoader />}><AdminDevicesPage /></Suspense>} />
+              <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><MarketplacePage /></Suspense>} />
+              <Route path="marketplace/sell" element={<Suspense fallback={<PageLoader />}><SellPage /></Suspense>} />
+              <Route path="marketplace/sell/:id" element={<Suspense fallback={<PageLoader />}><SellPage /></Suspense>} />
+              <Route path="marketplace/checkout/:id" element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />
+              <Route path="marketplace/:id" element={<Suspense fallback={<PageLoader />}><ListingDetailPage /></Suspense>} />
+              <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
+              <Route path="dashboard/orders" element={<Suspense fallback={<PageLoader />}><OrdersPage /></Suspense>} />
+              <Route path="dashboard/orders/:id" element={<Suspense fallback={<PageLoader />}><OrderDetailPage /></Suspense>} />
+              <Route path="dashboard/selling" element={<Suspense fallback={<PageLoader />}><SellerDashboardPage /></Suspense>} />
+            </Route>
+
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

@@ -40,6 +40,10 @@ export function useAuth(): AuthState & {
       return { error: error as Error | null };
     },
     signInWithGoogle: async () => {
+      // Persist returnTo across OAuth redirect
+      const params = new URLSearchParams(window.location.search);
+      const returnTo = params.get('returnTo');
+      if (returnTo) sessionStorage.setItem('auth_returnTo', returnTo);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: `${window.location.origin}/auth/callback` },
@@ -47,6 +51,9 @@ export function useAuth(): AuthState & {
       return { error: error as Error | null };
     },
     signInWithMagicLink: async (email) => {
+      const params = new URLSearchParams(window.location.search);
+      const returnTo = params.get('returnTo');
+      if (returnTo) sessionStorage.setItem('auth_returnTo', returnTo);
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },

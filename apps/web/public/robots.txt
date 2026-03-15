@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+Disallow: /transfer
+Disallow: /devices
+Disallow: /labels
+Disallow: /marketplace
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /auth
+Sitemap: https://netmdstudio.com/sitemap.xml
