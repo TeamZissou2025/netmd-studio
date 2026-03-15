@@ -23,9 +23,9 @@ const C = {
 } as const;
 
 // ── Hero word cycler ─────────────────────────────────────────
-const CYCLE_WORDS = ['MiniDisc', 'Recording', 'Collecting', 'Discovery', 'MiniDisc'];
+const CYCLE_WORDS = ['MiniDisc', 'Recording', 'Collecting', 'Discovery', 'Creating', 'Listening', 'Designing', 'Trading', 'Dubbing', 'MiniDisc'];
 const WORD_DISPLAY_MS = 1100;
-const HOLD_LAST_MS = 15000;
+const HOLD_LAST_MS = 7000;
 const TRANSITION_OUT_MS = 175;
 
 function HeroCycler() {
@@ -64,20 +64,21 @@ function HeroCycler() {
     <span
       ref={wrapperRef}
       className="inline-block relative overflow-hidden"
-      style={{ height: '1.1em', verticalAlign: 'bottom' }}
+      style={{ height: '1.25em', paddingBottom: '0.1em', verticalAlign: 'text-bottom' }}
     >
       <span ref={measureRef} className="invisible absolute whitespace-nowrap" style={{ font: 'inherit' }} aria-hidden="true" />
       {CYCLE_WORDS.map((word, i) => {
         const isActive = i === currentIndex;
+        const rest = 'translateY(-0.05em)';
         let transform = 'translateY(100%)';
         let opacity = 0;
         let transition = 'none';
 
         if (isActive && phase === 'in') {
-          transform = 'translateY(0)'; opacity = 1;
+          transform = rest; opacity = 1;
           transition = 'opacity 0.225s cubic-bezier(0.22,1,0.36,1), transform 0.225s cubic-bezier(0.22,1,0.36,1)';
         } else if (isActive && phase === 'hold') {
-          transform = 'translateY(0)'; opacity = 1;
+          transform = rest; opacity = 1;
         } else if (isActive && phase === 'out') {
           transform = 'translateY(-100%)'; opacity = 0;
           transition = 'opacity 0.175s cubic-bezier(0.55,0,1,0.45), transform 0.175s cubic-bezier(0.55,0,1,0.45)';
@@ -416,7 +417,7 @@ export function LandingPage() {
         </FadeInSection>
 
         {/* ── Four Pillars ── */}
-        <FadeInSection className="px-6 pb-12" delay={100}>
+        <FadeInSection className="px-6 pb-12 mt-[75px]" delay={100}>
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {pillars.map((p, i) => {

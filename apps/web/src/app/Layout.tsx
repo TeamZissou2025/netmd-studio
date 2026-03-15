@@ -16,7 +16,7 @@ export function Layout() {
       <Footer />
       <MobileNav />
       <CookieConsent variant="dark" />
-      <span className="font-mono text-2xs text-studio-text-dim fixed bottom-2 right-2 z-50 opacity-60">v0.2.8-alpha · 2026-03-15 · 01:00</span>
+      <span className="font-mono text-2xs text-studio-text-dim fixed bottom-2 right-2 z-50 opacity-60">v0.2.9-alpha · 2026-03-15 · 02:00</span>
     </div>
   );
 }
