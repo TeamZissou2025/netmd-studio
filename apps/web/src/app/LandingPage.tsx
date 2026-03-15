@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react';
 import { Disc3, Radio, Database, ShoppingBag, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { getWaitlistCookie, setWaitlistCookie } from '../lib/cookies';
-import { CookieConsent } from './CookieConsent';
+import { getConsent, setConsent as setCookieConsent, getWaitlistCookie, setWaitlistCookie } from '../lib/cookies';
 
 // ── Light-mode landing page colors ───────────────────────────
 const C = {
@@ -267,6 +266,64 @@ function WaitlistForm() {
   );
 }
 
+// ── Inline cookie notice (in-flow, not fixed) ───────────────
+function LandingCookieNotice() {
+  const [visible, setVisible] = useState(false);
+  const [fadingOut, setFadingOut] = useState(false);
+
+  useEffect(() => {
+    if (getConsent() === null) setVisible(true);
+  }, []);
+
+  const handleChoice = (choice: 'accepted' | 'declined') => {
+    setCookieConsent(choice);
+    setFadingOut(true);
+    setTimeout(() => setVisible(false), 300);
+  };
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className="flex justify-center px-6"
+      style={{
+        paddingTop: '120px',
+        opacity: fadingOut ? 0 : 1,
+        transition: 'opacity 0.3s ease',
+      }}
+    >
+      <div
+        className="rounded-xl p-4 max-w-[480px] w-full text-center"
+        style={{
+          background: '#FFFFFF',
+          border: `1px solid ${C.cardBorder}`,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        }}
+      >
+        <p style={{ color: '#888', fontSize: '11px', lineHeight: 1.5, marginBottom: '6px' }}>
+          We use a small cookie to remember your signup. No tracking.
+        </p>
+        <span className="inline-flex items-center gap-3" style={{ fontSize: '11px' }}>
+          <button
+            onClick={() => handleChoice('accepted')}
+            className="font-medium hover:underline"
+            style={{ color: C.accent }}
+          >
+            Accept
+          </button>
+          <button
+            onClick={() => handleChoice('declined')}
+            className="hover:underline"
+            style={{ color: '#999' }}
+          >
+            Decline
+          </button>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ── Main landing page ────────────────────────────────────────
 export function LandingPage() {
   return (
@@ -400,6 +457,9 @@ export function LandingPage() {
         </FadeInSection>
       </div>
 
+      {/* ── Inline cookie notice ── */}
+      <LandingCookieNotice />
+
       {/* ── Footer (mt-auto pins to bottom) ── */}
       <footer className="mt-auto px-6 py-6 text-center space-y-2" style={{ borderTop: `1px solid ${C.footerBorder}` }}>
         <p style={{ color: C.textDim, fontSize: '12px' }}>&copy; 2026 Squircle Labs</p>
@@ -411,8 +471,6 @@ export function LandingPage() {
           <a href="/privacy#cookies" className="transition-colors hover:underline" style={{ color: C.textDim }}>Cookies</a>
         </div>
       </footer>
-
-      <CookieConsent variant="light" />
 
       <style>{`
         @keyframes pulse-dot {
