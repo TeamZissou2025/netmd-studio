@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Layout } from './Layout';
-import { AuthGatedHome } from './AuthGatedHome';
+import { LandingPage } from './LandingPage';
 import { PrivacyPage } from './PrivacyPage';
 import { TermsPage } from './TermsPage';
 import { NotFoundPage } from './NotFoundPage';
@@ -36,7 +36,7 @@ export function App() {
       <BrowserRouter>
         <Routes>
           {/* Public pages — full-bleed, no Layout chrome */}
-          <Route index element={<AuthGatedHome />} />
+          <Route index element={<LandingPage />} />
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="terms" element={<TermsPage />} />
 
